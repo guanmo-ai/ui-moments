@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>昼夜开关</title>
+<script src="../../assets/embed.js"></script>
 <style>
 :root { --bg: #ecebe8; color-scheme: light; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #17161c; color-scheme: dark; } }
@@ -354,7 +355,7 @@ body { background: var(--bg); overflow: hidden; }
   sw.setAttribute('aria-checked', String(S.target > 0.5));
   window.__step = step;
   window.__ready = Promise.resolve(true);
-  if (!REC) { let last = performance.now(); const loop = (t) => { step(Math.min(50, t - last)); last = t; requestAnimationFrame(loop); }; requestAnimationFrame(loop); }
+  if (!REC) { let last = performance.now(); const loop = (t) => { if(!document.documentElement.dataset.embedded||document.documentElement.dataset.galleryActive!=='false')step(Math.min(50, t - last)); last = t; requestAnimationFrame(loop); }; requestAnimationFrame(loop); }
   else step(0);
 })();
 </script>

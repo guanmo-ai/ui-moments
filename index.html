@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>UI Moments · 界面图鉴</title>
-<meta name="description" content="好的界面，往往赢在某一个瞬间。这里收集这样的瞬间：每一个都能直接上手玩，附录屏，并写清灵感来自谁。">
+<meta name="description" content="直接体验每一个UI：加载指示器、开关、旋钮与滑块，按用途分类，可预览、调整并复制代码。">
 <meta property="og:title" content="UI Moments · 界面图鉴">
 <meta property="og:description" content="好的界面，往往赢在某一个瞬间。每一个都能直接上手玩。">
 <meta property="og:image" content="https://guanmo-ai.github.io/ui-moments/assets/og.jpg">
@@ -13,178 +13,40 @@
 <meta name="theme-color" content="#050506">
 <link rel="icon" href="assets/icon.svg">
 <link rel="stylesheet" href="assets/site.css">
+<link rel="stylesheet" href="gallery/loaders/style.css">
 <link rel="stylesheet" href="assets/gallery.css">
 </head>
 <body>
-<header class="top" id="top"><div class="wrap nav-inner"><a class="site-brand" href="index.html" aria-label="UI Moments 首页"><span class="site-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg></span><span>UI Moments</span></a><nav class="nav-links" aria-label="站点"><a href="#works" aria-current="page">作品</a><a href="#how">关于</a></nav><div class="nav-end"><a class="nav-follow" href="https://x.com/guanmo_ai" target="_blank" rel="noopener">关注观默 ↗</a><button class="theme-btn" id="theme" type="button" aria-label="切换浅色模式"></button></div></div></header>
+<a class="skip" href="#works">跳到 UI 组件</a>
+<header class="top" id="top"><div class="wrap nav-inner"><a class="site-brand" href="index.html" aria-label="UI Moments 首页"><span class="site-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg></span><span>UI Moments</span></a><nav class="nav-links" aria-label="站点"><a href="#works" aria-current="page">组件</a><a href="#sources">来源</a></nav><div class="nav-end"><a class="nav-follow" href="https://x.com/guanmo_ai" target="_blank" rel="noopener">关注观默 ↗</a><button class="theme-btn" id="theme" type="button" aria-label="切换浅色模式"></button></div></div></header>
 
-<main>
-  <section class="wrap hero"><h1>界面里的精彩瞬间。</h1><p>精选可交互的 UI 动效与微交互。点开体验，调整参数，找到下一次创作的灵感。</p></section>
-
-  <section class="wrap" id="works" aria-label="作品">
-    <div class="bar"><div class="bar-start"><span class="count" id="count"></span><div class="chips" id="chips" role="group" aria-label="按类型筛选"></div></div><label class="work-search"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"/><path d="m13 13 4 4"/></svg><span class="sr-only">搜索作品</span><input id="work-search" type="search" placeholder="搜索作品、主题或交互" autocomplete="off"><kbd aria-hidden="true">/</kbd></label></div><p class="empty" id="works-empty" hidden>没有找到匹配的作品，换个关键词试试。</p><div class="grid" id="grid"></div>
-  </section>
-
-  <section class="wrap how" id="how" aria-label="关于"><h2>关于 UI Moments</h2>
-    <div>
-      <h3>能直接上手玩</h3>
-      <p>每个作品都能在页面里直接操作。源码和所需资源随作品提供，可以在本地运行。</p>
-    </div>
-    <div>
-      <h3>录屏可以复现</h3>
-      <p>作品附有展示录屏。支持逐帧录制的作品在说明中提供对应脚本，可重复生成 60fps 视频。</p>
-    </div>
-    <div>
-      <h3>写清灵感来源</h3>
-      <p>参考了谁就写谁，并附来源链接。借鉴想法和使用现成实现分别说明。<a href="https://github.com/guanmo-ai/ui-moments/blob/main/docs/attribution.md" target="_blank" rel="noopener">署名规则</a></p>
-    </div>
+<main class="wrap">
+  <section class="hero"><h1>每个 UI，直接体验。</h1><p>加载、选择、导航。找到合适的组件，亲手试一试。</p></section>
+  <section id="works" aria-label="UI 组件">
+    <div class="gallery-toolbar"><div class="category-row"><span id="ui-count" aria-live="polite"></span><div id="categories" role="group" aria-label="按组件用途筛选"></div></div><div class="tool-actions"><label class="work-search"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"/><path d="m13 13 4 4"/></svg><span class="sr-only">搜索 UI</span><input id="work-search" type="search" placeholder="搜索组件、用途或形态" autocomplete="off"><kbd aria-hidden="true">/</kbd></label><button id="motion" type="button" aria-pressed="false">暂停动效</button></div></div>
+    <div id="shape-row" class="shape-row" hidden><span>加载形态</span><div id="shapes" role="group" aria-label="加载指示器形态"></div></div>
+    <div id="ui-grid" class="ui-grid" aria-label="实时 UI 组件"></div>
+    <p id="empty" class="empty" hidden>没有匹配的 UI，换个关键词试试。</p>
+    <p id="load-error" class="empty" hidden>组件载入失败，请刷新重试。</p>
   </section>
 </main>
-
-<footer class="site-footer"><div class="wrap"><div class="footer-top"><h2>更多界面瞬间，<br>持续更新。</h2><div class="footer-links"><div><strong>图鉴</strong><a href="index.html#works">全部作品</a><a href="gallery/loaders/">加载动效</a></div><div><strong>项目</strong><a href="https://github.com/guanmo-ai/ui-moments" target="_blank" rel="noopener">GitHub ↗</a><a href="https://x.com/guanmo_ai" target="_blank" rel="noopener">观默 @guanmo_ai ↗</a></div></div></div><div class="footer-legal"><span>© 2026 观默 Guanmo · UI Moments</span><details class="sources"><summary>来源与许可</summary><p>本项目新增代码采用 MIT 许可。引用的实现与资源保留各自的原作者署名及许可证，详见 <a href="https://github.com/guanmo-ai/ui-moments/blob/main/THIRD_PARTY_NOTICES.md" target="_blank" rel="noopener">第三方声明</a>。</p></details></div><div class="footer-wordmark" aria-hidden="true">UI Moments</div></div></footer>
-
-<dialog class="viewer" id="viewer" aria-labelledby="v-title">
-  <div class="stage"><div class="loading">载入中…</div><iframe id="v-frame" title="作品演示" allow="fullscreen; clipboard-write"></iframe></div>
-  <aside class="panel">
-    <div class="p-top">
-      <span class="p-count" id="v-count"></span>
-      <div class="p-nav">
-        <button class="icon-btn" id="v-prev" type="button" aria-label="上一个作品"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M10 3 5 8l5 5"/></svg></button>
-        <button class="icon-btn" id="v-next" type="button" aria-label="下一个作品"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m6 3 5 5-5 5"/></svg></button>
-        <button class="icon-btn" id="v-close" type="button" aria-label="关闭"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m4 4 8 8M12 4l-8 8"/></svg></button>
-      </div>
+<footer class="catalog-footer wrap" id="sources"><span>UI Moments · 持续收集界面的精彩瞬间</span><details class="sources"><summary>来源与许可</summary><p>加载指示器使用 <a href="https://github.com/GriffinJohnston/ldrs">LDRS 1.1.9</a>，原作者 Griffin Johnston / UI Ball，保留 <a href="gallery/loaders/vendor/ldrs/LICENSE">MIT 许可证</a>。其他组件的来源随代码附注，详见 <a href="https://github.com/guanmo-ai/ui-moments/blob/main/THIRD_PARTY_NOTICES.md">第三方声明</a>。<a href="https://github.com/guanmo-ai/ui-moments">项目源码 ↗</a></p></details></footer>
+  <dialog id="detail" aria-labelledby="detail-title">
+    <div class="dialog-head"><div><p id="detail-group" class="eyebrow"></p><h2 id="detail-title"></h2></div><button id="close" class="close" type="button" aria-label="关闭动效详情">×</button></div>
+    <div class="editor">
+      <section class="large-preview" aria-label="动效预览"><div id="selected-preview"></div><p id="detail-description"></p></section>
+      <section class="settings" aria-label="动效参数"><div class="settings-head"><h3>调成你的样子</h3><button id="reset" type="button">恢复默认</button></div><div id="controls"></div></section>
     </div>
-    <div>
-      <h2 id="v-title"></h2>
-      <p class="p-sum" id="v-sum"></p>
-    </div>
-    <div class="p-tags" id="v-tags"></div>
-    <div>
-      <h3>我们做了什么</h3>
-      <ul id="v-notes"></ul>
-    </div>
-    <div>
-      <h3 id="v-credit-heading">灵感来源</h3>
-      <p class="p-credit" id="v-credit"></p>
-    </div>
-    <div class="actions">
-      <a class="btn primary" id="v-open" target="_blank" rel="noopener">新窗口打开 ↗</a>
-      <div class="btn-row">
-        <a class="btn" id="v-video" target="_blank" rel="noopener">看录屏</a>
-        <a class="btn" id="v-src" target="_blank" rel="noopener">源码</a>
-      </div>
-      <p class="hint">在左侧直接操作 · <kbd>←</kbd> <kbd>→</kbd> 切换 · <kbd>Esc</kbd> 关闭</p>
-    </div>
-  </aside>
-</dialog>
-
+    <section class="code-section" aria-label="使用代码">
+      <div class="code-toolbar"><div class="code-tabs" role="tablist" aria-label="代码格式"><button id="tab-html" role="tab" aria-selected="true" aria-controls="code-panel" type="button" data-format="html">HTML + CSS</button><button id="tab-react" role="tab" aria-selected="false" aria-controls="code-panel" tabindex="-1" type="button" data-format="react">React</button></div><div class="code-actions"><button id="download" type="button">下载 HTML</button><button id="copy" class="primary" type="button">复制代码</button></div></div>
+      <p id="code-help">独立 HTML 页面，无需安装依赖。保存为 .html 文件后即可打开。</p>
+      <div id="code-panel" role="tabpanel" aria-labelledby="tab-html"><textarea id="code" aria-label="示例代码" readonly spellcheck="false" wrap="off"></textarea></div>
+      <p class="code-credit">每份代码都附有原作者署名与完整 MIT 许可证。<a href="vendor/ldrs/LICENSE">查看原文</a></p>
+    </section>
+  </dialog>
+  <p id="toast" class="toast" role="status" aria-live="polite" hidden></p>
+<dialog id="component-detail" aria-labelledby="component-title"><div class="dialog-head"><div><p id="component-kind" class="eyebrow"></p><h2 id="component-title"></h2></div><button id="component-close" class="close" type="button" aria-label="关闭组件详情">×</button></div><iframe id="component-frame" title="交互组件" allow="fullscreen; clipboard-write"></iframe><div class="component-meta"><p id="component-description"></p><p id="component-credit"></p><a id="component-source" target="_blank" rel="noopener">查看源码 ↗</a><a id="component-open" target="_blank" rel="noopener">独立体验 ↗</a><button id="component-copy" type="button">复制 HTML</button></div></dialog>
 <script src="gallery/works.js"></script>
-<script type="module">
-import {setupSite} from './assets/site.mjs';
-setupSite();
-(() => {
-  const REPO = 'https://github.com/guanmo-ai/ui-moments/tree/main/';
-  const works = window.WORKS || [];
-  const $ = (s) => document.querySelector(s);
-  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  /* 目录筛选与作品预览 */
-  const tags = ['全部', ...new Set(works.map((w) => w.tags[0]).filter(Boolean))];
-  $('#chips').innerHTML = tags.map((t, i) => `<button class="chip" type="button" aria-pressed="${i === 0}" data-tag="${esc(t)}">${esc(t)}</button>`).join('');
-
-  /* cards */
-  const grid = $('#grid');
-  grid.innerHTML = works.map((w, i) => `
-    <button class="card${w.featured ? ' featured' : ''}" type="button" data-i="${i}" aria-label="${esc(w.title)}：打开演示">
-      <div class="media">
-        <img src="${esc(w.poster)}" alt="" loading="${i < 3 ? 'eager' : 'lazy'}" decoding="async">
-        ${reduced ? '' : `<video muted loop playsinline preload="none" poster="${esc(w.poster)}" data-src="${esc(w.video)}"></video>`}
-        <span class="try">体验 ↗</span>
-      </div>
-      <div class="cap"><div class="cap-row"><h2>${esc(w.title)}</h2><span class="card-kind">${esc(w.tags[0] || "交互")}</span></div><p>${esc(w.en)}</p></div>
-    </button>`).join('');
-  const cards = [...grid.querySelectorAll('.card')];
-
-  /* play previews only while they are on screen */
-  if (!reduced && 'IntersectionObserver' in window) {
-    const io = new IntersectionObserver((entries) => {
-      for (const e of entries) {
-        const v = e.target.querySelector('video');
-        if (!v) continue;
-        if (e.isIntersecting) {
-          if (!v.src) { v.src = v.dataset.src; v.addEventListener('playing', () => v.classList.add('ready'), { once: true }); }
-          v.play().catch(() => {});
-        } else v.pause();
-      }
-    }, { threshold: 0.35 });
-    cards.forEach((c) => io.observe(c));
-  }
-
-  /* filtering */
-  const setCount = (n) => { $('#count').textContent = `${String(n).padStart(2, '0')} 个作品`; };
-  let activeTag = '全部';
-  function filterWorks() {
-    const query = $('#work-search').value.trim().toLocaleLowerCase();
-    const all = activeTag === '全部'; let n = 0;
-    cards.forEach((c) => {
-      const w = works[+c.dataset.i];
-      const show = (all || w.tags.includes(activeTag)) && [w.title, w.en, w.summary, ...w.tags].join(' ').toLocaleLowerCase().includes(query);
-      c.hidden = !show; if (show) n++;
-      if (!show) c.querySelector('video')?.pause();
-    });
-    grid.classList.toggle('filtered', !all || !!query);
-    $('#works-empty').hidden = n !== 0; setCount(n);
-  }
-  filterWorks();
-  $('#work-search').addEventListener('input', filterWorks);
-  $('#chips').addEventListener('click', (e) => {
-    const b = e.target.closest('.chip'); if (!b) return;
-    document.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', String(c === b)));
-    activeTag = b.dataset.tag; filterWorks();
-  });
-
-  /* viewer */
-  const dlg = $('#viewer'), frame = $('#v-frame');
-  let cur = -1;
-  const visible = () => cards.filter((c) => !c.hidden).map((c) => +c.dataset.i);
-  function show(i) {
-    const w = works[i]; if (!w) return;
-    cur = i;
-    const list = visible(), pos = Math.max(0, list.indexOf(i));
-    $('#v-count').textContent = `${String(pos + 1).padStart(2, '0')} / ${String(list.length).padStart(2, '0')}`;
-    $('#v-title').innerHTML = `${esc(w.title)}<small>${esc(w.en)}</small>`;
-    $('#v-sum').textContent = w.summary;
-    $('#v-tags').innerHTML = w.tags.map((t) => `<span>${esc(t)}</span>`).join('');
-    $('#v-notes').innerHTML = w.notes.map((n) => `<li>${esc(n)}</li>`).join('');
-    $('#v-credit-heading').textContent = w.credit?.heading || '灵感来源';
-    $('#v-credit').innerHTML = w.credit ? `<a href="${esc(w.credit.url)}" target="_blank" rel="noopener">${esc(w.credit.name)}${w.credit.note ? ' 的来源' : ' 的原帖'} ↗</a>　${esc(w.credit.note || '代码全部自己写，只借鉴想法。')}` : '原创作品。';
-    $('#v-open').href = w.demo;
-    $('#v-video').href = w.full || w.video;
-    $('#v-src').href = REPO + w.source;
-    frame.src = w.demo;
-    if (location.hash.slice(1) !== w.id) history.replaceState(null, '', '#' + w.id);
-  }
-  function open(i) { show(i); if (!dlg.open) dlg.showModal(); document.body.style.overflow = 'hidden'; $('#v-next').focus({ preventScroll: true }); }
-  function close() { if (dlg.open) dlg.close(); }
-  dlg.addEventListener('close', () => {
-    frame.src = 'about:blank'; document.body.style.overflow = '';
-    history.replaceState(null, '', location.pathname + location.search);
-    const c = cards[cur]; if (c) c.focus({ preventScroll: true });
-  });
-  function step(d) { const list = visible(); const p = list.indexOf(cur); show(list[(p + d + list.length) % list.length]); }
-  grid.addEventListener('click', (e) => { const c = e.target.closest('.card'); if (c) open(+c.dataset.i); });
-  $('#v-prev').addEventListener('click', () => step(-1));
-  $('#v-next').addEventListener('click', () => step(1));
-  $('#v-close').addEventListener('click', close);
-  dlg.addEventListener('keydown', (e) => { if (e.key === 'ArrowLeft') { e.preventDefault(); step(-1); } if (e.key === 'ArrowRight') { e.preventDefault(); step(1); } });
-  dlg.addEventListener('click', (e) => { if (e.target === dlg) close(); });
-
-  /* deep links: #work-id opens that work */
-  const fromHash = () => { const i = works.findIndex((w) => w.id === (location.hash.slice(1) === 'ldrs' ? 'loaders' : location.hash.slice(1))); if (i >= 0) open(i); };
-  addEventListener('hashchange', fromHash);
-  fromHash();
-})();
-</script>
+<script type="module" src="assets/gallery.mjs"></script>
 </body>
 </html>

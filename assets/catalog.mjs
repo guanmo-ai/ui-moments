@@ -1,0 +1,35 @@
+import {loaders} from '../gallery/loaders/catalog.mjs';
+
+// 依据组件用途分类；库名和实现技术不作为信息层级。
+export const categories=[
+  {id:'all',name:'全部 UI'},
+  {id:'feedback',name:'反馈与状态'},
+  {id:'input',name:'选择与输入'},
+  {id:'navigation',name:'导航'},
+  {id:'date',name:'日期与时间'},
+];
+const kinds={
+  'day-night-toggle':['input','开关'],dimmer:['input','旋钮'],
+  horizon:['input','时间滑块'],garden:['input','亮度滑块'],
+  neon:['feedback','状态反馈'],lamp:['input','色温滑块'],
+  'color-temperature':['input','色温滑块'],
+  'flow-tab-bar':['navigation','标签导航'],'holiday-calendar':['date','日期选择'],
+};
+export function buildCatalog(works=[]){
+  const effects=loaders.map(loader=>({id:loader.key,title:loader.name,en:loader.name,category:'feedback',type:'加载指示器',shape:loader.group,summary:loader.description,loader}));
+  const components=works.filter(work=>!['ldrs','loaders'].includes(work.id)).map(work=>{
+    const [category,type]=kinds[work.id]||['input','交互控件'];
+    return {...work,category,type};
+  });
+  // 同级混排，首屏能看到不同用途；没有合集、推荐位或大卡片。
+  const byId=new Map([...effects,...components].map(item=>[item.id,item]));
+  const start=['ring','day-night-toggle','waveform','dimmer','square','flow-tab-bar','horizon','orbit','holiday-calendar','infinity','neon','color-temperature','lamp','grid','garden'];
+  const result=[];
+  for(const id of start){if(byId.has(id)){result.push(byId.get(id));byId.delete(id);}}
+  return [...result,...byId.values()];
+}
+export function matches(item,{category='all',shape='all',query=''}={}){
+  return (category==='all'||item.category===category)
+    &&(shape==='all'||item.shape===shape)
+    &&[item.title,item.en,item.type,item.shape,item.summary,...(item.tags||[])].filter(Boolean).join(' ').toLocaleLowerCase().includes(query.trim().toLocaleLowerCase());
+}

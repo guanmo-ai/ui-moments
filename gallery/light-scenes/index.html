@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Martian+Mono:wght@300..500&family=Noto+Sans+SC:wght@200..700&family=Noto+Serif+SC:wght@600;700&family=Roboto+Flex:opsz,wdth,wght,GRAD@8..144,25..151,100..1000,-200..150&display=swap">
+<script src="../../assets/embed.js"></script>
 <style>
 /* Layout: full-screen stage, one scene at a time; floating pill HUD on top, caption at the bottom. All colours below are fallbacks; the light engine rewrites them per region every frame. */
 :root {
@@ -270,6 +271,43 @@ kbd { font: 400 10px/1 var(--f-mono); padding: 4px 6px; border-radius: 6px; bord
   .article { padding: 22px; }
   .article h2 { font-size: 23px; }
 }
+
+/* 主画廊只呈现当前组件，保留实际交互。独立页面继续展示完整场景。 */
+html[data-embedded] body{overflow:hidden}
+html[data-embedded] #hud,html[data-embedded] #caption{display:none}
+html[data-embedded] .scene{padding:16px!important;overflow:hidden}
+html[data-embedded] .scene>.inner{max-width:430px}
+html[data-embedded] .dim{display:flex;justify-content:center}
+html[data-embedded] .dash{display:none}
+html[data-embedded] .dim-left{gap:5px}
+html[data-embedded] .dial{--s:min(160px,55vh,60vw)}
+html[data-embedded] .dial-read .num{font-size:30px}
+html[data-embedded] .dim-left>p{display:none}
+html[data-embedded] .hz{gap:12px}
+html[data-embedded] .hz-pill{aspect-ratio:3.3}
+html[data-embedded] .hz-time .num{font-size:30px}
+html[data-embedded] .hz-phase{font-size:11px}
+html[data-embedded] .hz>.chips,html[data-embedded] .legend{display:none}
+html[data-embedded] .gd{grid-template-columns:minmax(0,1fr) 38px;gap:10px;align-items:stretch}
+html[data-embedded] .gd-panel{aspect-ratio:1.6;border-radius:15px}
+html[data-embedded] .fader{flex-direction:column;gap:4px;padding:8px 0;border-radius:18px}
+html[data-embedded] .fader-track{width:18px;height:auto;min-height:55px;flex:1;margin:0}
+html[data-embedded] .fader-cap{left:-6px;right:-6px;height:18px;border-radius:6px}
+html[data-embedded] .fader-cap i{width:15px}
+html[data-embedded] .fader .num{font-size:15px}
+html[data-embedded] .fader>span:first-child{font-size:8px}
+html[data-embedded] .lp{display:flex;flex-direction:column;gap:10px}
+html[data-embedded] .lp>.lamp,html[data-embedded] .lp>.article{display:none}
+html[data-embedded] .kel{width:100%;display:flex;flex-direction:column;gap:12px;padding:16px;border-radius:18px}
+html[data-embedded] .kel-read{min-width:0;align-items:center;gap:3px}
+html[data-embedded] .kel-read .num{font-size:28px}
+html[data-embedded] .kel-read>span:last-child{font-size:10px}
+html[data-embedded] .kel>div:last-child{width:100%}
+html[data-embedded] .kmarks{display:none}
+html[data-embedded] .nn-ui{bottom:12px;gap:10px}
+html[data-embedded] .photocell{display:none}
+html[data-embedded] .plate{width:40px;height:52px;border-radius:9px}
+html[data-embedded] .rocker{width:20px;height:34px;border-radius:5px}
 </style>
 </head>
 <body>
@@ -908,7 +946,7 @@ kbd { font: 400 10px/1 var(--f-mono); padding: 4px 6px; border-radius: 6px; bord
     const flies = Array.from({ length: 30 }, () => ({ x: r(), y: 0.35 + r() * 0.5, ph: r() * 6.28, sp: 0.4 + r() * 0.8, r: 0.6 + r() * 0.8 }));
 
     const setL = (v, origin) => setLight({ L: v }, origin);
-    const fromY = (e) => { const b = track.getBoundingClientRect(); return innerWidth <= 900 ? clamp((e.clientX - b.left) / b.width) : clamp(1 - (e.clientY - b.top) / b.height); };
+    const fromY = (e) => { const b = track.getBoundingClientRect(); return innerWidth <= 900 && !root.dataset.embedded ? clamp((e.clientX - b.left) / b.width) : clamp(1 - (e.clientY - b.top) / b.height); };
     track.addEventListener('pointerdown', (e) => startDrag(e, { move(ev) { setL(fromY(ev), cap); } }));
     sliderKeys(cap, () => light.L, (v) => setL(v, cap));
 
@@ -983,7 +1021,7 @@ kbd { font: 400 10px/1 var(--f-mono); padding: 4px 6px; border-radius: 6px; bord
       frame(t) {
         const pr = regionMap.get(panel), L = pr ? pr.cur.L : light.L;
         draw(t, L);
-        const v = light.L, narrow = innerWidth <= 900;
+        const v = light.L, narrow = innerWidth <= 900 && !root.dataset.embedded;
         if (narrow) { cap.style.top = '50%'; cap.style.left = `calc(${v * 100}% - 15px)`; cap.style.right = 'auto'; cap.style.width = '30px'; cap.style.height = '58px'; $('#fader-fill').style.cssText = `top:0;bottom:0;left:0;width:${v * 100}%;background:linear-gradient(to right, transparent, var(--accent-soft))`; }
         else { cap.style.cssText = `top:${(1 - v) * 100}%`; $('#fader-fill').style.cssText = `height:${v * 100}%`; }
         cap.setAttribute('aria-valuenow', Math.round(v * 100));
@@ -1054,6 +1092,7 @@ kbd { font: 400 10px/1 var(--f-mono); padding: 4px 6px; border-radius: 6px; bord
     }
     function draw(t, L, K, lx) {
       const { ctx, w, h, dpr } = fit(cv);
+      if(w<=0||h<=0)return;
       const illum = 0.012 + 0.988 * Math.pow(L, 1.3);
       const tt = kelvinTint(K);
       const wall = scaleY({ L: 0.9, a: tt[0] * 0.3, b: tt[1] * 0.3 }, illum);
@@ -1330,7 +1369,7 @@ kbd { font: 400 10px/1 var(--f-mono); padding: 4px 6px; border-radius: 6px; bord
   window.__step = (dt) => step(dt);
   if (!REC) {
     let last = performance.now();
-    const loop = (t) => { step(Math.min(50, t - last)); last = t; requestAnimationFrame(loop); };
+    const loop = (t) => { if(!root.dataset.embedded||(root.dataset.galleryActive!=='false'&&scenes[si].el.clientWidth>0&&scenes[si].el.clientHeight>0))step(Math.min(50, t - last)); last = t; requestAnimationFrame(loop); };
     requestAnimationFrame(loop);
   } else step(0);
   window.__ready = (async () => {
