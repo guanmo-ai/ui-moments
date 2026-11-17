@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="完整体验 LDRS 的44款加载动效，调整颜色、尺寸与速度，复制独立 HTML 或 React 示例。动效原作 Griffin Johnston / UI Ball，MIT许可。">
+  <title>LDRS · 44款加载动效 · UI Moments</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="../../index.html"><i aria-hidden="true"></i>UI MOMENTS <span>/ LDRS</span></a>
+    <div class="top-actions"><a href="preview.mp4">看录屏 ↗</a><button id="theme" type="button">切换浅色</button></div>
+  </header>
+  <main>
+    <section class="intro">
+      <p class="eyebrow">44 LOADING ANIMATIONS · LDRS 1.1.9</p>
+      <h1>等待，也可以很好看<span>。</span></h1>
+      <p class="lead">从流动的圆环，到弹跳的圆点。选一个动效，调到喜欢的样子，复制代码就能用。</p>
+      <p class="byline">动效原作 <a href="https://github.com/GriffinJohnston/ldrs" target="_blank" rel="noopener">Griffin Johnston / UI Ball ↗</a><span>MIT</span> <a href="vendor/ldrs/LICENSE">原始许可证</a></p>
+    </section>
+    <section class="browse" aria-label="筛选动效">
+      <div class="search-row"><label class="search"><span>搜索</span><input id="search" type="search" placeholder="名称、中文描述…" autocomplete="off"></label><button id="motion" type="button" aria-pressed="false">暂停动效</button></div>
+      <div class="filter-row"><div id="groups" class="groups" role="group" aria-label="动效分类"></div><span id="count" aria-live="polite">正在加载44款动效…</span></div>
+    </section>
+    <div id="grid" class="grid" aria-label="44款加载动效"></div>
+    <p id="empty" class="empty" hidden>没有找到匹配的动效，换个关键词试试。</p>
+    <p id="load-error" class="empty" hidden>动效载入失败，请刷新页面重试。</p>
+  </main>
+  <footer>动效来自 LDRS，保留 Griffin Johnston 的版权与 MIT 许可。<br>UI Moments 提供分类预览、参数调整、独立示例与代码复制。<a href="README.md">集成说明</a> · <a href="../../THIRD_PARTY_NOTICES.md">第三方声明</a></footer>
+
+  <dialog id="detail" aria-labelledby="detail-title">
+    <div class="dialog-head"><div><p id="detail-group" class="eyebrow"></p><h2 id="detail-title"></h2></div><button id="close" class="close" type="button" aria-label="关闭动效详情">×</button></div>
+    <div class="editor">
+      <section class="large-preview" aria-label="动效预览"><div id="selected-preview"></div><p id="detail-description"></p></section>
+      <section class="settings" aria-label="动效参数"><div class="settings-head"><h3>调成你的样子</h3><button id="reset" type="button">恢复默认</button></div><div id="controls"></div></section>
+    </div>
+    <section class="code-section" aria-label="使用代码">
+      <div class="code-toolbar"><div class="code-tabs" role="tablist" aria-label="代码格式"><button id="tab-html" role="tab" aria-selected="true" aria-controls="code-panel" type="button" data-format="html">HTML + CSS</button><button id="tab-react" role="tab" aria-selected="false" aria-controls="code-panel" tabindex="-1" type="button" data-format="react">React</button></div><div class="code-actions"><button id="download" type="button">下载 HTML</button><button id="copy" class="primary" type="button">复制代码</button></div></div>
+      <p id="code-help">独立 HTML 页面，无需安装依赖。保存为 .html 文件后即可打开。</p>
+      <div id="code-panel" role="tabpanel" aria-labelledby="tab-html"><textarea id="code" aria-label="示例代码" readonly spellcheck="false" wrap="off"></textarea></div>
+      <p class="code-credit">每份代码都附有原作者署名与完整 MIT 许可证。<a href="vendor/ldrs/LICENSE">查看原文</a></p>
+    </section>
+  </dialog>
+  <p id="toast" class="toast" role="status" aria-live="polite" hidden></p>
+  <script type="module" src="app.mjs"></script>
+</body>
+</html>

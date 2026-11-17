@@ -1,6 +1,32 @@
 // 作品清单：首页从这里读取。新增作品时在数组里加一项即可。
 window.WORKS = [
   {
+    id: 'ldrs',
+    title: '44款加载动效',
+    en: 'LDRS',
+    summary: '圆环流动、圆点弹跳、线条起伏。完整体验44款动效，调整尺寸、颜色与速度，复制独立HTML或React代码。',
+    tags: ['加载', '动效', '代码复制'],
+    demo: 'gallery/ldrs/index.html',
+    video: 'gallery/ldrs/card.mp4',
+    full: 'gallery/ldrs/preview.mp4',
+    poster: 'gallery/ldrs/poster.jpg',
+    source: 'gallery/ldrs',
+    credit: {
+      name: 'Griffin Johnston / UI Ball',
+      label: '原作',
+      heading: '原作与许可',
+      url: 'https://github.com/GriffinJohnston/ldrs',
+      note: '完整集成MIT许可的LDRS 1.1.9，原始实现与版权声明保留。UI Moments增加分类预览、参数调整及HTML/React代码复制。',
+    },
+    notes: [
+      '44款动效全部收录，Web Components与React发布文件原样保留',
+      '按名称和中文描述搜索，按环形、圆点、线条、几何筛选',
+      '按每款支持的参数调整，颜色、尺寸和周期实时生效',
+      '独立HTML无需依赖，React示例附组件与对应CSS导入',
+      '复制和下载的代码均保留原作者署名与完整MIT许可',
+    ],
+  },
+  {
     id: 'day-night-toggle',
     title: '昼夜开关',
     en: 'Day / Night Toggle',

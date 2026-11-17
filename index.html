@@ -218,15 +218,15 @@ a { color: inherit; }
   <section class="wrap how" id="how" aria-label="关于">
     <div>
       <h3>能直接上手玩</h3>
-      <p>每个作品都是一个不依赖构建的 HTML 文件。点开就能拖、能按，下载下来也能离线打开。</p>
+      <p>每个作品都能在页面里直接操作。源码和所需资源随作品提供，可以在本地运行。</p>
     </div>
     <div>
       <h3>录屏可以复现</h3>
-      <p>画面由虚拟时钟逐帧推进，光标操作写在脚本里。运行 <code>tools/record.js</code>，每次都录出一模一样的 60fps 视频。</p>
+      <p>作品附有展示录屏。支持逐帧录制的作品在说明中提供对应脚本，可重复生成 60fps 视频。</p>
     </div>
     <div>
       <h3>写清灵感来源</h3>
-      <p>参考了谁就写谁，并附原帖链接。代码全部自己写，只借鉴想法。<a href="https://github.com/guanmo-ai/ui-moments/blob/main/docs/attribution.md" target="_blank" rel="noopener">署名规则</a></p>
+      <p>参考了谁就写谁，并附来源链接。借鉴想法和使用现成实现分别说明。<a href="https://github.com/guanmo-ai/ui-moments/blob/main/docs/attribution.md" target="_blank" rel="noopener">署名规则</a></p>
     </div>
   </section>
 </main>
@@ -257,7 +257,7 @@ a { color: inherit; }
       <ul id="v-notes"></ul>
     </div>
     <div>
-      <h3>灵感来源</h3>
+      <h3 id="v-credit-heading">灵感来源</h3>
       <p class="p-credit" id="v-credit"></p>
     </div>
     <div class="actions">
@@ -297,7 +297,7 @@ a { color: inherit; }
 
   /* facts + chips */
   const credited = new Set(works.filter((w) => w.credit).map((w) => w.credit.name));
-  $('#facts').innerHTML = [`<b>${works.length}</b> 个瞬间`, '单文件 HTML', '60fps 录屏', `灵感来自 <b>${credited.size}</b> 位作者`, 'MIT'].map((s) => `<li>${s}</li>`).join('');
+  $('#facts').innerHTML = [`<b>${works.length}</b> 个瞬间`, '直接上手玩', '60fps 录屏', `灵感来自 <b>${credited.size}</b> 位作者`, 'MIT'].map((s) => `<li>${s}</li>`).join('');
   const tags = ['全部', ...new Set(works.flatMap((w) => w.tags))];
   $('#chips').innerHTML = tags.map((t, i) => `<button class="chip" type="button" aria-pressed="${i === 0}" data-tag="${esc(t)}">${esc(t)}</button>`).join('');
 
@@ -311,7 +311,7 @@ a { color: inherit; }
         <span class="try">上手试试 →</span>
       </div>
       <div class="cap">
-        <div class="cap-row"><h2>${esc(w.title)}<small>${esc(w.en)}</small></h2><span class="credit">${w.credit ? '灵感 ' + esc(w.credit.name) : '原创'}</span></div>
+        <div class="cap-row"><h2>${esc(w.title)}<small>${esc(w.en)}</small></h2><span class="credit">${w.credit ? esc((w.credit.label || '灵感') + ' ') + esc(w.credit.name) : '原创'}</span></div>
         <p>${esc(w.summary)}</p>
       </div>
     </button>`).join('');
@@ -358,6 +358,7 @@ a { color: inherit; }
     $('#v-sum').textContent = w.summary;
     $('#v-tags').innerHTML = w.tags.map((t) => `<span>${esc(t)}</span>`).join('');
     $('#v-notes').innerHTML = w.notes.map((n) => `<li>${esc(n)}</li>`).join('');
+    $('#v-credit-heading').textContent = w.credit?.heading || '灵感来源';
     $('#v-credit').innerHTML = w.credit ? `<a href="${esc(w.credit.url)}" target="_blank" rel="noopener">${esc(w.credit.name)} 的原帖 ↗</a>　代码全部自己写，只借鉴想法。` : '原创作品。';
     $('#v-open').href = w.demo;
     $('#v-video').href = w.full || w.video;
