@@ -26,6 +26,7 @@ jobs:
         with:
           node-version: 22
       - run: npm run test:ldrs
+      - run: npm run test:site
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

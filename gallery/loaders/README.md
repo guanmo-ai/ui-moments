@@ -1,12 +1,12 @@
-# LDRS · 44款加载动效
+# 加载动效 · UI Moments
 
 完整集成 [LDRS](https://github.com/GriffinJohnston/ldrs) 1.1.9，原作者为 **Griffin Johnston / UI Ball**，MIT许可。44款动画保留原实现；UI Moments负责浏览和使用体验。
 
 ## 在线体验
 
-https://guanmo-ai.github.io/ui-moments/gallery/ldrs/
+https://guanmo-ai.github.io/ui-moments/gallery/loaders/
 
-本地在仓库根目录运行 `python3 -m http.server 5173 --bind 127.0.0.1`，打开 `/gallery/ldrs/`。无需构建或CDN。
+本地在仓库根目录运行 `python3 -m http.server 5173 --bind 127.0.0.1`，打开 `/gallery/loaders/`。无需构建或CDN。
 
 ## 使用
 
@@ -26,3 +26,5 @@ UI Moments新增分类、中文说明、参数调整、代码生成/复制/下�
 ## 检查
 
 运行 `npm run test:ldrs`。完整许可见 [原始LICENSE](vendor/ldrs/LICENSE) 和 [第三方声明](../../THIRD_PARTY_NOTICES.md)。后续引入新的库时，各自记录来源、固定版本、接入范围及许可证，不替换上游署名。
+
+展示视频使用 UI Moments 署名的36款精选同屏片段；网页完整提供44款动效。首页卡片截取视频中部，不影响完整预览。视频为无音轨版本。

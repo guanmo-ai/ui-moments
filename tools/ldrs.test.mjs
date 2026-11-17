@@ -1,10 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile,access} from 'node:fs/promises';
-import {loaders,previewProps} from '../gallery/ldrs/catalog.mjs';
-import {htmlExample,reactExample} from '../gallery/ldrs/snippets.mjs';
+import {loaders,previewProps} from '../gallery/loaders/catalog.mjs';
+import {htmlExample,reactExample} from '../gallery/loaders/snippets.mjs';
 
-const base=new URL('../gallery/ldrs/',import.meta.url);
+const base=new URL('../gallery/loaders/',import.meta.url);
 const license=await readFile(new URL('vendor/ldrs/LICENSE',base),'utf8');
 
 test('44款完整收录，预览、React样式、原始属性与来源版本均可用',async()=>{

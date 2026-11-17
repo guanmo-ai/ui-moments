@@ -1,3 +1,4 @@
+import {setupSite,foreground,background} from '../../assets/site.mjs';
 import * as ldrs from './vendor/ldrs/dist/index.js';
 import {loaders,groups,previewProps} from './catalog.mjs';
 import {escapeHtml as esc,htmlExample,reactExample} from './snippets.mjs';
@@ -7,13 +8,7 @@ const root=document.documentElement,grid=$('#grid'),detail=$('#detail'),toast=$(
 const reduced=matchMedia('(prefers-reduced-motion:reduce)');
 let playing=!reduced.matches,group='全部',selected=null,props={},format='html',trigger=null,toastTimer;
 const visible=new Set();
-let theme='dark';
-try{theme=localStorage.getItem('ui-moments-theme')||theme;}catch{}
-root.dataset.theme=theme==='light'?'light':'dark';
-const foreground=()=>root.dataset.theme==='light'?'#202024':'#f3f2ee';
-const background=()=>root.dataset.theme==='light'?'#f3f2ef':'#101012';
-const paintTheme=()=>$('#theme').textContent=root.dataset.theme==='light'?'切换深色':'切换浅色';
-paintTheme();
+setupSite();
 
 let license;
 try{
@@ -41,7 +36,7 @@ function syncMotion(){
 
 for(const [index,item] of loaders.entries()){
   const card=document.createElement('article');card.className='loader-card';card.dataset.key=item.key;
-  card.innerHTML=`<button class="open-loader" type="button" aria-label="${esc(item.name)}：预览与代码"><div class="sample"></div><div class="card-info"><span class="card-number">${String(index+1).padStart(2,'0')} / ${esc(item.group)}</span><strong>${esc(item.name)}</strong><small>调整参数与代码 →</small></div></button><button class="card-copy" type="button" aria-label="复制 ${esc(item.name)} 的HTML代码">复制 HTML + CSS</button>`;
+  card.innerHTML=`<button class="open-loader" type="button" aria-label="${esc(item.name)}：预览与代码"><div class="sample"></div><div class="card-info"><span class="card-number">${String(index+1).padStart(2,'0')}</span><strong>${esc(item.name)}</strong><small>${esc(item.group)}</small></div></button><button class="card-copy" type="button" aria-label="复制 ${esc(item.name)} 的HTML代码">复制代码</button>`;
   card.querySelector('.sample').append(effect(item,previewProps(item,foreground())));
   grid.append(card);
 }
@@ -88,7 +83,7 @@ function currentCode(){
 }
 function paintCode(){
   $('#code').value=currentCode();
-  $('#code-help').textContent=format==='html'?'独立 HTML 页面，无需安装依赖。保存为 .html 文件后即可打开。':'先运行 npm install ldrs@1.1.9，再将这段代码放入 React 项目。';
+  $('#code-help').textContent=format==='html'?'独立 HTML 页面，无需安装依赖。保存为 .html 文件后即可打开。':'React 示例包含组件、样式导入及依赖安装说明。';
   $('#download').textContent=format==='html'?'下载 HTML':'下载 JSX';
   $('#code-panel').setAttribute('aria-labelledby','tab-'+format);
   for(const tab of document.querySelectorAll('[data-format]')){const active=tab.dataset.format===format;tab.setAttribute('aria-selected',String(active));tab.tabIndex=active?0:-1;}
@@ -99,7 +94,7 @@ function paintSelected(){
 }
 function open(item,button){
   selected=item;props=previewProps(item,foreground());format='html';trigger=button;
-  $('#detail-title').textContent=item.name;$('#detail-group').textContent=item.group+' / LDRS';$('#detail-description').textContent=item.description;
+  $('#detail-title').textContent=item.name;$('#detail-group').textContent='加载动效 / '+item.group;$('#detail-description').textContent=item.description;
   controls();paintSelected();detail.showModal();document.body.style.overflow='hidden';
   history.replaceState(null,'','#'+item.key);
 }
@@ -137,7 +132,7 @@ async function copyWithFeedback(text){
 $('#copy').addEventListener('click',()=>copyWithFeedback(currentCode()));
 $('#download').addEventListener('click',()=>{
   const url=URL.createObjectURL(new Blob([currentCode()],{type:format==='html'?'text/html;charset=utf-8':'text/plain;charset=utf-8'}));
-  const link=document.createElement('a');link.href=url;link.download=`ldrs-${selected.key}.${format==='html'?'html':'jsx'}`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  const link=document.createElement('a');link.href=url;link.download=`ui-moments-${selected.key}.${format==='html'?'html':'jsx'}`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 });
 grid.addEventListener('click',async event=>{
   const card=event.target.closest('.loader-card');if(!card)return;const item=loaders.find(item=>item.key===card.dataset.key);
@@ -146,11 +141,9 @@ grid.addEventListener('click',async event=>{
     if(!await copyWithFeedback(htmlExample(item,values,node.shadowRoot.innerHTML,license,background()))){open(item,card.querySelector('.card-copy'));$('#code').focus();$('#code').select();}
   }else if(event.target.closest('.open-loader'))open(item,card.querySelector('.open-loader'));
 });
-$('#theme').addEventListener('click',()=>{
-  const old=foreground();root.dataset.theme=root.dataset.theme==='light'?'dark':'light';paintTheme();
-  try{localStorage.setItem('ui-moments-theme',root.dataset.theme);}catch{}
+root.addEventListener('ui-moments:theme',event=>{
   for(const [index,card] of [...grid.children].entries())card.querySelector('.sample').replaceChildren(effect(loaders[index],previewProps(loaders[index],foreground())));
-  if(detail.open&&props.color===old){props.color=foreground();controls();paintSelected();}
+  if(detail.open&&props.color===event.detail.previousForeground){props.color=foreground();controls();paintSelected();}
   requestAnimationFrame(syncMotion);
 });
 filter();await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));syncMotion();

@@ -1,16 +1,16 @@
 // 作品清单：首页从这里读取。新增作品时在数组里加一项即可。
 window.WORKS = [
   {
-    id: 'ldrs',
+    id: 'loaders',
     title: '44款加载动效',
-    en: 'LDRS',
+    en: 'Loading Animations',
     summary: '圆环流动、圆点弹跳、线条起伏。完整体验44款动效，调整尺寸、颜色与速度，复制独立HTML或React代码。',
     tags: ['加载', '动效', '代码复制'],
-    demo: 'gallery/ldrs/index.html',
-    video: 'gallery/ldrs/card.mp4',
-    full: 'gallery/ldrs/preview.mp4',
-    poster: 'gallery/ldrs/poster.jpg',
-    source: 'gallery/ldrs',
+    demo: 'gallery/loaders/index.html',
+    video: 'gallery/loaders/card.mp4',
+    full: 'gallery/loaders/preview.mp4',
+    poster: 'gallery/loaders/poster.jpg',
+    source: 'gallery/loaders',
     credit: {
       name: 'Griffin Johnston / UI Ball',
       label: '原作',

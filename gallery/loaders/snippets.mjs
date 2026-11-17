@@ -8,14 +8,7 @@ export function htmlExample(item,props,markup,license,background='#151517'){
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${escapeHtml(item.name)} · LDRS</title>
-<!--
-LDRS 1.1.9 · Griffin Johnston / UI Ball
-https://github.com/GriffinJohnston/ldrs
-独立页面由 UI Moments 生成，动效保留原作实现。
-
-${license.trim()}
--->
+<title>${escapeHtml(item.name)} · UI Moments</title>
 <style>
 body{margin:0;min-height:100svh;display:grid;place-items:center;background:${escapeHtml(background)}}
 </style>
@@ -30,6 +23,13 @@ ${markup}
   </div>
 </div>
 </body>
+<!--
+来源与许可：LDRS 1.1.9 · Griffin Johnston / UI Ball
+https://github.com/GriffinJohnston/ldrs
+独立页面由 UI Moments 生成，动效保留原作实现。
+
+${license.trim()}
+-->
 </html>
 `;
 }
@@ -39,13 +39,7 @@ export function reactExample(item,props,license){
     const attr=name.replaceAll('-','_');
     return `      ${attr}=${typeof value==='number'?`{${value}}`:JSON.stringify(value)}`;
   }).join('\n');
-  return `/*
-LDRS 1.1.9 · Griffin Johnston / UI Ball
-https://github.com/GriffinJohnston/ldrs
-安装：npm install ldrs@1.1.9
-
-${license.trim()}
-*/
+  return `// 安装：npm install ldrs@1.1.9
 import { ${item.react} } from 'ldrs/react';
 import 'ldrs/react/${item.react}.css';
 
@@ -58,5 +52,12 @@ ${attributes}
     </span>
   );
 }
+
+/*
+来源与许可：LDRS 1.1.9 · Griffin Johnston / UI Ball
+https://github.com/GriffinJohnston/ldrs
+
+${license.trim()}
+*/
 `;
 }

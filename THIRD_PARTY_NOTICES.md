@@ -5,8 +5,8 @@
 - 原作者：Griffin Johnston / UI Ball
 - 原仓库：https://github.com/GriffinJohnston/ldrs
 - 原演示：https://uiball.com/ldrs/
-- 许可：MIT，原文见 `gallery/ldrs/vendor/ldrs/LICENSE`
-- 来源：npm发布包ldrs@1.1.9，来源地址与SHA-512记录在 `gallery/ldrs/vendor/source.json`
+- 许可：MIT，原文见 `gallery/loaders/vendor/ldrs/LICENSE`
+- 来源：npm发布包ldrs@1.1.9，来源地址与SHA-512记录在 `gallery/loaders/vendor/source.json`
 - 接入范围：44款动效的Web Components、React组件、CSS、类型及source maps，发布包原样保留
 - 我们增加：分类预览、搜索、参数面板、独立HTML与React代码生成及复制、合集展示录屏
 - 展示视频由原作动效录制，无配乐
@@ -36,3 +36,7 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+## Geist / Geist Mono
+
+界面使用自托管的Geist与Geist Mono字体，按SIL Open Font License 1.1分发；原文分别保留在 `assets/fonts/OFL-Geist.txt` 与 `assets/fonts/OFL-GeistMono.txt`。字体来源：https://github.com/vercel/geist-font 。
