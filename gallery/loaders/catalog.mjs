@@ -609,7 +609,8 @@ export const loaders=[
 
 export const groups=[...new Set(loaders.map(item=>item.group))];
 export function previewProps(item,color,theme){
-  if(item.original)return {...item.defaults,color:theme==='dark'?item.darkColor:item.defaults.color};
+  // 图鉴保持单色：原创动效也使用当前前景色，调色留给详情面板。
+  if(item.original)return {...item.defaults,color};
   if(item.provider)return {...item.defaults,color};
   const wide=["lineWobble","zoomies","dotStream","waveform","treadmill","newtonsCradle","leapfrog"];
   return {...item.defaults,size:item.key==="hatch"?42:wide.includes(item.key)?100:68,color};

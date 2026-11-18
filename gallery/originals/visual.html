@@ -1,14 +1,14 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>原创图形交互 · UI Moments</title>
-  <meta name="description" content="UI Moments 原创图形交互：磁吸点阵、果冻方块、色轮、融合水滴、拉绳灯、抛硬币、涟漪画板与花朵开关。">
+  <title>Visual · UI Moments Originals</title>
+  <meta name="description" content="UI Moments original wordless interactions: magnet grid, jelly cube, merge drops, ripple pad and bloom toggle.">
   <link rel="icon" href="../../assets/icon.svg">
   <script src="../../assets/embed.js"></script>
   <script>
-    // 独立打开时跟随站点主题；嵌入画廊时由 embed.js 决定。
+    // Standalone pages follow the site theme; embedded pages take it from embed.js.
     (() => {
       const root = document.documentElement;
       if (root.dataset.embedded) return;
@@ -20,41 +20,41 @@
   <style>
     @font-face { font-family: Geist; src: url('../../assets/fonts/Geist-latin-wght.woff2') format('woff2'); font-weight: 100 900; font-display: swap; }
 
+    /* Monochrome tokens. Only the Color set adds hues of its own. */
     :root {
       color-scheme: light;
-      --page: #f8f8fb;
-      --surface: #f1f2f8;
+      --page: #fafafa;
+      --surface: #f2f2f3;
       --raised: #fff;
-      --ink: #20212a;
-      --muted: #65697b;
-      --rail: rgb(34 38 81 / .13);
-      --line: rgb(34 38 81 / .12);
-      --accent: #434eaa;
-      --on-accent: #fff;
-      --accent-soft: rgb(67 78 170 / .14);
-      --danger: #c6402f;
-      --danger-soft: rgb(198 64 47 / .14);
-      --shadow: 0 1px 2px rgb(20 22 50 / .14), 0 6px 18px rgb(20 22 50 / .09);
+      --ink: #18181b;
+      --muted: #6b6b72;
+      --rail: rgb(24 24 27 / .11);
+      --line: rgb(24 24 27 / .09);
+      --accent: #18181b;
+      --on-accent: #fafafa;
+      --accent-soft: rgb(24 24 27 / .07);
+      --danger: var(--ink);
+      --danger-soft: rgb(24 24 27 / .1);
+      --shadow: 0 1px 2px rgb(0 0 0 / .1), 0 6px 18px rgb(0 0 0 / .07);
       --spring: cubic-bezier(.3, 1.45, .5, 1);
       --ease: cubic-bezier(.16, 1, .3, 1);
-      --font: Geist, -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+      --font: Geist, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
     }
 
     :root[data-theme="dark"] {
       color-scheme: dark;
-      --page: #111217;
-      --surface: #1c1e27;
-      --raised: #2b2e3d;
-      --ink: #f4f3f8;
-      --muted: #a0a2b5;
-      --rail: rgb(216 219 249 / .15);
-      --line: rgb(216 219 249 / .12);
-      --accent: #bcc4ff;
-      --on-accent: #1c2142;
-      --accent-soft: rgb(188 196 255 / .16);
-      --danger: #ff8f80;
-      --danger-soft: rgb(255 143 128 / .17);
-      --shadow: 0 1px 2px rgb(0 0 0 / .45), 0 8px 24px rgb(0 0 0 / .3);
+      --page: #0b0b0c;
+      --surface: #161618;
+      --raised: #232326;
+      --ink: #fafafa;
+      --muted: #9a9aa1;
+      --rail: rgb(250 250 250 / .13);
+      --line: rgb(250 250 250 / .09);
+      --accent: #fafafa;
+      --on-accent: #0b0b0c;
+      --accent-soft: rgb(250 250 250 / .09);
+      --danger-soft: rgb(250 250 250 / .12);
+      --shadow: 0 1px 2px rgb(0 0 0 / .5), 0 8px 24px rgb(0 0 0 / .35);
     }
 
     *, *::before, *::after { box-sizing: border-box; }
@@ -77,7 +77,7 @@
     .theme:hover { color: var(--ink); }
     .theme svg { width: 15px; height: 15px; }
     .intro { margin: clamp(48px, 10vh, 96px) 0 26px; }
-    .intro p:first-child { margin: 0 0 8px; font: 500 11px/1.4 ui-monospace, monospace; letter-spacing: .12em; color: var(--accent); text-transform: uppercase; }
+    .intro p:first-child { margin: 0 0 8px; font: 500 11px/1.4 ui-monospace, monospace; letter-spacing: .12em; color: var(--muted); text-transform: uppercase; }
     h1 { margin: 0; font-size: clamp(30px, 6vw, 44px); letter-spacing: -.05em; line-height: 1.1; font-weight: 680; }
     .intro p:last-child { margin: 12px 0 0; max-width: 34em; color: var(--muted); }
 
@@ -98,7 +98,7 @@
     .caption p, .credit { margin: 0; font-size: 12px; color: var(--muted); }
     .credit { margin: 40px 0 28px; padding-top: 18px; border-top: 1px solid var(--line); }
 
-    /* 卡片尺寸不同：控件按舞台大小缩放，指针坐标仍以实际尺寸计算。 */
+    /* Controls scale with the card; pointer maths always uses real geometry. */
     .widget { display: grid; place-items: center; transition: scale .3s var(--ease); }
     @container (max-height: 160px) { .widget { scale: .82; } }
     @container (max-width: 215px) { .widget { scale: .8; } }
@@ -106,61 +106,36 @@
     @container (max-width: 180px) { .widget { scale: .66; } }
     @container (min-height: 300px) and (min-width: 440px) { .widget { scale: 1.35; } }
 
-
-    :root { --glow: #f2b33d; --sun: #e09a2b; --moon: #6b74c9; }
-    :root[data-theme="dark"] { --glow: #ffd27a; --sun: #ffc46b; --moon: #bcc4ff; }
+    .sets { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 22px; }
+    .sets a { padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-size: 13px; text-decoration: none; }
+    .sets a:hover { color: var(--ink); border-color: var(--rail); }
+    .sets a[aria-current="page"] { background: var(--ink); border-color: var(--ink); color: var(--page); }
+    [data-embedded] .sets { display: none; }
+    :root { --glow: var(--page); }
     .pad { position: relative; width: 210px; height: 140px; border-radius: 18px; touch-action: none; }
     .pad:focus-visible { outline-offset: 2px; }
 
-    /* 磁吸点阵 */
+    /* Magnet Grid */
     .magnet { display: grid; grid-template-columns: repeat(8, 1fr); place-items: center; padding: 14px; cursor: crosshair; }
     .magnet i { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); opacity: calc(.28 + var(--p, 0) * .72); transform: translate(var(--x, 0), var(--y, 0)) scale(calc(1 + var(--p, 0) * 1.5)); transition: transform .45s var(--spring), opacity .3s; }
 
-    /* 果冻方块 */
+    /* Jelly Cube */
     .jelly { display: grid; place-items: center; cursor: grab; }
     .jelly[data-drag] { cursor: grabbing; }
     .jelly-cube { width: 62px; height: 62px; border-radius: 18px; background: linear-gradient(145deg, color-mix(in srgb, var(--accent) 85%, #fff), var(--accent)); box-shadow: inset 0 -6px 12px rgb(0 0 0 / .12), var(--shadow); will-change: transform; }
     .jelly-cube::after { display: block; width: 18px; height: 9px; margin: 11px 0 0 12px; content: ''; border-radius: 50%; background: rgb(255 255 255 / .55); rotate: -18deg; }
 
-    /* 色轮 */
-    .hue { position: relative; width: 150px; height: 150px; border-radius: 50%; cursor: pointer; touch-action: none; }
-    .hue i { position: absolute; top: 50%; left: 50%; width: 16px; height: 16px; margin: -8px; border-radius: 50%; background: oklch(.72 .15 var(--h)); transform: rotate(var(--h)) translateY(-62px) scale(var(--s, 1)); transition: transform .35s var(--spring), box-shadow .3s; }
-    .hue i[data-on] { --s: 1.45; box-shadow: 0 0 0 3px var(--surface), 0 0 0 4.5px oklch(.72 .15 var(--h)); }
-    .hue-core { position: absolute; inset: 40px; border-radius: 50%; background: oklch(.72 .15 var(--hue)); box-shadow: 0 10px 28px -6px oklch(.6 .17 var(--hue) / .7); transition: background .25s, box-shadow .25s; }
-
-    /* 融合水滴 */
+    /* Merge Drops */
     .drops { cursor: grab; }
     .drops svg { width: 100%; height: 100%; overflow: visible; }
     .drops circle { fill: var(--accent); }
 
-    /* 拉绳灯 */
-    .lamp { position: relative; width: 120px; height: 150px; }
-    .lamp-shade { position: absolute; top: 6px; left: 50%; width: 64px; height: 34px; margin-left: -32px; border-radius: 32px 32px 8px 8px; background: var(--raised); box-shadow: var(--shadow); }
-    .lamp-bulb { position: absolute; top: 34px; left: 50%; width: 22px; height: 22px; margin-left: -11px; border-radius: 50%; background: var(--rail); transition: background .3s, box-shadow .4s; }
-    .lamp-light { position: absolute; top: 40px; left: 50%; width: 150px; height: 120px; margin-left: -75px; background: radial-gradient(ellipse 50% 70% at 50% 0, color-mix(in srgb, var(--glow) 45%, transparent), transparent 70%); clip-path: polygon(38% 0, 62% 0, 100% 100%, 0 100%); opacity: 0; transition: opacity .35s; pointer-events: none; }
-    .lamp[data-on] .lamp-bulb { background: var(--glow); box-shadow: 0 0 18px 6px color-mix(in srgb, var(--glow) 60%, transparent); }
-    .lamp[data-on] .lamp-light { opacity: 1; }
-    .lamp-cord { position: absolute; top: 30px; left: calc(50% + 24px); width: 2px; height: calc(52px + var(--pull, 0px)); background: var(--muted); transition: height .6s var(--spring); }
-    .lamp-bead { position: absolute; top: calc(78px + var(--pull, 0px)); left: calc(50% + 25px); width: 16px; height: 20px; margin-left: -8px; padding: 0; border: 0; border-radius: 8px; background: var(--muted); cursor: grab; touch-action: none; transition: top .6s var(--spring), background .2s; }
-    .lamp-bead:hover { background: var(--ink); }
-    .lamp[data-drag] .lamp-cord, .lamp[data-drag] .lamp-bead { transition: none; }
-
-    /* 抛硬币 */
-    .coin-wrap { position: relative; display: grid; place-items: center; width: 120px; height: 150px; perspective: 500px; }
-    .coin { position: relative; width: 72px; height: 72px; padding: 0; border: 0; border-radius: 50%; background: none; transform-style: preserve-3d; }
-    .coin-face { position: absolute; inset: 0; display: grid; place-items: center; border-radius: 50%; backface-visibility: hidden; box-shadow: inset 0 0 0 4px rgb(0 0 0 / .08), inset 0 -5px 10px rgb(0 0 0 / .12); }
-    .coin-sun { background: var(--sun); }
-    .coin-moon { background: var(--moon); transform: rotateY(180deg); }
-    .coin-sun::before { width: 26px; height: 26px; content: ''; border-radius: 50%; background: #fff; opacity: .9; box-shadow: 0 0 0 5px rgb(255 255 255 / .25); }
-    .coin-moon::before { width: 28px; height: 28px; content: ''; border-radius: 50%; box-shadow: inset -8px 4px 0 0 #fff; opacity: .9; rotate: -20deg; }
-    .coin-shadow { position: absolute; bottom: 14px; width: 54px; height: 10px; border-radius: 50%; background: rgb(0 0 0 / .18); filter: blur(2px); }
-
-    /* 涟漪画板 */
+    /* Ripple Pad */
     .ripples { overflow: hidden; background: color-mix(in srgb, var(--accent) 7%, transparent); box-shadow: inset 0 0 0 1px var(--line); cursor: pointer; }
     .ripples b { position: absolute; width: var(--d); height: var(--d); margin: calc(var(--d) / -2); border: 2px solid var(--accent); border-radius: 50%; pointer-events: none; }
     .ripples .seed { position: absolute; width: 10px; height: 10px; margin: -5px; border-radius: 50%; background: var(--accent); pointer-events: none; scale: var(--grow, 1); transition: scale .1s linear; }
 
-    /* 花朵开关 */
+    /* Bloom Toggle */
     .bloom { position: relative; width: 110px; height: 110px; padding: 0; border: 0; border-radius: 50%; background: none; }
     .bloom i { position: absolute; top: 50%; left: 50%; width: 30px; height: 46px; margin: -46px 0 0 -15px; border-radius: 50% 50% 50% 50% / 62% 62% 38% 38%; background: color-mix(in srgb, var(--accent) 70%, var(--raised)); transform-origin: 50% 100%; transform: rotate(var(--r)) scale(.3, .2); opacity: .5; transition: transform .55s var(--spring) calc(var(--n) * 35ms), opacity .3s, background .3s; }
     .bloom[aria-checked="true"] i { transform: rotate(var(--r)) scale(1); opacity: 1; background: var(--accent); }
@@ -192,71 +167,52 @@
     <header class="masthead">
       <a class="brand" href="../../">UI Moments</a>
       <nav>
-        <a class="site-link" id="gallery-link" href="../../">图鉴 ↗</a>
-        <a class="site-link" id="all-controls" href="./visual.html" hidden>本页全部控件 ↗</a>
-        <button class="theme" id="theme" type="button" aria-label="切换深浅色"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="M10 3a7 7 0 0 0 0 14Z" fill="currentColor"/></svg></button>
+        <a class="site-link" id="gallery-link" href="../../">Gallery ↗</a>
+        <a class="site-link" id="all-controls" href="./visual.html" hidden>Whole set ↗</a>
+        <button class="theme" id="theme" type="button" aria-label="Toggle theme"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="M10 3a7 7 0 0 0 0 14Z" fill="currentColor"/></svg></button>
       </nav>
     </header>
     <main>
       <header class="intro">
         <p>UI Moments Originals</p>
-        <h1>原创图形交互</h1>
-        <p>八个没有文字的交互。只靠形状、颜色和运动说明状态，全部可以用键盘操作。</p>
+        <h1>Visual</h1>
+        <p>Wordless interactions that explain themselves through shape and motion alone. All keyboard accessible.</p>
       </header>
-
+      <nav class="sets" aria-label="Original sets"><a href="./index.html">Core</a><a href="./visual.html" aria-current="page">Visual</a><a href="./motion.html">Motion</a><a href="./actions.html">Actions</a><a href="./inputs.html">Forms</a><a href="./color.html">Color</a></nav>
 
       <div class="samples">
-
         <section class="sample" id="magnet-grid" aria-labelledby="magnet-title">
-          <div class="stage"><div class="widget"><div class="pad magnet" tabindex="0" role="img" aria-label="磁吸点阵：移动指针或用方向键，圆点会朝它聚拢"></div></div></div>
-          <div class="caption"><h2 id="magnet-title">磁吸点阵</h2><p>移动指针</p></div>
+          <div class="stage"><div class="widget"><div class="pad magnet" tabindex="0" role="img" aria-label="Magnet grid: move the pointer or use the arrow keys and the dots gather toward it"></div></div></div>
+          <div class="caption"><h2 id="magnet-title">Magnet Grid</h2><p>Move the pointer</p></div>
         </section>
 
         <section class="sample" id="jelly-pad" aria-labelledby="jelly-title">
-          <div class="stage"><div class="widget"><div class="pad jelly" tabindex="0" role="img" aria-label="果冻方块：拖动或用方向键推它，松手后晃动回弹"><span class="jelly-cube"></span></div></div></div>
-          <div class="caption"><h2 id="jelly-title">果冻方块</h2><p>拖动松手</p></div>
+          <div class="stage"><div class="widget"><div class="pad jelly" tabindex="0" role="img" aria-label="Jelly cube: drag it or push it with the arrow keys; it wobbles back"><span class="jelly-cube"></span></div></div></div>
+          <div class="caption"><h2 id="jelly-title">Jelly Cube</h2><p>Drag and release</p></div>
         </section>
 
-        <section class="sample" id="hue-orbit" aria-labelledby="hue-title">
-          <div class="stage"><div class="widget"><div class="hue" role="slider" tabindex="0" aria-labelledby="hue-title" aria-valuemin="0" aria-valuemax="330" aria-valuenow="270" style="--hue:270"><span class="hue-core"></span></div></div></div>
-          <div class="caption"><h2 id="hue-title">色轮</h2><p>绕圈选色</p></div>
-        </section>
 
         <section class="sample" id="merge-drops" aria-labelledby="drops-title">
-          <div class="stage"><div class="widget"><div class="pad drops" tabindex="0" role="img" aria-label="融合水滴：把小水滴拖向大水滴，它们会融在一起">
+          <div class="stage"><div class="widget"><div class="pad drops" tabindex="0" role="img" aria-label="Merge drops: drag the small drop into the big one and they merge">
             <svg viewBox="0 0 210 140" aria-hidden="true"><defs><filter id="goo"><feGaussianBlur in="SourceGraphic" stdDeviation="7"/><feColorMatrix values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -9"/></filter></defs><g filter="url(#goo)"><circle class="big" cx="78" cy="70" r="30"/><circle class="small" cx="150" cy="70" r="17"/></g></svg>
           </div></div></div>
-          <div class="caption"><h2 id="drops-title">融合水滴</h2><p>拖近试试</p></div>
+          <div class="caption"><h2 id="drops-title">Merge Drops</h2><p>Drag it closer</p></div>
         </section>
 
-        <section class="sample" id="pull-cord" aria-labelledby="cord-title">
-          <div class="stage"><div class="widget"><div class="lamp">
-            <span class="lamp-light" aria-hidden="true"></span><span class="lamp-shade" aria-hidden="true"></span><span class="lamp-bulb" aria-hidden="true"></span><span class="lamp-cord" aria-hidden="true"></span>
-            <button class="lamp-bead" type="button" role="switch" aria-checked="false" aria-labelledby="cord-title"></button>
-          </div></div></div>
-          <div class="caption"><h2 id="cord-title">拉绳灯</h2><p>往下拉</p></div>
-        </section>
 
-        <section class="sample" id="flip-coin" aria-labelledby="coin-title">
-          <div class="stage"><div class="widget"><div class="coin-wrap">
-            <span class="coin-shadow" aria-hidden="true"></span>
-            <button class="coin" type="button" aria-label="抛硬币，当前太阳面"><span class="coin-face coin-sun"></span><span class="coin-face coin-moon"></span></button>
-          </div></div></div>
-          <div class="caption"><h2 id="coin-title">抛硬币</h2><p>点按抛起</p></div>
-        </section>
 
         <section class="sample" id="ripple-pad" aria-labelledby="ripple-title">
-          <div class="stage"><div class="widget"><div class="pad ripples" tabindex="0" role="button" aria-label="涟漪画板：点按产生涟漪，按得越久涟漪越大"></div></div></div>
-          <div class="caption"><h2 id="ripple-title">涟漪画板</h2><p>点按或长按</p></div>
+          <div class="stage"><div class="widget"><div class="pad ripples" tabindex="0" role="button" aria-label="Ripple pad: tap to make ripples; hold longer for bigger ones"></div></div></div>
+          <div class="caption"><h2 id="ripple-title">Ripple Pad</h2><p>Tap or hold</p></div>
         </section>
 
         <section class="sample" id="bloom-toggle" aria-labelledby="bloom-title">
           <div class="stage"><div class="widget"><button class="bloom" type="button" role="switch" aria-checked="false" aria-labelledby="bloom-title"></button></div></div>
-          <div class="caption"><h2 id="bloom-title">花朵开关</h2><p>点按开花</p></div>
+          <div class="caption"><h2 id="bloom-title">Bloom Toggle</h2><p>Tap to bloom</p></div>
         </section>
       </div>
     </main>
-    <footer class="credit">八个图形交互均由 UI Moments 原创设计与实现，按项目 <a href="../../LICENSE">MIT 许可证</a> 发布。<a href="./index.html">更多原创控件 ↗</a></footer>
+    <footer class="credit">Designed and built by UI Moments. Released under the <a href="../../LICENSE">MIT License</a>.</footer>
   </div>
 
   <script>
@@ -268,7 +224,7 @@
     const $$ = (selector, scope = document) => Array.from(scope.querySelectorAll(selector));
     const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
-    // 单个控件：独立页面用 #id，画廊嵌入用 ?sample=id。
+    // One control per view: #id when opened directly, ?sample=id when embedded in the gallery.
     const sections = $$('.sample');
     function showSelectedSample() {
       const id = location.hash.slice(1) || (root.dataset.embedded && params.get('sample'));
@@ -286,7 +242,7 @@
       try { localStorage.setItem('ui-moments-theme', root.dataset.theme); } catch {}
     });
 
-    // 弹簧动画：只在运动时请求帧，静止后自动停下。
+    // Spring loop: requests frames only while moving and stops once at rest.
     function spring({ k = 170, c = 13, onFrame, isAtRest }) {
       let frame = 0, last = 0;
       function step(now) {
@@ -303,7 +259,7 @@
       };
     }
 
-    /* ---------- 磁吸点阵：靠近指针的圆点被吸过去并变大 ---------- */
+    /* ---------- Magnet Grid ---------- */
     {
       const pad = $('.magnet');
       const dots = Array.from({ length: 40 }, () => pad.appendChild(document.createElement('i')));
@@ -342,7 +298,7 @@
       });
     }
 
-    /* ---------- 果冻方块：拖动时沿速度方向拉伸，松手后弹簧回中并晃动 ---------- */
+    /* ---------- Jelly Cube ---------- */
     {
       const pad = $('.jelly');
       const cube = $('.jelly-cube', pad);
@@ -399,43 +355,7 @@
       });
     }
 
-    /* ---------- 色轮：绕圈拖动选色，中心色块随之变色并轻轻鼓起 ---------- */
-    {
-      const wheel = $('.hue');
-      const core = $('.hue-core', wheel);
-      const swatches = Array.from({ length: 12 }, (_, index) => {
-        const swatch = document.createElement('i');
-        swatch.style.setProperty('--h', index * 30 + 'deg');
-        return wheel.appendChild(swatch);
-      });
-      let hue = 270, dragging = false;
-      function set(next, pulse = true) {
-        next = ((Math.round(next / 30) * 30) % 360 + 360) % 360;
-        const changed = next !== hue;
-        hue = next;
-        wheel.style.setProperty('--hue', hue);
-        wheel.setAttribute('aria-valuenow', hue);
-        wheel.setAttribute('aria-valuetext', `色相 ${hue} 度`);
-        swatches.forEach((swatch, index) => swatch.toggleAttribute('data-on', index * 30 === hue));
-        if (changed && pulse && motionEnabled()) core.animate([{ scale: '1' }, { scale: '1.12' }, { scale: '1' }], { duration: 320, easing: 'cubic-bezier(.3,1.5,.5,1)' });
-      }
-      function fromPointer(event) {
-        const box = wheel.getBoundingClientRect();
-        set(Math.atan2(event.clientX - (box.left + box.width / 2), -(event.clientY - (box.top + box.height / 2))) * 180 / Math.PI);
-      }
-      wheel.addEventListener('pointerdown', event => { dragging = true; wheel.setPointerCapture(event.pointerId); fromPointer(event); });
-      wheel.addEventListener('pointermove', event => { if (dragging) fromPointer(event); });
-      for (const type of ['pointerup', 'pointercancel']) wheel.addEventListener(type, () => { dragging = false; });
-      wheel.addEventListener('keydown', event => {
-        const delta = { ArrowRight: 30, ArrowUp: 30, ArrowLeft: -30, ArrowDown: -30 }[event.key];
-        if (delta === undefined) return;
-        event.preventDefault();
-        set(hue + delta);
-      });
-      set(hue, false);
-    }
-
-    /* ---------- 融合水滴：小水滴靠近时被吸进去，松手后拉丝弹回原位 ---------- */
+    /* ---------- Merge Drops ---------- */
     {
       const pad = $('.drops');
       const svg = $('svg', pad);
@@ -477,74 +397,7 @@
       });
     }
 
-    /* ---------- 拉绳灯：把绳子往下拉，松手弹回并切换灯光 ---------- */
-    {
-      const lamp = $('.lamp');
-      const bead = $('.lamp-bead', lamp);
-      let drag = null;
-      function toggle() {
-        const on = bead.getAttribute('aria-checked') !== 'true';
-        bead.setAttribute('aria-checked', String(on));
-        lamp.toggleAttribute('data-on', on);
-      }
-      function pull(px) { lamp.style.setProperty('--pull', px + 'px'); }
-      bead.addEventListener('pointerdown', event => {
-        if (event.button !== 0) return;
-        event.preventDefault();
-        bead.setPointerCapture(event.pointerId);
-        lamp.dataset.drag = '';
-        drag = { id: event.pointerId, y: event.clientY, moved: 0 };
-      });
-      bead.addEventListener('pointermove', event => {
-        if (drag?.id !== event.pointerId) return;
-        drag.moved = clamp(event.clientY - drag.y, 0, 46);
-        pull(drag.moved);
-      });
-      for (const type of ['pointerup', 'pointercancel']) bead.addEventListener(type, event => {
-        if (drag?.id !== event.pointerId) return;
-        const far = drag.moved > 18 || (type === 'pointerup' && drag.moved < 3);
-        drag = null;
-        delete lamp.dataset.drag;
-        pull(0);
-        if (far) toggle();
-      });
-      bead.addEventListener('click', event => {
-        if (event.detail !== 0) return;
-        toggle();
-        if (!motionEnabled()) return;
-        lamp.dataset.drag = '';
-        pull(30);
-        requestAnimationFrame(() => requestAnimationFrame(() => { delete lamp.dataset.drag; pull(0); }));
-      });
-    }
-
-    /* ---------- 抛硬币：抛起旋转若干圈，落地停在太阳或月亮 ---------- */
-    {
-      const coin = $('.coin');
-      const shadow = $('.coin-shadow');
-      let side = 0, busy = false;
-      coin.addEventListener('click', () => {
-        if (busy) return;
-        const next = Math.random() < .5 ? 0 : 1;
-        const turns = 4 + next - side + (Math.random() < .5 ? 2 : 0);
-        const from = side * 180, to = from + turns * 180;
-        side = next;
-        coin.setAttribute('aria-label', `抛硬币，当前${side ? '月亮' : '太阳'}面`);
-        if (!motionEnabled()) { coin.style.transform = `rotateY(${to}deg)`; return; }
-        busy = true;
-        const toss = coin.animate([
-          { transform: `translateY(0) rotateY(${from}deg)` },
-          { transform: `translateY(-58px) rotateY(${(from + to) / 2}deg)`, easing: 'cubic-bezier(.2,.6,.4,1)' },
-          { transform: `translateY(0) rotateY(${to}deg)`, easing: 'cubic-bezier(.6,0,.8,.4)' },
-          { transform: `translateY(-6px) rotateY(${to}deg)`, offset: .9 },
-          { transform: `translateY(0) rotateY(${to}deg)` },
-        ], { duration: 900, fill: 'forwards' });
-        shadow.animate([{ scale: '1', opacity: 1 }, { scale: '.5', opacity: .4 }, { scale: '1', opacity: 1 }], { duration: 820 });
-        toss.onfinish = () => { coin.style.transform = `rotateY(${to % 360}deg)`; toss.cancel(); busy = false; };
-      });
-    }
-
-    /* ---------- 涟漪画板：点按落下涟漪，按住越久涟漪越大 ---------- */
+    /* ---------- Ripple Pad ---------- */
     {
       const pad = $('.ripples');
       let hold = null;
@@ -593,7 +446,7 @@
       });
     }
 
-    /* ---------- 花朵开关：花瓣依次张开，花心亮起；关闭时收拢成花苞 ---------- */
+    /* ---------- Bloom Toggle ---------- */
     {
       const bloom = $('.bloom');
       Array.from({ length: 6 }, (_, index) => {

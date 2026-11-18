@@ -1,14 +1,14 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>原创操作反馈 · UI Moments</title>
-  <meta name="description" content="UI Moments 原创操作反馈：复制按钮、点赞爆发、纸飞机发送、下载进度环、验证码与通知铃。">
+  <title>Actions · UI Moments Originals</title>
+  <meta name="description" content="UI Moments original action feedback: copy button, like burst, paper plane, download ring, code shake and bell toggle.">
   <link rel="icon" href="../../assets/icon.svg">
   <script src="../../assets/embed.js"></script>
   <script>
-    // 独立打开时跟随站点主题；嵌入画廊时由 embed.js 决定。
+    // Standalone pages follow the site theme; embedded pages take it from embed.js.
     (() => {
       const root = document.documentElement;
       if (root.dataset.embedded) return;
@@ -20,41 +20,41 @@
   <style>
     @font-face { font-family: Geist; src: url('../../assets/fonts/Geist-latin-wght.woff2') format('woff2'); font-weight: 100 900; font-display: swap; }
 
+    /* Monochrome tokens. Only the Color set adds hues of its own. */
     :root {
       color-scheme: light;
-      --page: #f8f8fb;
-      --surface: #f1f2f8;
+      --page: #fafafa;
+      --surface: #f2f2f3;
       --raised: #fff;
-      --ink: #20212a;
-      --muted: #65697b;
-      --rail: rgb(34 38 81 / .13);
-      --line: rgb(34 38 81 / .12);
-      --accent: #434eaa;
-      --on-accent: #fff;
-      --accent-soft: rgb(67 78 170 / .14);
-      --danger: #c6402f;
-      --danger-soft: rgb(198 64 47 / .14);
-      --shadow: 0 1px 2px rgb(20 22 50 / .14), 0 6px 18px rgb(20 22 50 / .09);
+      --ink: #18181b;
+      --muted: #6b6b72;
+      --rail: rgb(24 24 27 / .11);
+      --line: rgb(24 24 27 / .09);
+      --accent: #18181b;
+      --on-accent: #fafafa;
+      --accent-soft: rgb(24 24 27 / .07);
+      --danger: var(--ink);
+      --danger-soft: rgb(24 24 27 / .1);
+      --shadow: 0 1px 2px rgb(0 0 0 / .1), 0 6px 18px rgb(0 0 0 / .07);
       --spring: cubic-bezier(.3, 1.45, .5, 1);
       --ease: cubic-bezier(.16, 1, .3, 1);
-      --font: Geist, -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+      --font: Geist, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
     }
 
     :root[data-theme="dark"] {
       color-scheme: dark;
-      --page: #111217;
-      --surface: #1c1e27;
-      --raised: #2b2e3d;
-      --ink: #f4f3f8;
-      --muted: #a0a2b5;
-      --rail: rgb(216 219 249 / .15);
-      --line: rgb(216 219 249 / .12);
-      --accent: #bcc4ff;
-      --on-accent: #1c2142;
-      --accent-soft: rgb(188 196 255 / .16);
-      --danger: #ff8f80;
-      --danger-soft: rgb(255 143 128 / .17);
-      --shadow: 0 1px 2px rgb(0 0 0 / .45), 0 8px 24px rgb(0 0 0 / .3);
+      --page: #0b0b0c;
+      --surface: #161618;
+      --raised: #232326;
+      --ink: #fafafa;
+      --muted: #9a9aa1;
+      --rail: rgb(250 250 250 / .13);
+      --line: rgb(250 250 250 / .09);
+      --accent: #fafafa;
+      --on-accent: #0b0b0c;
+      --accent-soft: rgb(250 250 250 / .09);
+      --danger-soft: rgb(250 250 250 / .12);
+      --shadow: 0 1px 2px rgb(0 0 0 / .5), 0 8px 24px rgb(0 0 0 / .35);
     }
 
     *, *::before, *::after { box-sizing: border-box; }
@@ -77,7 +77,7 @@
     .theme:hover { color: var(--ink); }
     .theme svg { width: 15px; height: 15px; }
     .intro { margin: clamp(48px, 10vh, 96px) 0 26px; }
-    .intro p:first-child { margin: 0 0 8px; font: 500 11px/1.4 ui-monospace, monospace; letter-spacing: .12em; color: var(--accent); text-transform: uppercase; }
+    .intro p:first-child { margin: 0 0 8px; font: 500 11px/1.4 ui-monospace, monospace; letter-spacing: .12em; color: var(--muted); text-transform: uppercase; }
     h1 { margin: 0; font-size: clamp(30px, 6vw, 44px); letter-spacing: -.05em; line-height: 1.1; font-weight: 680; }
     .intro p:last-child { margin: 12px 0 0; max-width: 34em; color: var(--muted); }
 
@@ -98,7 +98,7 @@
     .caption p, .credit { margin: 0; font-size: 12px; color: var(--muted); }
     .credit { margin: 40px 0 28px; padding-top: 18px; border-top: 1px solid var(--line); }
 
-    /* 卡片尺寸不同：控件按舞台大小缩放，指针坐标仍以实际尺寸计算。 */
+    /* Controls scale with the card; pointer maths always uses real geometry. */
     .widget { display: grid; place-items: center; transition: scale .3s var(--ease); }
     @container (max-height: 160px) { .widget { scale: .82; } }
     @container (max-width: 215px) { .widget { scale: .8; } }
@@ -106,9 +106,13 @@
     @container (max-width: 180px) { .widget { scale: .66; } }
     @container (min-height: 300px) and (min-width: 440px) { .widget { scale: 1.35; } }
 
-
-    :root { --love: #d63a6a; --ok: #2c8655; --warn: #c6402f; }
-    :root[data-theme="dark"] { --love: #ff8fb1; --ok: #7fe0a8; --warn: #ff8f80; }
+    .sets { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 22px; }
+    .sets a { padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-size: 13px; text-decoration: none; }
+    .sets a:hover { color: var(--ink); border-color: var(--rail); }
+    .sets a[aria-current="page"] { background: var(--ink); border-color: var(--ink); color: var(--page); }
+    [data-embedded] .sets { display: none; }
+    :root { --love: var(--ink); --ok: var(--ink); --warn: var(--ink); }
+    .code[data-state="error"] input { border-style: dashed; }
     .pill { display: inline-flex; align-items: center; justify-content: center; gap: 9px; height: 46px; padding: 0 20px; border: 1px solid var(--line); border-radius: 23px; background: var(--raised); box-shadow: var(--shadow); font-size: 14px; font-weight: 620; transition: scale .3s var(--spring), background .3s, color .3s, border-color .3s; }
     .pill:active { scale: .95; transition-duration: .1s; }
     .pill svg { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
@@ -118,7 +122,7 @@
     [data-done] .swap > :first-child { translate: 0 -110%; opacity: 0; }
     [data-done] .swap > :last-child { translate: 0 0; opacity: 1; }
 
-    /* 复制按钮 */
+    /* Copy Button */
     .copy[data-done] { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 40%, transparent); }
     .copy-icon { display: grid; }
     .copy-icon svg { grid-area: 1 / 1; transition: scale .35s var(--spring), opacity .2s; }
@@ -126,7 +130,7 @@
     .copy[data-done] .copy-icon .clip { scale: .4; opacity: 0; }
     .copy[data-done] .copy-icon .check { stroke-dashoffset: 0; }
 
-    /* 点赞爆发 */
+    /* Like Burst */
     .like-wrap { display: flex; align-items: center; gap: 10px; }
     .like { position: relative; display: grid; place-items: center; width: 54px; height: 54px; padding: 0; border: 1px solid var(--line); border-radius: 50%; background: var(--raised); box-shadow: var(--shadow); color: var(--muted); transition: color .25s; }
     .like svg { width: 24px; height: 24px; fill: transparent; stroke: currentColor; stroke-width: 1.8; stroke-linejoin: round; transition: fill .25s; }
@@ -138,13 +142,13 @@
     .like-sparks i:nth-child(even) { background: var(--accent); width: 4px; height: 4px; margin: -2px; }
     .like-count { display: grid; height: 22px; overflow: hidden; font-size: 16px; font-weight: 650; font-variant-numeric: tabular-nums; min-width: 34px; }
 
-    /* 纸飞机发送 */
+    /* Paper Plane */
     .send { min-width: 120px; background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
     .send-plane { display: grid; transition: width .35s var(--spring), margin .35s var(--spring); width: 18px; }
     .send[data-done] .send-plane { width: 0; margin-right: -9px; }
     .send[data-done] { background: var(--raised); color: var(--accent); }
 
-    /* 下载进度环 */
+    /* Download Ring */
     .dl { position: relative; width: 124px; padding: 0; overflow: hidden; transition: width .45s var(--spring), scale .3s var(--spring), color .3s, background .3s; }
     .dl[data-state="loading"], .dl[data-state="done"] { width: 46px; }
     .dl-label { display: inline-flex; align-items: center; gap: 8px; transition: opacity .2s; white-space: nowrap; }
@@ -159,7 +163,7 @@
     .dl[data-state="done"] { background: var(--ok); border-color: var(--ok); color: var(--page); }
     .dl[data-state="done"] .dl-check { opacity: 1; stroke-dashoffset: 0; }
 
-    /* 验证码 */
+    /* Code Shake */
     .code { display: grid; justify-items: center; gap: 10px; }
     .code-boxes { display: flex; gap: 8px; }
     .code-boxes input { width: 42px; height: 50px; padding: 0; border: 1.5px solid var(--line); border-radius: 12px; background: var(--raised); text-align: center; font-size: 22px; font-weight: 650; caret-color: var(--accent); outline: 0; transition: border-color .2s, background .3s, color .3s, box-shadow .2s; }
@@ -170,7 +174,7 @@
     .code[data-state="error"] .code-hint { color: var(--warn); }
     .code[data-state="ok"] .code-hint { color: var(--ok); }
 
-    /* 通知铃 */
+    /* Bell Toggle */
     .bell-wrap { display: grid; justify-items: center; gap: 10px; }
     .bell { position: relative; display: grid; place-items: center; width: 58px; height: 58px; padding: 0; border: 1px solid var(--line); border-radius: 18px; background: var(--raised); box-shadow: var(--shadow); color: var(--muted); transition: color .3s, scale .3s var(--spring); }
     .bell:active { scale: .93; }
@@ -179,7 +183,7 @@
     .bell .body, .bell .clapper { transform-box: view-box; transform-origin: 12px 3px; }
     .bell .slash { stroke-dasharray: 26; stroke-dashoffset: 26; transition: stroke-dashoffset .35s var(--ease); }
     .bell[aria-pressed="false"] .slash { stroke-dashoffset: 0; }
-    .bell-badge { position: absolute; top: -6px; right: -6px; display: grid; place-items: center; min-width: 20px; height: 20px; padding: 0 5px; border: 2px solid var(--surface); border-radius: 10px; background: var(--warn); color: #fff; font-size: 11px; font-weight: 700; transition: scale .35s var(--spring); }
+    .bell-badge { position: absolute; top: -6px; right: -6px; display: grid; place-items: center; min-width: 20px; height: 20px; padding: 0 5px; border: 2px solid var(--surface); border-radius: 10px; background: var(--ink); color: var(--page); font-size: 11px; font-weight: 700; transition: scale .35s var(--spring); }
     .bell[aria-pressed="false"] .bell-badge { scale: 0; }
     .bell-state { margin: 0; font-size: 12px; color: var(--muted); }
 
@@ -207,80 +211,79 @@
     <header class="masthead">
       <a class="brand" href="../../">UI Moments</a>
       <nav>
-        <a class="site-link" id="gallery-link" href="../../">图鉴 ↗</a>
-        <a class="site-link" id="all-controls" href="./actions.html" hidden>本页全部控件 ↗</a>
-        <button class="theme" id="theme" type="button" aria-label="切换深浅色"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="M10 3a7 7 0 0 0 0 14Z" fill="currentColor"/></svg></button>
+        <a class="site-link" id="gallery-link" href="../../">Gallery ↗</a>
+        <a class="site-link" id="all-controls" href="./actions.html" hidden>Whole set ↗</a>
+        <button class="theme" id="theme" type="button" aria-label="Toggle theme"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="M10 3a7 7 0 0 0 0 14Z" fill="currentColor"/></svg></button>
       </nav>
     </header>
     <main>
       <header class="intro">
         <p>UI Moments Originals</p>
-        <h1>原创操作反馈</h1>
-        <p>六个点按后给出清晰反馈的按钮与输入。动画只用来说明发生了什么，关掉动效时状态依然清楚。</p>
+        <h1>Actions</h1>
+        <p>Buttons and inputs that answer clearly when you act. With motion off, the state still reads at a glance.</p>
       </header>
-
+      <nav class="sets" aria-label="Original sets"><a href="./index.html">Core</a><a href="./visual.html">Visual</a><a href="./motion.html">Motion</a><a href="./actions.html" aria-current="page">Actions</a><a href="./inputs.html">Forms</a><a href="./color.html">Color</a></nav>
 
       <div class="samples">
-
         <section class="sample" id="copy-morph" aria-labelledby="copy-title">
           <div class="stage"><div class="widget">
             <button class="pill copy" type="button">
               <span class="copy-icon" aria-hidden="true"><svg class="clip" viewBox="0 0 20 20"><rect x="6.5" y="6.5" width="10" height="10" rx="2.5"/><path d="M13.5 6.5V5a1.5 1.5 0 0 0-1.5-1.5H5A1.5 1.5 0 0 0 3.5 5v7A1.5 1.5 0 0 0 5 13.5h1.5"/></svg><svg class="check" viewBox="0 0 20 20"><path d="M4.5 10.5l3.5 3.5 7.5-8"/></svg></span>
-              <span class="swap"><span>复制链接</span><span aria-hidden="true">已复制</span></span>
+              <span class="swap"><span>Copy link</span><span aria-hidden="true">Copied</span></span>
             </button>
             <span class="sr-only" id="copy-status" aria-live="polite"></span>
           </div></div>
-          <div class="caption"><h2 id="copy-title">复制按钮</h2><p>点按复制</p></div>
+          <div class="caption"><h2 id="copy-title">Copy Button</h2><p>Tap to copy</p></div>
         </section>
 
         <section class="sample" id="like-burst" aria-labelledby="like-title">
           <div class="stage"><div class="widget like-wrap">
-            <button class="like" type="button" aria-pressed="false" aria-label="喜欢">
+            <button class="like" type="button" aria-pressed="false" aria-label="Like">
               <span class="like-ring" aria-hidden="true"></span>
               <span class="like-sparks" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.4a4.3 4.3 0 0 1 7.5 2.9c0 5.6-7.5 10.2-7.5 10.2Z"/></svg>
             </button>
             <span class="like-count" aria-live="polite"><span>128</span></span>
           </div></div>
-          <div class="caption"><h2 id="like-title">点赞爆发</h2><p>点按喜欢</p></div>
+          <div class="caption"><h2 id="like-title">Like Burst</h2><p>Tap to like</p></div>
         </section>
 
         <section class="sample" id="paper-plane" aria-labelledby="send-title">
           <div class="stage"><div class="widget">
             <button class="pill send" type="button">
               <span class="send-plane" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M17.5 2.5 9 11M17.5 2.5l-5 15-3.5-6.5L2.5 7.5l15-5Z"/></svg></span>
-              <span class="swap"><span>发送</span><span aria-hidden="true">已发送</span></span>
+              <span class="swap"><span>Send</span><span aria-hidden="true">Sent</span></span>
             </button>
             <span class="sr-only" id="send-status" aria-live="polite"></span>
           </div></div>
-          <div class="caption"><h2 id="send-title">纸飞机发送</h2><p>点按发送</p></div>
+          <div class="caption"><h2 id="send-title">Paper Plane</h2><p>Tap to send</p></div>
         </section>
 
         <section class="sample" id="download-ring" aria-labelledby="dl-title">
           <div class="stage"><div class="widget">
             <button class="pill dl" type="button" data-state="idle">
-              <span class="dl-label"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v10m0 0-4-4m4 4 4-4M4 16.5h12"/></svg>下载</span>
+              <span class="dl-label"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v10m0 0-4-4m4 4 4-4M4 16.5h12"/></svg>Download</span>
               <svg class="dl-ring" viewBox="0 0 32 32" aria-hidden="true"><circle class="track" cx="16" cy="16" r="13"/><circle class="bar" cx="16" cy="16" r="13"/></svg>
               <svg class="dl-check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4.5 10.5l3.5 3.5 7.5-8"/></svg>
             </button>
             <span class="sr-only" id="dl-status" aria-live="polite"></span>
           </div></div>
-          <div class="caption"><h2 id="dl-title">下载进度环</h2><p>点按下载</p></div>
+          <div class="caption"><h2 id="dl-title">Download Ring</h2><p>Tap to download</p></div>
         </section>
 
         <section class="sample" id="code-shake" aria-labelledby="code-title">
           <div class="stage"><div class="widget">
             <div class="code">
               <div class="code-boxes" role="group" aria-labelledby="code-title" aria-describedby="code-hint">
-                <input inputmode="numeric" autocomplete="one-time-code" maxlength="1" aria-label="第 1 位">
-                <input inputmode="numeric" maxlength="1" aria-label="第 2 位">
-                <input inputmode="numeric" maxlength="1" aria-label="第 3 位">
-                <input inputmode="numeric" maxlength="1" aria-label="第 4 位">
+                <input inputmode="numeric" autocomplete="one-time-code" maxlength="1" aria-label="Digit 1">
+                <input inputmode="numeric" maxlength="1" aria-label="Digit 2">
+                <input inputmode="numeric" maxlength="1" aria-label="Digit 3">
+                <input inputmode="numeric" maxlength="1" aria-label="Digit 4">
               </div>
-              <p class="code-hint" id="code-hint" aria-live="polite">输入 2468 试试</p>
+              <p class="code-hint" id="code-hint" aria-live="polite">Try 2468</p>
             </div>
           </div></div>
-          <div class="caption"><h2 id="code-title">验证码</h2><p>输错会摇头</p></div>
+          <div class="caption"><h2 id="code-title">Code Shake</h2><p>Shakes when wrong</p></div>
         </section>
 
         <section class="sample" id="bell-toggle" aria-labelledby="bell-title">
@@ -289,13 +292,13 @@
               <svg viewBox="0 0 24 24" aria-hidden="true"><g class="body"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15l1.5-2Z"/><path d="M12 3v2"/></g><path class="clapper" d="M10 20.5a2 2 0 0 0 4 0"/><path class="slash" d="M4 4l16 16"/></svg>
               <span class="bell-badge" aria-hidden="true">3</span>
             </button>
-            <p class="bell-state" aria-live="polite">通知已开启</p>
+            <p class="bell-state" aria-live="polite">Notifications on</p>
           </div></div>
-          <div class="caption"><h2 id="bell-title">通知铃</h2><p>点按开关</p></div>
+          <div class="caption"><h2 id="bell-title">Bell Toggle</h2><p>Tap to toggle</p></div>
         </section>
       </div>
     </main>
-    <footer class="credit">六个操作反馈均由 UI Moments 原创设计与实现，按项目 <a href="../../LICENSE">MIT 许可证</a> 发布。<a href="./index.html">更多原创控件 ↗</a></footer>
+    <footer class="credit">Designed and built by UI Moments. Released under the <a href="../../LICENSE">MIT License</a>.</footer>
   </div>
 
   <script>
@@ -307,7 +310,7 @@
     const $$ = (selector, scope = document) => Array.from(scope.querySelectorAll(selector));
     const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
-    // 单个控件：独立页面用 #id，画廊嵌入用 ?sample=id。
+    // One control per view: #id when opened directly, ?sample=id when embedded in the gallery.
     const sections = $$('.sample');
     function showSelectedSample() {
       const id = location.hash.slice(1) || (root.dataset.embedded && params.get('sample'));
@@ -325,7 +328,7 @@
       try { localStorage.setItem('ui-moments-theme', root.dataset.theme); } catch {}
     });
 
-    /* ---------- 复制按钮：图标描成对勾，文字向上换成「已复制」 ---------- */
+    /* ---------- Copy Button ---------- */
     {
       const button = $('.copy');
       const status = $('#copy-status');
@@ -333,13 +336,13 @@
       button.addEventListener('click', async () => {
         try { await navigator.clipboard?.writeText(location.href.split('?')[0]); } catch {}
         button.dataset.done = '';
-        status.textContent = '已复制链接';
+        status.textContent = 'Link copied';
         clearTimeout(timer);
         timer = setTimeout(() => { delete button.dataset.done; status.textContent = ''; }, 1600);
       });
     }
 
-    /* ---------- 点赞爆发：心形压扁回弹，光圈与火花向外散开 ---------- */
+    /* ---------- Like Burst ---------- */
     {
       const button = $('.like');
       const ring = $('.like-ring', button);
@@ -381,7 +384,7 @@
       });
     }
 
-    /* ---------- 纸飞机发送：飞机飞出，文字换成「已发送」，稍后从左侧飞回 ---------- */
+    /* ---------- Paper Plane ---------- */
     {
       const button = $('.send');
       const plane = $('.send-plane', button);
@@ -391,7 +394,7 @@
         if (busy) return;
         busy = true;
         button.dataset.done = '';
-        status.textContent = '已发送';
+        status.textContent = 'Sent';
         const motion = motionEnabled();
         if (motion) plane.animate([
           { transform: 'none', opacity: 1 },
@@ -410,7 +413,7 @@
       });
     }
 
-    /* ---------- 下载进度环：按钮收成圆环，填满后变成对勾 ---------- */
+    /* ---------- Download Ring ---------- */
     {
       const button = $('.dl');
       const bar = $('.bar', button);
@@ -425,31 +428,31 @@
         bar.style.strokeDashoffset = length;
       }
       function tick() {
-        // 模拟真实下载：速度忽快忽慢，最后一段稍慢。
+        // Fake a real download: uneven speed, slower near the end.
         progress = Math.min(1, progress + (progress > .8 ? .006 : .004 + Math.random() * .016));
         bar.style.strokeDashoffset = length * (1 - progress);
         if (progress < 1) { frame = requestAnimationFrame(tick); return; }
         button.dataset.state = 'done';
-        button.setAttribute('aria-label', '下载完成');
-        status.textContent = '下载完成';
+        button.setAttribute('aria-label', 'Download complete');
+        status.textContent = 'Download complete';
         timer = setTimeout(reset, 1700);
       }
       button.addEventListener('click', () => {
         if (button.dataset.state === 'loading') {
           reset();
-          status.textContent = '已取消下载';
+          status.textContent = 'Download canceled';
           return;
         }
         if (button.dataset.state === 'done') return;
         progress = 0;
         button.dataset.state = 'loading';
-        button.setAttribute('aria-label', '下载中，点按取消');
-        status.textContent = '开始下载';
+        button.setAttribute('aria-label', 'Downloading, tap to cancel');
+        status.textContent = 'Download started';
         frame = requestAnimationFrame(tick);
       });
     }
 
-    /* ---------- 验证码：输错左右摇头并清空，输对逐格变绿 ---------- */
+    /* ---------- Code Shake ---------- */
     {
       const code = $('.code');
       const boxes = $$('input', code);
@@ -462,17 +465,17 @@
         clearTimeout(timer);
         if (value === answer) {
           code.dataset.state = 'ok';
-          hint.textContent = '验证成功';
+          hint.textContent = 'Verified';
           if (motionEnabled()) boxes.forEach((box, index) => box.animate([{ scale: '1' }, { scale: '1.12' }, { scale: '1' }], { duration: 320, delay: index * 60, easing: 'ease-out' }));
           timer = setTimeout(() => {
             delete code.dataset.state;
             boxes.forEach(box => { box.value = ''; });
-            hint.textContent = '输入 2468 试试';
+            hint.textContent = 'Try 2468';
           }, 1800);
           return;
         }
         code.dataset.state = 'error';
-        hint.textContent = '验证码不对，再试一次';
+        hint.textContent = 'Wrong code, try again';
         if (motionEnabled()) $('.code-boxes', code).animate([
           { translate: '0 0' }, { translate: '-9px 0' }, { translate: '8px 0' }, { translate: '-6px 0' }, { translate: '4px 0' }, { translate: '0 0' },
         ], { duration: 420, easing: 'ease-out' });
@@ -507,14 +510,14 @@
       });
     }
 
-    /* ---------- 通知铃：开启时铃身摇摆、角标弹出；关闭时划上一道斜线 ---------- */
+    /* ---------- Bell Toggle ---------- */
     {
       const button = $('.bell');
       const state = $('.bell-state');
       button.addEventListener('click', () => {
         const on = button.getAttribute('aria-pressed') !== 'true';
         button.setAttribute('aria-pressed', String(on));
-        state.textContent = on ? '通知已开启' : '通知已关闭';
+        state.textContent = on ? 'Notifications on' : 'Notifications off';
         if (!on || !motionEnabled()) return;
         const swing = [0, 18, -15, 11, -7, 3, 0].map(deg => ({ rotate: deg + 'deg' }));
         $('.body', button).animate(swing, { duration: 760, easing: 'ease-out' });

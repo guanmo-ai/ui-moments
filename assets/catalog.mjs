@@ -9,6 +9,8 @@ export const categories = [
   {id: 'input', name: '交互控件'},
   {id: 'feedback', name: '点击反馈'},
   {id: 'loading', name: '加载动效'},
+  // 色彩鲜艳的作品单独放在最后，图鉴首屏保持单色。
+  {id: 'color', name: '多彩'},
 ];
 const categoryNames = new Map(categories.map(({id, name}) => [id, name]));
 
@@ -31,11 +33,12 @@ const shapeFilters = {
 };
 
 const featured = [
-  'day-night-toggle', 'magnet-grid', 'ink-switch', 'jelly-pad', 'paper-fold',
-  'hue-orbit', 'detent-dial', 'merge-drops', 'like-burst', 'tide-ring',
-  'pull-cord', 'bloom-toggle', 'tide-progress', 'flip-coin', 'download-ring',
-  'odometer-stepper', 'ripple-pad', 'elastic-ruler', 'leaf-tabs', 'bell-toggle',
-  'hold-confirm', 'alignment-switch', 'pebble-rating', 'bookmark-press', 'paper-plane',
+  'magnet-grid', 'card-fan', 'ink-switch', 'jelly-pad', 'paper-fold',
+  'tilt-card', 'detent-dial', 'merge-drops', 'menu-morph', 'tide-ring',
+  'depth-stack', 'bloom-toggle', 'like-burst', 'text-reveal', 'download-ring',
+  'cover-flow', 'odometer-stepper', 'ripple-pad', 'magnetic-button', 'elastic-ruler',
+  'leaf-tabs', 'tide-progress', 'bell-toggle', 'stagger-rows', 'hold-confirm',
+  'alignment-switch', 'pebble-rating', 'bookmark-press', 'paper-plane', 'copy-morph',
   'shutter-steps', 'micron-jelly', 'signal-return', 'svg-spinner-gooey-balls-1', 'micron-swing',
   'sand-turn', 'ring', 'micron-fade', 'bow-spring', 'svg-spinner-wifi', 'dot-field', 'square',
   'micron-squeeze', 'svg-spinner-bars-scale-middle', 'corner-lock', 'micron-shake', 'lineWobble',
@@ -53,7 +56,7 @@ export function buildCatalog(works = []) {
     loader,
   }));
   const controls = works.filter(work => !['ldrs', 'loaders'].includes(work.id)).map(work => ({
-    ...work, category: 'input', type: work.type || controlTypes[work.id] || '交互控件',
+    ...work, category: work.vivid ? 'color' : 'input', type: work.type || controlTypes[work.id] || '交互控件',
   }));
   const feedback = micronWorks.map(work => ({...work, shape: feedbackShapes[work.en]}));
 
@@ -80,7 +83,8 @@ export function buildCatalog(works = []) {
       if (group[index]) result.push(group[index]);
     }
   }
-  return result;
+  // 「全部 UI」里多彩作品统一排在最后。
+  return [...result.filter(item => item.category !== 'color'), ...result.filter(item => item.category === 'color')];
 }
 
 export function getCategoryFilters(items, category) {

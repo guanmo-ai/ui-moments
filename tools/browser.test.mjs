@@ -56,13 +56,13 @@ test('发布包子路径下可搜索、操作滑尺、下载 HTML 并复制提�
   });
   await page.goto(site);
   await page.locator('html[data-ready="true"]').waitFor({ state: 'attached' });
-  assert.equal(await page.locator('.ui-item').count(), 198);
-  await page.frameLocator('[data-ui="ink-switch"] iframe').getByRole('switch', { name: '墨滴开关' }).waitFor();
+  assert.equal(await page.locator('.ui-item').count(), 206);
+  await page.frameLocator('[data-ui="ink-switch"] iframe').getByRole('switch', { name: 'Ink Switch' }).waitFor();
   assert.equal(await page.evaluate(() => window.scrollY), 0, '嵌入控件载入后首页仍停在顶部');
   assert.ok(await page.locator('.ui-stage .ui-animation').count() < 35, '首页只挂载近屏的循环动效');
   assert.ok(!requests.some(url => url.endsWith('/gallery/loading-ui/dist/THIRD_PARTY_LICENSES.txt')), '首屏不请求第三方导出许可');
-  await page.getByRole('link', { name: '试试昼夜开关' }).click();
-  await page.locator('#component-detail[open]').getByRole('heading', { name: '昼夜开关' }).waitFor();
+  await page.getByRole('link', { name: '试试果冻方块' }).click();
+  await page.locator('#component-detail[open]').getByRole('heading', { name: '果冻方块' }).waitFor();
   await page.locator('#component-close').click();
 
   const search = page.locator('#work-search');
@@ -196,18 +196,18 @@ test('原创控件支持键盘操作，嵌入时只显示所选控件', { timeou
   page.on('pageerror', error => errors.push(error.message));
   await page.goto(new URL('gallery/originals/index.html', site).href);
 
-  const ink = page.getByRole('switch', { name: '墨滴开关' });
+  const ink = page.getByRole('switch', { name: 'Ink Switch' });
   await ink.press('Space');
   assert.equal(await ink.getAttribute('aria-checked'), 'true');
 
-  const dial = page.getByRole('slider', { name: '刻度旋钮' });
+  const dial = page.getByRole('slider', { name: 'Detent Dial' });
   await dial.press('ArrowUp');
   await dial.press('PageUp');
   assert.equal(await dial.getAttribute('aria-valuenow'), '7');
   await dial.press('End');
   assert.equal(await dial.getAttribute('aria-valuenow'), '10');
 
-  const stepper = page.getByRole('spinbutton', { name: '滚轮步进器' });
+  const stepper = page.getByRole('spinbutton', { name: 'Odometer Stepper' });
   await stepper.press('ArrowUp');
   await stepper.press('ArrowUp');
   assert.equal(await stepper.getAttribute('aria-valuenow'), '10');
@@ -217,14 +217,14 @@ test('原创控件支持键盘操作，嵌入时只显示所选控件', { timeou
   const tabs = page.getByRole('tab');
   await tabs.nth(1).press('ArrowRight');
   assert.equal(await tabs.nth(2).getAttribute('aria-selected'), 'true');
-  assert.equal(await page.evaluate(() => document.activeElement.textContent), '月');
+  assert.equal(await page.evaluate(() => document.activeElement.textContent), 'M');
 
   const hold = page.locator('.hold');
   await hold.focus();
   await page.keyboard.down('Space');
   await page.waitForTimeout(1350);
   await page.keyboard.up('Space');
-  assert.equal(await page.locator('#hold-status').textContent(), '已删除');
+  assert.equal(await page.locator('#hold-status').textContent(), 'Deleted');
 
   await page.goto(new URL('gallery/originals/index.html?embed=ui&theme=light&sample=tide-progress', site).href);
   assert.equal(await page.locator('.sample:visible').count(), 1);
@@ -240,33 +240,45 @@ test('第二、三批原创控件可用键盘完成主要操作', { timeout: 25_
   page.on('pageerror', error => errors.push(error.message));
 
   await page.goto(new URL('gallery/originals/visual.html', site).href);
-  const bloom = page.getByRole('switch', { name: '花朵开关' });
+  const bloom = page.getByRole('switch', { name: 'Bloom Toggle' });
   await bloom.press('Space');
   assert.equal(await bloom.getAttribute('aria-checked'), 'true');
-  const cord = page.getByRole('switch', { name: '拉绳灯' });
+  await page.goto(new URL('gallery/originals/color.html', site).href);
+  const cord = page.getByRole('switch', { name: 'Pull Cord Lamp' });
   await cord.press('Enter');
   assert.equal(await cord.getAttribute('aria-checked'), 'true');
-  const hue = page.getByRole('slider', { name: '色轮' });
+  const hue = page.getByRole('slider', { name: 'Hue Orbit' });
   await hue.press('ArrowRight');
   assert.equal(await hue.getAttribute('aria-valuenow'), '300');
 
+  await page.goto(new URL('gallery/originals/motion.html', site).href);
+  const fan = page.getByRole('button', { name: 'Card Fan' });
+  await fan.press('Enter');
+  assert.equal(await fan.getAttribute('aria-expanded'), 'true');
+  const flow = page.getByRole('group', { name: 'Cover Flow' });
+  await flow.press('ArrowRight');
+  assert.equal(await page.locator('#flow-status').textContent(), 'Card 4 of 5');
+  const menu = page.getByRole('button', { name: 'Menu' });
+  await menu.press('Enter');
+  assert.equal(await page.locator('.menu').getAttribute('aria-expanded'), 'true');
+
   await page.goto(new URL('gallery/originals/inputs.html', site).href);
-  const notch = page.getByRole('slider', { name: '档位滑块' });
+  const notch = page.getByRole('slider', { name: 'Notch Slider' });
   await notch.press('ArrowRight');
   assert.equal(await notch.getAttribute('aria-valuetext'), 'L');
-  const chips = page.getByRole('textbox', { name: '新标签' });
-  await chips.fill('原创');
+  const chips = page.getByRole('textbox', { name: 'New tag' });
+  await chips.fill('original');
   await chips.press('Enter');
   assert.equal(await page.locator('.chip').count(), 3);
   await chips.press('Backspace');
   await page.waitForFunction(() => document.querySelectorAll('.chip').length === 2);
 
   await page.goto(new URL('gallery/originals/actions.html', site).href);
-  const like = page.getByRole('button', { name: '喜欢' });
+  const like = page.getByRole('button', { name: 'Like' });
   await like.press('Enter');
   assert.equal(await like.getAttribute('aria-pressed'), 'true');
-  await page.getByRole('textbox', { name: '第 1 位' }).focus();
+  await page.getByRole('textbox', { name: 'Digit 1' }).focus();
   await page.keyboard.type('2468');
-  assert.equal(await page.locator('.code-hint').textContent(), '验证成功');
+  assert.equal(await page.locator('.code-hint').textContent(), 'Verified');
   assert.deepEqual(errors, []);
 });

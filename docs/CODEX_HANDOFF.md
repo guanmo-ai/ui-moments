@@ -41,13 +41,14 @@ git add -A && npm run package:site && npx playwright install --only-shell chromi
 ## 1. 这次已经完成
 
 ### 原创内容
+- 第三次更新：原创控件页全部英文、单色；`gallery/originals/` 共六页（Core / Visual / Motion / Actions / Forms / Color）。鲜艳作品标记 `vivid: true`，在 `assets/catalog.mjs` 中归入 `color`（「多彩」）分类并排在最后。Motion 页 7 个作品参考 amicro（MIT），`credit` 字段已标注。约定：**图鉴首屏只放单色作品；原创页面不出现中文**（`tools/site.test.mjs` 会检查）。
 - 第二次更新：再加 20 个原创控件与 8 款原创加载动效。`gallery/originals/` 现有四个页面：`index.html`（基础 6）、`visual.html`（无文字图形交互 8）、`inputs.html`（表单 6）、`actions.html`（操作反馈 6）；新增加载动效在 `gallery/loaders/motifs.mjs`。四个页面共用同一套外壳，生成脚本未入库，新增页面时复制 `visual.html` 的结构即可。
 - 新增 `gallery/originals/`：**墨滴开关、刻度旋钮、长按确认、滚轮步进器、翻页标签、潮汐进度** 六个从零设计的控件。单文件、无依赖；有正确的 ARIA 角色与键盘操作；支持深浅主题、`prefers-reduced-motion`、画廊离屏暂停；用 `container-type: size` 让控件在不同卡片尺寸下缩放。
 - 已登记到 `gallery/works.js`（`originalControls`，`original: true`，无 `credit`），卡片显示「原创 · 类型」，复制 HTML 时注释写「UI Moments 原创设计与实现」。
 - 新测试：`tools/site.test.mjs`「原创控件不带外部来源…」，`tools/browser.test.mjs`「原创控件支持键盘操作…」。
 
 ### 来源与许可
-- 新增 **[CREDITS.md](../CREDITS.md)**：作品来源总表（原创 45 / 开源集成 149 / 参考后实现 4 = 198），收录的第三方代码（固定版本与位置）、打包进网站的运行时依赖、开发工具、只借鉴想法的作品、明确不使用的内容、原作者联系方式。
+- 新增 **[CREDITS.md](../CREDITS.md)**：作品来源总表（原创 46 / 开源集成 149 / 参考后实现 11 = 206），收录的第三方代码（固定版本与位置）、打包进网站的运行时依赖、开发工具、只借鉴想法的作品、明确不使用的内容、原作者联系方式。
 - `THIRD_PARTY_NOTICES.md` 顶部指向 CREDITS.md。
 
 ### 网站
@@ -131,5 +132,5 @@ git add -A && npm run package:site && npx playwright install --only-shell chromi
 - **来源规则优先于一切。** 新增任何作品前先读 `docs/attribution.md`，并同步更新 `CREDITS.md`；`vendor/` 下的上游文件必须字节一致（`.gitattributes` 已关闭换行转换，测试会校验哈希）。
 - **组件三件套。** 键盘可达、深浅主题、`prefers-reduced-motion`；嵌入时遵守 `data-gallery-active="false"`。
 - **不引入外部运行时资源。** 网站与导出代码不请求 CDN、字体服务或统计脚本。
-- **测试先行。** 改目录 / 数量时同步更新 `tools/site.test.mjs` 与 `tools/browser.test.mjs` 中的断言（例如卡片总数 198）。
+- **测试先行。** 改目录 / 数量时同步更新 `tools/site.test.mjs` 与 `tools/browser.test.mjs` 中的断言（例如卡片总数 206）。
 - **提交信息** 使用简洁的中文祈使句，与现有历史一致。

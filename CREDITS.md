@@ -15,10 +15,10 @@ UI Moments 用到的每一个外部仓库、字体、依赖和灵感来源都列
 
 | 来源类型 | 数量 | 作品 | 代码归属 | 许可 |
 | --- | ---: | --- | --- | --- |
-| **UI Moments 原创** | 45 | 26 个原创控件、10 款原创加载动效、9 款加载微动效 | UI Moments | MIT |
+| **UI Moments 原创** | 46 | 27 个原创控件、10 款原创加载动效、9 款加载微动效 | UI Moments | MIT |
 | **开源完整集成** | 149 | LDRS 44 款、Loading UI 47 款、SVG Spinners 46 款、Micron.js 12 款 | 各上游作者 | MIT（保留原文） |
-| **参考想法后独立实现** | 4 | 昼夜开关、弹性滑尺、对齐拨片、夹页键 | UI Moments | MIT |
-| **合计** | **198** | | | |
+| **参考想法后独立实现** | 11 | 昼夜开关、弹性滑尺、对齐拨片、夹页键；7 个参考 amicro 卡片排布与微交互类型的 Motion 作品 | UI Moments | MIT |
+| **合计** | **206** | | | |
 
 画廊卡片会分别标注「原创」「×× 开源」「参考后实现」。打开详情后能看到来源链接和许可。
 
@@ -75,7 +75,7 @@ Loading UI 需要 React 运行。构建脚本 `gallery/loading-ui/tools/build.mj
 
 | 作品 | 位置 |
 | --- | --- |
-| 26 个原创控件：图形交互、表单控件、操作反馈等 | [gallery/originals/](gallery/originals/) |
+| 27 个原创控件：基础、图形、动效、操作反馈、表单、多彩六组 | [gallery/originals/](gallery/originals/) |
 | 折页、回信与 8 款原创加载动效 | [gallery/loaders/originals.mjs](gallery/loaders/originals.mjs)、[gallery/loaders/motifs.mjs](gallery/loaders/motifs.mjs) |
 | 风格库的「像素风」变体 | [gallery/elastic-controls/variants.css](gallery/elastic-controls/variants.css) |
 | 站点外壳、画廊、导出与提示词生成 | `assets/`、`index.html`、`styles.html` |

@@ -1,14 +1,14 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>原创表单控件 · UI Moments</title>
-  <meta name="description" content="UI Moments 原创表单控件：划线清单、石子评分、档位滑块、密码强度、标签输入与方案卡片。">
+  <title>Forms · UI Moments Originals</title>
+  <meta name="description" content="UI Moments original form controls: stroke checklist, pebble rating, notch slider, strength meter, chip input and plan picker.">
   <link rel="icon" href="../../assets/icon.svg">
   <script src="../../assets/embed.js"></script>
   <script>
-    // 独立打开时跟随站点主题；嵌入画廊时由 embed.js 决定。
+    // Standalone pages follow the site theme; embedded pages take it from embed.js.
     (() => {
       const root = document.documentElement;
       if (root.dataset.embedded) return;
@@ -20,41 +20,41 @@
   <style>
     @font-face { font-family: Geist; src: url('../../assets/fonts/Geist-latin-wght.woff2') format('woff2'); font-weight: 100 900; font-display: swap; }
 
+    /* Monochrome tokens. Only the Color set adds hues of its own. */
     :root {
       color-scheme: light;
-      --page: #f8f8fb;
-      --surface: #f1f2f8;
+      --page: #fafafa;
+      --surface: #f2f2f3;
       --raised: #fff;
-      --ink: #20212a;
-      --muted: #65697b;
-      --rail: rgb(34 38 81 / .13);
-      --line: rgb(34 38 81 / .12);
-      --accent: #434eaa;
-      --on-accent: #fff;
-      --accent-soft: rgb(67 78 170 / .14);
-      --danger: #c6402f;
-      --danger-soft: rgb(198 64 47 / .14);
-      --shadow: 0 1px 2px rgb(20 22 50 / .14), 0 6px 18px rgb(20 22 50 / .09);
+      --ink: #18181b;
+      --muted: #6b6b72;
+      --rail: rgb(24 24 27 / .11);
+      --line: rgb(24 24 27 / .09);
+      --accent: #18181b;
+      --on-accent: #fafafa;
+      --accent-soft: rgb(24 24 27 / .07);
+      --danger: var(--ink);
+      --danger-soft: rgb(24 24 27 / .1);
+      --shadow: 0 1px 2px rgb(0 0 0 / .1), 0 6px 18px rgb(0 0 0 / .07);
       --spring: cubic-bezier(.3, 1.45, .5, 1);
       --ease: cubic-bezier(.16, 1, .3, 1);
-      --font: Geist, -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+      --font: Geist, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
     }
 
     :root[data-theme="dark"] {
       color-scheme: dark;
-      --page: #111217;
-      --surface: #1c1e27;
-      --raised: #2b2e3d;
-      --ink: #f4f3f8;
-      --muted: #a0a2b5;
-      --rail: rgb(216 219 249 / .15);
-      --line: rgb(216 219 249 / .12);
-      --accent: #bcc4ff;
-      --on-accent: #1c2142;
-      --accent-soft: rgb(188 196 255 / .16);
-      --danger: #ff8f80;
-      --danger-soft: rgb(255 143 128 / .17);
-      --shadow: 0 1px 2px rgb(0 0 0 / .45), 0 8px 24px rgb(0 0 0 / .3);
+      --page: #0b0b0c;
+      --surface: #161618;
+      --raised: #232326;
+      --ink: #fafafa;
+      --muted: #9a9aa1;
+      --rail: rgb(250 250 250 / .13);
+      --line: rgb(250 250 250 / .09);
+      --accent: #fafafa;
+      --on-accent: #0b0b0c;
+      --accent-soft: rgb(250 250 250 / .09);
+      --danger-soft: rgb(250 250 250 / .12);
+      --shadow: 0 1px 2px rgb(0 0 0 / .5), 0 8px 24px rgb(0 0 0 / .35);
     }
 
     *, *::before, *::after { box-sizing: border-box; }
@@ -77,7 +77,7 @@
     .theme:hover { color: var(--ink); }
     .theme svg { width: 15px; height: 15px; }
     .intro { margin: clamp(48px, 10vh, 96px) 0 26px; }
-    .intro p:first-child { margin: 0 0 8px; font: 500 11px/1.4 ui-monospace, monospace; letter-spacing: .12em; color: var(--accent); text-transform: uppercase; }
+    .intro p:first-child { margin: 0 0 8px; font: 500 11px/1.4 ui-monospace, monospace; letter-spacing: .12em; color: var(--muted); text-transform: uppercase; }
     h1 { margin: 0; font-size: clamp(30px, 6vw, 44px); letter-spacing: -.05em; line-height: 1.1; font-weight: 680; }
     .intro p:last-child { margin: 12px 0 0; max-width: 34em; color: var(--muted); }
 
@@ -98,7 +98,7 @@
     .caption p, .credit { margin: 0; font-size: 12px; color: var(--muted); }
     .credit { margin: 40px 0 28px; padding-top: 18px; border-top: 1px solid var(--line); }
 
-    /* 卡片尺寸不同：控件按舞台大小缩放，指针坐标仍以实际尺寸计算。 */
+    /* Controls scale with the card; pointer maths always uses real geometry. */
     .widget { display: grid; place-items: center; transition: scale .3s var(--ease); }
     @container (max-height: 160px) { .widget { scale: .82; } }
     @container (max-width: 215px) { .widget { scale: .8; } }
@@ -106,11 +106,14 @@
     @container (max-width: 180px) { .widget { scale: .66; } }
     @container (min-height: 300px) and (min-width: 440px) { .widget { scale: 1.35; } }
 
+    .sets { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 22px; }
+    .sets a { padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-size: 13px; text-decoration: none; }
+    .sets a:hover { color: var(--ink); border-color: var(--rail); }
+    .sets a[aria-current="page"] { background: var(--ink); border-color: var(--ink); color: var(--page); }
+    [data-embedded] .sets { display: none; }
+    :root { --weak: color-mix(in srgb, var(--ink) 40%, transparent); --warn: color-mix(in srgb, var(--ink) 65%, transparent); --ok: var(--ink); }
 
-    :root { --warn: #b86b12; --ok: #2c8655; --weak: #c6402f; }
-    :root[data-theme="dark"] { --warn: #ffc27a; --ok: #7fe0a8; --weak: #ff8f80; }
-
-    /* 划线清单 */
+    /* Stroke Checklist */
     .todo { display: grid; gap: 4px; width: 196px; margin: 0; padding: 0; border: 0; }
     .todo label { position: relative; display: flex; align-items: center; gap: 11px; padding: 7px 10px; border-radius: 10px; cursor: pointer; transition: background .2s; }
     .todo label:hover { background: var(--accent-soft); }
@@ -126,7 +129,7 @@
     .todo input:focus-visible + .box { outline: 2px solid var(--accent); outline-offset: 3px; }
     @keyframes todo-pop { 0% { scale: .7; } 60% { scale: 1.15; } 100% { scale: 1; } }
 
-    /* 石子评分 */
+    /* Pebble Rating */
     .pebbles { display: grid; justify-items: center; gap: 12px; margin: 0; padding: 0; border: 0; }
     .pebble-row { display: flex; flex-direction: row-reverse; gap: 7px; }
     .pebble-row input { position: absolute; opacity: 0; pointer-events: none; }
@@ -142,7 +145,7 @@
     .pebble-row input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: 3px; }
     .pebble-word { min-height: 20px; margin: 0; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
 
-    /* 档位滑块 */
+    /* Notch Slider */
     .notch { position: relative; width: 210px; padding-top: 26px; }
     .notch-labels { position: absolute; inset: 0 0 auto; display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
     .notch-labels span { width: 34px; text-align: center; transition: color .25s, translate .35s var(--spring), font-weight .25s; }
@@ -155,7 +158,7 @@
     .notch input { position: absolute; inset: 26px 0 0; width: 100%; height: 34px; margin: 0; opacity: 0; cursor: pointer; }
     .notch input:focus-visible ~ .notch-track { outline: 2px solid var(--accent); outline-offset: 3px; }
 
-    /* 密码强度 */
+    /* Strength Meter */
     .secret { display: grid; gap: 10px; width: 220px; }
     .secret-field { display: flex; align-items: center; height: 44px; padding: 0 6px 0 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--raised); transition: border-color .25s, box-shadow .25s; }
     .secret-field:focus-within { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
@@ -173,7 +176,7 @@
     .secret-note { display: flex; justify-content: space-between; margin: 0; font-size: 12px; color: var(--muted); }
     .secret-note strong { color: var(--tone, var(--muted)); font-weight: 650; transition: color .3s; }
 
-    /* 标签输入 */
+    /* Chip Input */
     .chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; width: 236px; min-height: 46px; padding: 7px; border: 1px solid var(--line); border-radius: 13px; background: var(--raised); cursor: text; transition: border-color .25s, box-shadow .25s; }
     .chips:focus-within { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
     .chip { display: inline-flex; align-items: center; gap: 3px; height: 28px; padding: 0 4px 0 10px; border-radius: 8px; background: var(--accent-soft); color: var(--accent); font-size: 13px; font-weight: 560; white-space: nowrap; animation: chip-in .38s var(--spring); }
@@ -183,7 +186,7 @@
     .chips input::placeholder { color: var(--muted); }
     @keyframes chip-in { from { scale: .6; opacity: 0; } }
 
-    /* 方案卡片 */
+    /* Plan Picker */
     .plans { position: relative; display: grid; grid-template-columns: repeat(3, 74px); gap: 8px; margin: 0; padding: 0; border: 0; }
     .plans label { position: relative; display: grid; align-content: center; gap: 2px; height: 86px; padding: 0 10px; border: 1px solid var(--line); border-radius: 14px; background: var(--raised); cursor: pointer; transition: translate .3s var(--spring); }
     .plans label:hover { translate: 0 -2px; }
@@ -221,46 +224,45 @@
     <header class="masthead">
       <a class="brand" href="../../">UI Moments</a>
       <nav>
-        <a class="site-link" id="gallery-link" href="../../">图鉴 ↗</a>
-        <a class="site-link" id="all-controls" href="./inputs.html" hidden>本页全部控件 ↗</a>
-        <button class="theme" id="theme" type="button" aria-label="切换深浅色"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="M10 3a7 7 0 0 0 0 14Z" fill="currentColor"/></svg></button>
+        <a class="site-link" id="gallery-link" href="../../">Gallery ↗</a>
+        <a class="site-link" id="all-controls" href="./inputs.html" hidden>Whole set ↗</a>
+        <button class="theme" id="theme" type="button" aria-label="Toggle theme"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="M10 3a7 7 0 0 0 0 14Z" fill="currentColor"/></svg></button>
       </nav>
     </header>
     <main>
       <header class="intro">
         <p>UI Moments Originals</p>
-        <h1>原创表单控件</h1>
-        <p>六个从零设计的表单控件。全部基于原生表单元素，键盘、读屏与「减少动态效果」都能正常工作。</p>
+        <h1>Forms</h1>
+        <p>Form controls built on native inputs, so keyboards, screen readers and reduced motion all keep working.</p>
       </header>
-
+      <nav class="sets" aria-label="Original sets"><a href="./index.html">Core</a><a href="./visual.html">Visual</a><a href="./motion.html">Motion</a><a href="./actions.html">Actions</a><a href="./inputs.html" aria-current="page">Forms</a><a href="./color.html">Color</a></nav>
 
       <div class="samples">
-
         <section class="sample" id="stroke-checklist" aria-labelledby="todo-title">
           <div class="stage"><div class="widget">
-            <fieldset class="todo"><legend class="sr-only">今日待办</legend>
-              <label><input type="checkbox"><span class="box"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg></span><span class="text">整理需求</span></label>
-              <label><input type="checkbox" checked><span class="box"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg></span><span class="text">画线框图</span></label>
-              <label><input type="checkbox"><span class="box"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg></span><span class="text">写交接文档</span></label>
+            <fieldset class="todo"><legend class="sr-only">Today</legend>
+              <label><input type="checkbox"><span class="box"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg></span><span class="text">Gather requirements</span></label>
+              <label><input type="checkbox" checked><span class="box"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg></span><span class="text">Sketch wireframes</span></label>
+              <label><input type="checkbox"><span class="box"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg></span><span class="text">Write the handoff</span></label>
             </fieldset>
           </div></div>
-          <div class="caption"><h2 id="todo-title">划线清单</h2><p>勾选完成</p></div>
+          <div class="caption"><h2 id="todo-title">Stroke Checklist</h2><p>Check to finish</p></div>
         </section>
 
         <section class="sample" id="pebble-rating" aria-labelledby="pebble-title">
           <div class="stage"><div class="widget">
-            <fieldset class="pebbles"><legend class="sr-only">评分</legend>
+            <fieldset class="pebbles"><legend class="sr-only">Rating</legend>
               <div class="pebble-row">
-                <input type="radio" name="pebble" id="pebble-5" value="5"><label for="pebble-5" title="超棒"><span class="sr-only">5 分</span></label>
-                <input type="radio" name="pebble" id="pebble-4" value="4" checked><label for="pebble-4" title="很好"><span class="sr-only">4 分</span></label>
-                <input type="radio" name="pebble" id="pebble-3" value="3"><label for="pebble-3" title="还行"><span class="sr-only">3 分</span></label>
-                <input type="radio" name="pebble" id="pebble-2" value="2"><label for="pebble-2" title="一般"><span class="sr-only">2 分</span></label>
-                <input type="radio" name="pebble" id="pebble-1" value="1"><label for="pebble-1" title="很差"><span class="sr-only">1 分</span></label>
+                <input type="radio" name="pebble" id="pebble-5" value="5"><label for="pebble-5" title="Great"><span class="sr-only">5 of 5</span></label>
+                <input type="radio" name="pebble" id="pebble-4" value="4" checked><label for="pebble-4" title="Good"><span class="sr-only">4 of 5</span></label>
+                <input type="radio" name="pebble" id="pebble-3" value="3"><label for="pebble-3" title="Okay"><span class="sr-only">3 of 5</span></label>
+                <input type="radio" name="pebble" id="pebble-2" value="2"><label for="pebble-2" title="Poor"><span class="sr-only">2 of 5</span></label>
+                <input type="radio" name="pebble" id="pebble-1" value="1"><label for="pebble-1" title="Bad"><span class="sr-only">1 of 5</span></label>
               </div>
-              <p class="pebble-word" aria-live="polite">4 / 5 · 很好</p>
+              <p class="pebble-word" aria-live="polite">4 / 5 · Good</p>
             </fieldset>
           </div></div>
-          <div class="caption"><h2 id="pebble-title">石子评分</h2><p>点按打分</p></div>
+          <div class="caption"><h2 id="pebble-title">Pebble Rating</h2><p>Tap to rate</p></div>
         </section>
 
         <section class="sample" id="notch-slider" aria-labelledby="notch-title">
@@ -271,7 +273,7 @@
               <div class="notch-track" aria-hidden="true"><span class="notch-fill"></span><i style="--n:0"></i><i style="--n:1"></i><i style="--n:2"></i><i style="--n:3"></i><i style="--n:4"></i><span class="notch-thumb"></span></div>
             </div>
           </div></div>
-          <div class="caption"><h2 id="notch-title">档位滑块</h2><p>拖动选尺码</p></div>
+          <div class="caption"><h2 id="notch-title">Notch Slider</h2><p>Drag to size</p></div>
         </section>
 
         <section class="sample" id="strength-meter" aria-labelledby="secret-title">
@@ -279,38 +281,38 @@
             <div class="secret">
               <div class="secret-field">
                 <input type="password" value="moments" aria-labelledby="secret-title" aria-describedby="secret-note" autocomplete="new-password" spellcheck="false">
-                <button class="secret-eye" type="button" aria-label="显示密码" aria-pressed="false"><svg viewBox="0 0 20 20" aria-hidden="true"><path class="lid" d="M2 10s3-5.5 8-5.5S18 10 18 10s-3 5.5-8 5.5S2 10 2 10Z"/><circle class="lid" cx="10" cy="10" r="2.4"/><path class="slash" d="M3.5 3.5l13 13"/></svg></button>
+                <button class="secret-eye" type="button" aria-label="Show password" aria-pressed="false"><svg viewBox="0 0 20 20" aria-hidden="true"><path class="lid" d="M2 10s3-5.5 8-5.5S18 10 18 10s-3 5.5-8 5.5S2 10 2 10Z"/><circle class="lid" cx="10" cy="10" r="2.4"/><path class="slash" d="M3.5 3.5l13 13"/></svg></button>
               </div>
               <div class="secret-meter" aria-hidden="true"><i style="--n:0"></i><i style="--n:1"></i><i style="--n:2"></i><i style="--n:3"></i></div>
-              <p class="secret-note" id="secret-note" aria-live="polite"><span>强度</span><strong>一般</strong></p>
+              <p class="secret-note" id="secret-note" aria-live="polite"><span>Strength</span><strong>Fair</strong></p>
             </div>
           </div></div>
-          <div class="caption"><h2 id="secret-title">密码强度</h2><p>输入试试</p></div>
+          <div class="caption"><h2 id="secret-title">Strength Meter</h2><p>Type to test</p></div>
         </section>
 
         <section class="sample" id="chip-input" aria-labelledby="chip-title">
           <div class="stage"><div class="widget">
             <div class="chips" role="group" aria-labelledby="chip-title">
-              <input type="text" placeholder="回车添加" aria-label="新标签" enterkeyhint="done" maxlength="8">
+              <input type="text" placeholder="Press Enter" aria-label="New tag" enterkeyhint="done" maxlength="8">
             </div>
           </div></div>
-          <div class="caption"><h2 id="chip-title">标签输入</h2><p>回车添加</p></div>
+          <div class="caption"><h2 id="chip-title">Chip Input</h2><p>Press Enter</p></div>
         </section>
 
         <section class="sample" id="plan-picker" aria-labelledby="plan-title">
           <div class="stage"><div class="widget">
-            <fieldset class="plans"><legend class="sr-only">选择方案</legend>
+            <fieldset class="plans"><legend class="sr-only">Choose a plan</legend>
               <span class="plan-ring" aria-hidden="true"></span>
-              <label><input type="radio" name="plan" value="basic"><b>基础</b><small>免费</small></label>
-              <label><input type="radio" name="plan" value="pro" checked><b>专业</b><small>¥28/月</small></label>
-              <label><input type="radio" name="plan" value="team"><b>团队</b><small>¥98/月</small></label>
+              <label><input type="radio" name="plan" value="basic"><b>Basic</b><small>Free</small></label>
+              <label><input type="radio" name="plan" value="pro" checked><b>Pro</b><small>$4/mo</small></label>
+              <label><input type="radio" name="plan" value="team"><b>Team</b><small>$12/mo</small></label>
             </fieldset>
           </div></div>
-          <div class="caption"><h2 id="plan-title">方案卡片</h2><p>点选方案</p></div>
+          <div class="caption"><h2 id="plan-title">Plan Picker</h2><p>Pick a plan</p></div>
         </section>
       </div>
     </main>
-    <footer class="credit">六个表单控件均由 UI Moments 原创设计与实现，按项目 <a href="../../LICENSE">MIT 许可证</a> 发布。<a href="./index.html">更多原创控件 ↗</a></footer>
+    <footer class="credit">Designed and built by UI Moments. Released under the <a href="../../LICENSE">MIT License</a>.</footer>
   </div>
 
   <script>
@@ -322,7 +324,7 @@
     const $$ = (selector, scope = document) => Array.from(scope.querySelectorAll(selector));
     const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
-    // 单个控件：独立页面用 #id，画廊嵌入用 ?sample=id。
+    // One control per view: #id when opened directly, ?sample=id when embedded in the gallery.
     const sections = $$('.sample');
     function showSelectedSample() {
       const id = location.hash.slice(1) || (root.dataset.embedded && params.get('sample'));
@@ -340,9 +342,9 @@
       try { localStorage.setItem('ui-moments-theme', root.dataset.theme); } catch {}
     });
 
-    /* ---------- 石子评分：选中后石子从左到右依次弹起 ---------- */
+    /* ---------- Pebble Rating ---------- */
     {
-      const words = ['', '很差', '一般', '还行', '很好', '超棒'];
+      const words = ['', 'Bad', 'Poor', 'Okay', 'Good', 'Great'];
       const group = $('.pebbles');
       const word = $('.pebble-word', group);
       group.addEventListener('change', event => {
@@ -358,7 +360,7 @@
       });
     }
 
-    /* ---------- 档位滑块：拖动时拨块变宽，档位标签跟着抬起 ---------- */
+    /* ---------- Notch Slider ---------- */
     {
       const notch = $('.notch');
       const range = $('input', notch);
@@ -373,14 +375,14 @@
       for (const type of ['pointerup', 'pointercancel', 'blur']) range.addEventListener(type, () => delete notch.dataset.drag);
     }
 
-    /* ---------- 密码强度：分段依次填满，颜色随强度变化 ---------- */
+    /* ---------- Strength Meter ---------- */
     {
       const box = $('.secret');
       const input = $('input', box);
       const eye = $('.secret-eye', box);
       const segments = $$('.secret-meter i', box);
       const note = $('strong', box);
-      const levels = [['太短', '--weak'], ['弱', '--weak'], ['一般', '--warn'], ['良好', '--accent'], ['很强', '--ok']];
+      const levels = [['Too short', '--weak'], ['Weak', '--weak'], ['Fair', '--warn'], ['Good', '--accent'], ['Strong', '--ok']];
       function score(text) {
         if (text.length < 4) return 0;
         let points = text.length >= 8 ? 2 : 1;
@@ -399,13 +401,13 @@
         const show = input.type === 'password';
         input.type = show ? 'text' : 'password';
         eye.setAttribute('aria-pressed', String(show));
-        eye.setAttribute('aria-label', show ? '隐藏密码' : '显示密码');
+        eye.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
         if (motionEnabled()) $$('.lid', eye).forEach(lid => lid.animate([{ scale: '1 1' }, { scale: '1 .1' }, { scale: '1 1' }], { duration: 260, easing: 'ease-in-out' }));
       });
       paint();
     }
 
-    /* ---------- 标签输入：回车弹出新标签，退格把最后一个收回 ---------- */
+    /* ---------- Chip Input ---------- */
     {
       const field = $('.chips');
       const input = $('input', field);
@@ -425,7 +427,7 @@
         const close = document.createElement('button');
         close.type = 'button';
         close.textContent = '×';
-        close.setAttribute('aria-label', `移除 ${text}`);
+        close.setAttribute('aria-label', `Remove ${text}`);
         close.addEventListener('click', () => { remove(chip); input.focus(); });
         chip.append(close);
         field.insertBefore(chip, input);
@@ -447,10 +449,10 @@
         }
       });
       field.addEventListener('pointerdown', event => { if (event.target === field) { event.preventDefault(); input.focus(); } });
-      ['设计', '动效'].forEach(add);
+      ['design', 'motion'].forEach(add);
     }
 
-    /* ---------- 方案卡片：选中描边从旧卡片滑到新卡片 ---------- */
+    /* ---------- Plan Picker ---------- */
     {
       const plans = $('.plans');
       const ring = $('.plan-ring', plans);

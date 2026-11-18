@@ -119,26 +119,44 @@ const originalActions = [
 const originalVisuals = [
   ['magnet-grid', '磁吸点阵', 'Magnet Grid', '指针反馈', '四十个圆点被指针吸过去，越近越大越亮，离开后弹回原位。', ['点阵', '指针', '磁吸']],
   ['jelly-pad', '果冻方块', 'Jelly Cube', '拖动', '拖动时方块沿速度方向拉长，松手后按弹簧晃回中心。', ['果冻', '拖动', '弹簧']],
-  ['hue-orbit', '色轮', 'Hue Orbit', '选色器', '绕着色环拖动选色，选中的色点放大，中心色块跟着变色并鼓一下。', ['颜色', '选色', '圆环']],
+  ['hue-orbit', '色轮', 'Hue Orbit', '选色器', '绕着色环拖动选色，选中的色点放大，中心色块跟着变色并鼓一下。', ['颜色', '选色', '圆环'], 'color'],
   ['merge-drops', '融合水滴', 'Merge Drops', '拖动', '把小水滴拖向大水滴，两者融成一体；松手后拉丝分开并弹回原位。', ['水滴', 'gooey', '融合']],
-  ['pull-cord', '拉绳灯', 'Pull Cord Lamp', '开关', '把灯绳往下拉，松手弹回并切换灯光，灯罩下投出一束暖光。', ['开关', '灯', '拉绳']],
-  ['flip-coin', '抛硬币', 'Flip Coin', '按钮', '硬币抛起旋转几圈，落地停在太阳面或月亮面，影子随高度缩放。', ['硬币', '翻转', '随机']],
+  ['pull-cord', '拉绳灯', 'Pull Cord Lamp', '开关', '把灯绳往下拉，松手弹回并切换灯光，灯罩下投出一束暖光。', ['开关', '灯', '拉绳'], 'color'],
+  ['flip-coin', '抛硬币', 'Flip Coin', '按钮', '硬币抛起旋转几圈，落地停在太阳面或月亮面，影子随高度缩放。', ['硬币', '翻转', '随机'], 'color'],
   ['ripple-pad', '涟漪画板', 'Ripple Pad', '指针反馈', '点按落下三圈涟漪，按住越久水滴越大、涟漪越远。', ['涟漪', '长按', '水波']],
   ['bloom-toggle', '花朵开关', 'Bloom Toggle', '开关', '六片花瓣依次张开，花心亮起；再点一次收拢成花苞。', ['开关', '花', '花瓣']],
-].map(([id, title, en, type, summary, tags]) => ({id, title, en, type, summary, tags, page: 'visual'}));
+].map(([id, title, en, type, summary, tags, page = 'visual']) => ({id, title, en, type, summary, tags, page, ...(page === 'color' && {vivid: true})}));
+
+// 第四批原创：单色微交互（motion.html）。卡片排布与过渡类型参考 amicro（MIT），代码与造型由本项目独立完成。
+const amicro = {
+  name: 'amicro',
+  url: 'https://github.com/Subhan-code/Amicro--Micro-transitions-',
+  note: '参考其卡片排布与微交互类型，UI Moments 独立设计与实现，未使用其代码。',
+};
+const originalMotion = [
+  ['card-fan', '扇形卡组', 'Card Fan', '卡片', '五张卡片叠在一起，悬停或点按时沿弧线展开成扇形。', ['卡片', '扇形', '展开'], amicro],
+  ['depth-stack', '纵深卡堆', 'Depth Stack', '卡片', '点按把最前面的卡片沉下去，再从后方插回卡堆。', ['卡片', '层叠', '纵深'], amicro],
+  ['cover-flow', '封面流', 'Cover Flow', '轮播', '两侧卡片在透视中转开，中间一张正对你；方向键或点按切换。', ['轮播', '3D', '透视'], amicro],
+  ['tilt-card', '倾斜卡片', 'Tilt Card', '卡片', '卡片朝指针方向倾斜，一道高光跟着移动，离开后弹回。', ['卡片', '倾斜', '高光'], amicro],
+  ['magnetic-button', '磁吸按钮', 'Magnetic Button', '按钮', '指针靠近时按钮被吸过去，箭头比按钮多走一点。', ['按钮', '磁吸', '指针'], amicro],
+  ['text-reveal', '文字翻转', 'Text Reveal', '文字', '悬停时字母从左到右依次向上翻出新的一行。', ['文字', '翻转', '悬停'], amicro],
+  ['menu-morph', '菜单变形', 'Menu Morph', '图标', '三条横线折成一个叉，再点一次复原。', ['菜单', '图标', '变形']],
+  ['stagger-rows', '错落入场', 'Stagger Rows', '列表', '四行内容依次上浮淡入，点按重播。', ['列表', '入场', '错落'], amicro],
+].map(([id, title, en, type, summary, tags, credit]) => ({id, title, en, type, summary, tags, page: 'motion', ...(credit && {credit})}));
 
 const originalControls = [
   ...originalCore.map(work => ({...work, page: 'index'})),
   ...originalVisuals,
+  ...originalMotion,
   ...originalInputs,
   ...originalActions,
 ].map(({page, ...work}) => ({
   ...work,
-  tags: [...work.tags, '原创控件'],
+  tags: [...work.tags, work.credit ? '参考后实现' : '原创控件'],
   demo: `gallery/originals/${page}.html#${work.id}`,
   source: 'gallery/originals',
   live: true,
-  original: true,
+  original: !work.credit,
 }));
 
 window.WORKS = [
@@ -164,5 +182,6 @@ window.WORKS = [
       '支持键盘、系统亮暗设置和“减少动态效果”',
     ],
     featured: true,
+    vivid: true,
   },
 ];
