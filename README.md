@@ -4,7 +4,7 @@
 
 # UI Moments · 界面图鉴
 
-**开源的 UI 交互与动效图鉴。** 224 个可以直接上手的实时示例：点按、拖动、调参，再把 HTML 或 React 代码带走。
+**开源的 UI 交互与动效图鉴。** 232 个可以直接上手的实时示例：点按、拖动、调参，再把 HTML 或 React 代码带走。
 
 [![Check and deploy](https://github.com/guanmo-ai/ui-moments/actions/workflows/pages.yml/badge.svg)](https://github.com/guanmo-ai/ui-moments/actions/workflows/pages.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-434eaa.svg)](LICENSE)
@@ -34,26 +34,27 @@
 
 | 分类 | 数量 | 包含 |
 | --- | ---: | --- |
-| 交互控件 | 44 | 原创控件、Motion 微交互、弹性滑尺、对齐拨片、夹页键（全部单色） |
+| 交互控件 | 52 | 原创控件、Motion 微交互、弹性滑尺、对齐拨片、夹页键（全部单色） |
 | 点击反馈 | 12 | Micron.js 的回弹、摆动、闪动效果 |
 | 加载动效 | 164 | 27 款原创、44 款 LDRS、47 款 Loading UI、46 款 SVG Spinners |
 | 多彩 | 4 | 色彩鲜艳的作品单独成组、排在最后：昼夜开关、色轮、拉绳灯、抛硬币 |
 
 ### 原创控件
 
-44 个控件，分在七个英文、单文件、无依赖的页面里。图鉴首屏全部是极简单色；需要颜色的作品单独放在「多彩」。
+52 个控件，分在八个英文、单文件、无依赖的页面里。图鉴首屏全部是极简单色；需要颜色的作品单独放在「多彩」。
 
 | 页面 | 控件 |
 | --- | --- |
 | [Visual](https://guanmo-ai.github.io/ui-moments/gallery/originals/visual.html)（无文字） | [磁吸点阵](https://guanmo-ai.github.io/ui-moments/#magnet-grid) · [果冻方块](https://guanmo-ai.github.io/ui-moments/#jelly-pad) · [融合水滴](https://guanmo-ai.github.io/ui-moments/#merge-drops) · [涟漪画板](https://guanmo-ai.github.io/ui-moments/#ripple-pad) · [花朵开关](https://guanmo-ai.github.io/ui-moments/#bloom-toggle) |
 | [Motion](https://guanmo-ai.github.io/ui-moments/gallery/originals/motion.html) | [扇形卡组](https://guanmo-ai.github.io/ui-moments/#card-fan) · [纵深卡堆](https://guanmo-ai.github.io/ui-moments/#depth-stack) · [封面流](https://guanmo-ai.github.io/ui-moments/#cover-flow) · [倾斜卡片](https://guanmo-ai.github.io/ui-moments/#tilt-card) · [磁吸按钮](https://guanmo-ai.github.io/ui-moments/#magnetic-button) · [文字翻转](https://guanmo-ai.github.io/ui-moments/#text-reveal) · [菜单变形](https://guanmo-ai.github.io/ui-moments/#menu-morph) · [错落入场](https://guanmo-ai.github.io/ui-moments/#stagger-rows) |
 | [Gestures](https://guanmo-ai.github.io/ui-moments/gallery/originals/gestures.html) | [滑动确认](https://guanmo-ai.github.io/ui-moments/#swipe-confirm) · [下拉刷新](https://guanmo-ai.github.io/ui-moments/#pull-refresh) · [弹弦](https://guanmo-ai.github.io/ui-moments/#elastic-string) · [多米诺](https://guanmo-ai.github.io/ui-moments/#domino-row) · [翘板开关](https://guanmo-ai.github.io/ui-moments/#rocker-switch) · [波形拖动](https://guanmo-ai.github.io/ui-moments/#scrub-wave) · [吸附网格](https://guanmo-ai.github.io/ui-moments/#snap-grid) · [扇形菜单](https://guanmo-ai.github.io/ui-moments/#radial-menu) · [步骤条](https://guanmo-ai.github.io/ui-moments/#step-track) · [呼吸球](https://guanmo-ai.github.io/ui-moments/#breath-orb) |
+| [Elastic](https://guanmo-ai.github.io/ui-moments/gallery/originals/elastic.html) | [拉伸开关](https://guanmo-ai.github.io/ui-moments/#stretch-toggle) · [蠕动分页点](https://guanmo-ai.github.io/ui-moments/#worm-dots) · [橡皮搜索](https://guanmo-ai.github.io/ui-moments/#rubber-search) · [弹性标签栏](https://guanmo-ai.github.io/ui-moments/#gooey-tabbar) · [压键播放](https://guanmo-ai.github.io/ui-moments/#squash-play) · [购物袋角标](https://guanmo-ai.github.io/ui-moments/#cart-badge) · [弹性折叠卡](https://guanmo-ai.github.io/ui-moments/#elastic-accordion) · [鼓包音量条](https://guanmo-ai.github.io/ui-moments/#bulge-volume) |
 | [Core](https://guanmo-ai.github.io/ui-moments/gallery/originals/) | [墨滴开关](https://guanmo-ai.github.io/ui-moments/#ink-switch) · [刻度旋钮](https://guanmo-ai.github.io/ui-moments/#detent-dial) · [长按确认](https://guanmo-ai.github.io/ui-moments/#hold-confirm) · [滚轮步进器](https://guanmo-ai.github.io/ui-moments/#odometer-stepper) · [翻页标签](https://guanmo-ai.github.io/ui-moments/#leaf-tabs) · [潮汐进度](https://guanmo-ai.github.io/ui-moments/#tide-progress) |
 | [Actions](https://guanmo-ai.github.io/ui-moments/gallery/originals/actions.html) | [复制按钮](https://guanmo-ai.github.io/ui-moments/#copy-morph) · [点赞爆发](https://guanmo-ai.github.io/ui-moments/#like-burst) · [纸飞机](https://guanmo-ai.github.io/ui-moments/#paper-plane) · [下载进度环](https://guanmo-ai.github.io/ui-moments/#download-ring) · [验证码](https://guanmo-ai.github.io/ui-moments/#code-shake) · [通知铃](https://guanmo-ai.github.io/ui-moments/#bell-toggle) |
 | [Forms](https://guanmo-ai.github.io/ui-moments/gallery/originals/inputs.html) | [划线清单](https://guanmo-ai.github.io/ui-moments/#stroke-checklist) · [石子评分](https://guanmo-ai.github.io/ui-moments/#pebble-rating) · [档位滑块](https://guanmo-ai.github.io/ui-moments/#notch-slider) · [密码强度](https://guanmo-ai.github.io/ui-moments/#strength-meter) · [标签输入](https://guanmo-ai.github.io/ui-moments/#chip-input) · [方案卡片](https://guanmo-ai.github.io/ui-moments/#plan-picker) |
 | [Color](https://guanmo-ai.github.io/ui-moments/gallery/originals/color.html)（多彩） | [色轮](https://guanmo-ai.github.io/ui-moments/#hue-orbit) · [拉绳灯](https://guanmo-ai.github.io/ui-moments/#pull-cord) · [抛硬币](https://guanmo-ai.github.io/ui-moments/#flip-coin) |
 
-Motion 页中的 7 个作品参考了 [amicro](https://github.com/Subhan-code/Amicro--Micro-transitions-)（MIT）的卡片排布与微交互类型，代码与造型由 UI Moments 独立完成。另有 18 款原创加载动效：折页、回信、潮环、叠块、节拍、浮字、点阵波、沙漏、文稿、时针、双星、电平、绕方、摆锤、回字、缺环、方阵蛇、翻块。
+Motion 页中的 7 个作品参考了 [amicro](https://github.com/Subhan-code/Amicro--Micro-transitions-)（MIT）的卡片排布与微交互类型；Elastic 页参考 [@yui540](https://x.com/yui540/status/2120825584947487170) 弹性 UI 的视觉语言（浅灰底板、粗圆角近黑控件、压缩回弹），控件种类与代码均为独立设计。另有 18 款原创加载动效：折页、回信、潮环、叠块、节拍、浮字、点阵波、沙漏、文稿、时针、双星、电平、绕方、摆锤、回字、缺环、方阵蛇、翻块。
 
 ## 快速开始
 
@@ -85,7 +86,7 @@ ui-moments/
 │   └── site.css            # 全站颜色令牌与导航
 ├── gallery/
 │   ├── works.js            # 交互控件清单（新增控件从这里登记）
-│   ├── originals/          # 44 个控件（7 个英文页面）
+│   ├── originals/          # 52 个控件（8 个英文页面）
 │   ├── elastic-controls/   # 弹性滑尺 / 对齐拨片 / 夹页键 + 风格变体
 │   ├── day-night-toggle/   # 昼夜开关（canvas）
 │   ├── loaders/            # LDRS 集成、原创加载动效（originals / motifs）与编辑器

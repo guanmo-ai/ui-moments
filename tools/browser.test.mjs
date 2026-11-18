@@ -56,7 +56,7 @@ test('发布包子路径下可搜索、操作滑尺、下载 HTML 并复制提�
   });
   await page.goto(site);
   await page.locator('html[data-ready="true"]').waitFor({ state: 'attached' });
-  assert.equal(await page.locator('.ui-item').count(), 224);
+  assert.equal(await page.locator('.ui-item').count(), 232);
   await page.frameLocator('[data-ui="ink-switch"] iframe').getByRole('switch', { name: 'Ink Switch' }).waitFor();
   assert.equal(await page.evaluate(() => window.scrollY), 0, '嵌入控件载入后首页仍停在顶部');
   assert.ok(await page.locator('.ui-stage .ui-animation').count() < 35, '首页只挂载近屏的循环动效');
@@ -279,6 +279,20 @@ test('第二、三批原创控件可用键盘完成主要操作', { timeout: 25_
   assert.equal(await steps.getAttribute('aria-valuenow'), '3');
   await page.getByRole('application', { name: 'Snap Grid' }).press('ArrowRight');
   assert.equal(await page.locator('#snap-status').textContent(), 'Row 2, column 3');
+
+  await page.goto(new URL('gallery/originals/elastic.html', site).href);
+  const stretch = page.getByRole('switch', { name: 'Stretch Toggle' });
+  await stretch.press('Space');
+  assert.equal(await stretch.getAttribute('aria-checked'), 'true');
+  await page.getByRole('tab', { name: 'Home' }).press('ArrowRight');
+  assert.equal(await page.getByRole('tab', { name: 'Search' }).getAttribute('aria-selected'), 'true');
+  await page.getByRole('button', { name: 'Add to cart' }).click();
+  await page.getByRole('button', { name: /Cart, 1 item/ }).waitFor();
+  const volume = page.getByRole('slider', { name: 'Bulge Volume' });
+  await volume.press('End');
+  assert.equal(await volume.getAttribute('aria-valuenow'), '100');
+  await page.getByRole('button', { name: 'Elastic Accordion' }).press('Enter');
+  assert.equal(await page.locator('.acc-head').getAttribute('aria-expanded'), 'true');
 
   await page.goto(new URL('gallery/originals/inputs.html', site).href);
   const notch = page.getByRole('slider', { name: 'Notch Slider' });

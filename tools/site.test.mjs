@@ -39,12 +39,12 @@ test('新入口和旧链接兼容，画廊指向可用的代码与展示资源',
   assert.ok(!items.some(item=>['ldrs','loaders'].includes(item.id)));
   const controls=items.filter(item=>!item.loader&&item.type!=='点击反馈');
   const referenced=controls.filter(item=>!item.original).map(item=>item.id);
-  assert.deepEqual(referenced.filter(id=>!items.find(item=>item.id===id).credit?.url.includes('Amicro')).sort(),[
+  assert.deepEqual(referenced.filter(id=>!items.find(item=>item.id===id).credit?.url.includes('Amicro')&&items.find(item=>item.id===id).demo?.startsWith('gallery/originals/')!==true).sort(),[
     'alignment-switch','bookmark-press','day-night-toggle','elastic-ruler',
   ]);
-  assert.equal(referenced.length,11);
+  assert.equal(referenced.length,19);
   assert.equal(controls.filter(item=>item.original).length,37);
-  assert.deepEqual(controls.slice(0,4).map(item=>item.id),['magnet-grid','card-fan','ink-switch','swipe-confirm']);
+  assert.deepEqual(controls.slice(0,4).map(item=>item.id),['magnet-grid','stretch-toggle','card-fan','ink-switch']);
   const vivid=items.filter(item=>item.category==='color').map(item=>item.id);
   assert.deepEqual(vivid.sort(),['day-night-toggle','flip-coin','hue-orbit','pull-cord']);
   assert.ok(items.slice(-vivid.length).every(item=>item.category==='color'),'多彩作品排在最后');
@@ -68,7 +68,7 @@ test('原创控件不带外部来源，独立页面包含每个控件与无障�
   for(const work of originals){
     assert.equal(work.credit,undefined,work.id);
     const [path,id]=work.demo.split('#');
-    assert.match(path,/^gallery\/originals\/(index|visual|motion|gestures|color|inputs|actions)\.html$/);
+    assert.match(path,/^gallery\/originals\/(index|visual|motion|gestures|elastic|color|inputs|actions)\.html$/);
     assert.equal(id,work.id);
     if(!pages.has(path))pages.set(path,await read(path));
     assert.match(pages.get(path),new RegExp(`<section class="sample" id="${work.id}"`),work.id);
@@ -77,6 +77,9 @@ test('原创控件不带外部来源，独立页面包含每个控件与无障�
     assert.doesNotMatch(prompt,/原始参考/);
   }
   assert.equal(pages.size,7);
+  const elastic=context.window.WORKS.filter(work=>work.demo?.startsWith('gallery/originals/elastic.html#'));
+  assert.equal(elastic.length,8);
+  assert.ok(elastic.every(work=>work.credit?.name==='@yui540'&&!work.original));
   const inspired=context.window.WORKS.filter(work=>work.credit?.name==='amicro');
   assert.equal(inspired.length,7);
   assert.ok(inspired.every(work=>work.demo.startsWith('gallery/originals/motion.html#')));

@@ -158,11 +158,30 @@ const originalGestures = [
   ['breath-orb', '呼吸球', 'Breath Orb', '节奏', '圆球四秒吸气、四秒呼气，外圈跟着慢半拍；点按暂停。', ['呼吸', '节奏', '冥想']],
 ].map(([id, title, en, type, summary, tags]) => ({id, title, en, type, summary, tags, page: 'gestures'}));
 
+// 第六批：Elastic（elastic.html）。参考 @yui540 弹性 UI 的视觉语言（浅灰底板、粗圆角近黑控件、压缩回弹），
+// 控件种类、造型与代码均为本项目独立设计，未复刻原视频中的控件。
+const yuiStyle = {
+  name: '@yui540',
+  url: 'https://x.com/yui540/status/2120825584947487170',
+  note: '参考其浅灰底板、粗圆角近黑控件与压缩回弹的视觉语言；控件种类、造型与代码由 UI Moments 独立完成。',
+};
+const elasticSet = [
+  ['stretch-toggle', '拉伸开关', 'Stretch Toggle', '开关', '按住时圆钮被拉长，松手后弹到另一端；打开时轨道翻成实色。', ['开关', '拉伸', '弹性']],
+  ['worm-dots', '蠕动分页点', 'Worm Dots', '分页', '切页时指示条的前端先跑过去、尾端再追上，像一条小虫。', ['分页', '指示器', '蠕动']],
+  ['rubber-search', '橡皮搜索', 'Rubber Search', '输入框', '黑色圆钮弹性拉长成搜索框；Esc 或清空后收回成圆。', ['搜索', '展开', '输入框']],
+  ['gooey-tabbar', '弹性标签栏', 'Gooey Tab Bar', '标签栏', '选中底块朝新标签拉长再回弹，新图标轻轻跳起。', ['标签栏', '导航', '弹性']],
+  ['squash-play', '压键播放', 'Squash Play Key', '按钮', '厚实的键帽按下时下沉压扁，播放与暂停图标互相变形。', ['播放', '键帽', '按钮']],
+  ['cart-badge', '购物袋角标', 'Cart Badge', '按钮', '点加号，一颗圆点沿弧线落进袋子，袋子压扁、角标数字弹出。', ['购物车', '角标', '计数']],
+  ['elastic-accordion', '弹性折叠卡', 'Elastic Accordion', '折叠面板', '展开时卡片先被拉长再回弹，箭头翻转。', ['折叠', '卡片', '展开']],
+  ['bulge-volume', '鼓包音量条', 'Bulge Volume', '滑块', '拖动音量时实色顶端鼓起，扬声器的声波随音量增减。', ['音量', '竖向滑块', '拖动']],
+].map(([id, title, en, type, summary, tags]) => ({id, title, en, type, summary, tags, page: 'elastic', credit: yuiStyle}));
+
 const originalControls = [
   ...originalCore.map(work => ({...work, page: 'index'})),
   ...originalVisuals,
   ...originalMotion,
   ...originalGestures,
+  ...elasticSet,
   ...originalInputs,
   ...originalActions,
 ].map(({page, ...work}) => ({

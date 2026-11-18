@@ -33,11 +33,11 @@ const shapeFilters = {
 };
 
 const featured = [
-  'magnet-grid', 'card-fan', 'ink-switch', 'swipe-confirm', 'jelly-pad',
+  'magnet-grid', 'stretch-toggle', 'card-fan', 'ink-switch', 'gooey-tabbar', 'swipe-confirm', 'jelly-pad', 'squash-play',
   'paper-fold', 'tilt-card', 'elastic-string', 'detent-dial', 'merge-drops',
   'radial-menu', 'menu-morph', 'tide-ring', 'depth-stack', 'rocker-switch',
   'bloom-toggle', 'domino-row', 'like-burst', 'text-reveal', 'pixel-snake',
-  'scrub-wave', 'download-ring', 'snap-grid', 'breath-orb', 'pull-refresh',
+  'scrub-wave', 'worm-dots', 'download-ring', 'cart-badge', 'snap-grid', 'breath-orb', 'rubber-search', 'pull-refresh', 'bulge-volume', 'elastic-accordion',
   'step-track', 'orbit-pair', 'level-bars', 'flip-tile',
   'cover-flow', 'odometer-stepper', 'ripple-pad', 'magnetic-button', 'elastic-ruler',
   'leaf-tabs', 'tide-progress', 'bell-toggle', 'stagger-rows', 'hold-confirm',

@@ -4,7 +4,7 @@
 
 # UI Moments
 
-**An open-source gallery of UI interactions and motion.** 224 live examples you can poke, drag and tune — then take the HTML or React code with you.
+**An open-source gallery of UI interactions and motion.** 232 live examples you can poke, drag and tune — then take the HTML or React code with you.
 
 [![Check and deploy](https://github.com/guanmo-ai/ui-moments/actions/workflows/pages.yml/badge.svg)](https://github.com/guanmo-ai/ui-moments/actions/workflows/pages.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-434eaa.svg)](LICENSE)
@@ -35,26 +35,27 @@
 
 | Category | Count | Includes |
 | --- | ---: | --- |
-| Controls | 44 | Original controls, Motion micro-transitions, Elastic Slider, Alignment Switch, Bookmark Button (all monochrome) |
+| Controls | 52 | Original controls, Motion micro-transitions, Elastic Slider, Alignment Switch, Bookmark Button (all monochrome) |
 | Tap feedback | 12 | Micron.js bounce, wobble and blink effects |
 | Loaders | 164 | 27 originals, 44 LDRS, 47 Loading UI, 46 SVG Spinners |
 | Color | 4 | Colorful pieces kept in their own tab, at the end: Day/Night Toggle, Hue Orbit, Pull Cord Lamp, Flip Coin |
 
 ### Original controls
 
-44 controls across seven English, single-file pages with no dependencies. The gallery front is monochrome; pieces that need color live in the Color tab.
+52 controls across eight English, single-file pages with no dependencies. The gallery front is monochrome; pieces that need color live in the Color tab.
 
 | Page | Controls |
 | --- | --- |
 | [Visual](https://guanmo-ai.github.io/ui-moments/gallery/originals/visual.html) (no text) | Magnet Grid · Jelly Cube · Merge Drops · Ripple Pad · Bloom Toggle |
 | [Motion](https://guanmo-ai.github.io/ui-moments/gallery/originals/motion.html) | Card Fan · Depth Stack · Cover Flow · Tilt Card · Magnetic Button · Text Reveal · Menu Morph · Stagger Rows |
 | [Gestures](https://guanmo-ai.github.io/ui-moments/gallery/originals/gestures.html) | Swipe to Confirm · Pull to Refresh · Elastic String · Domino Row · Rocker Switch · Scrub Wave · Snap Grid · Radial Menu · Step Track · Breath Orb |
+| [Elastic](https://guanmo-ai.github.io/ui-moments/gallery/originals/elastic.html) | Stretch Toggle · Worm Dots · Rubber Search · Gooey Tab Bar · Squash Play Key · Cart Badge · Elastic Accordion · Bulge Volume |
 | [Core](https://guanmo-ai.github.io/ui-moments/gallery/originals/) | Ink Switch · Detent Dial · Hold to Confirm · Odometer Stepper · Leaf Tabs · Tide Progress |
 | [Actions](https://guanmo-ai.github.io/ui-moments/gallery/originals/actions.html) | Copy Button · Like Burst · Paper Plane · Download Ring · Code Shake · Bell Toggle |
 | [Forms](https://guanmo-ai.github.io/ui-moments/gallery/originals/inputs.html) | Stroke Checklist · Pebble Rating · Notch Slider · Strength Meter · Chip Input · Plan Picker |
 | [Color](https://guanmo-ai.github.io/ui-moments/gallery/originals/color.html) | Hue Orbit · Pull Cord Lamp · Flip Coin |
 
-Seven Motion pieces take their layout and transition types from [amicro](https://github.com/Subhan-code/Amicro--Micro-transitions-) (MIT); the code and visuals are our own. Plus 18 original loaders.
+Seven Motion pieces take their layout and transition types from [amicro](https://github.com/Subhan-code/Amicro--Micro-transitions-) (MIT); the Elastic set borrows the visual language of [@yui540](https://x.com/yui540/status/2120825584947487170)'s elastic UI. The controls, shapes and code are our own. Plus 18 original loaders.
 
 ## Quick start
 
