@@ -1,66 +1,69 @@
 # UI Moments · 界面图鉴
 
-好的界面，往往赢在某一个瞬间。这里收集这样的瞬间：每一个 UI 都在主画廊中直接运行，按组件用途分类，保留来源与许可证。
+UI Moments 收录可直接操作的界面组件和动效。每个组件在主画廊逐个运行，按用途分类。点击名称旁的放大按钮可打开详情，加载动效还提供参数调整、代码下载和提示词复制。
 
-**在线体验：[guanmo-ai.github.io/ui-moments](https://guanmo-ai.github.io/ui-moments/)**
+[在线画廊](https://guanmo-ai.github.io/ui-moments/) · [风格库](https://guanmo-ai.github.io/ui-moments/styles.html)
 
 [![作品预览](assets/og.jpg)](https://guanmo-ai.github.io/ui-moments/)
 
-## 作品
+## 收录内容
 
-| 作品 | 说明 | 灵感来源 |
-| --- | --- | --- |
-| [44个加载指示器](index.html) | 在主画廊逐个展示，与其他 UI 同级；可调整参数、复制 HTML 或 React | [Griffin Johnston / UI Ball](https://github.com/GriffinJohnston/ldrs)，完整集成，MIT |
-| [昼夜开关](gallery/day-night-toggle/) | 像素点沿螺旋重组成月亮，轮廓光绕拨钮转一圈，可以拖到一半停住 | [@kaolti](https://x.com/kaolti/status/2119151022014894260) |
-| [调光旋钮](gallery/light-scenes/) | 光从旋钮出发，按距离依次照亮每张卡片 | [@chetaslua](https://x.com/chetaslua/status/2119353034165891308) |
-| [海平线](gallery/light-scenes/) | 拖动时间，太阳落下，灯塔和窗户依次亮起 | [@chetaslua](https://x.com/chetaslua/status/2119353034165891308) |
-| [浦肯野花园](gallery/light-scenes/) | 光变暗时红花最先消失，萤火虫不受影响 | 原创 |
-| [霓虹招牌](gallery/light-scenes/) | 天黑到 50 lux 以下，招牌带着闪烁依次点亮 | 原创 |
-| [色温台灯](gallery/light-scenes/) | 拖动色温，整页纸面跟着变暖 | [@chetaslua](https://x.com/chetaslua/status/2119353034165891308) |
+| 作品 | 实现与来源 |
+| --- | --- |
+| [9 款加载微动效](index.html?q=加载微动效) | UI Moments 原创动效。并列展示形式参考 [Ramin Nasibov](https://x.com/RaminNasibov/status/2122045748623609935) |
+| [折页](index.html#paper-fold) · [回信](index.html#signal-return) | UI Moments 构思、AI 辅助实现的动效实验 |
+| [44 款 LDRS](index.html#ring) | 集成 Griffin Johnston / UI Ball 的 [LDRS 1.1.9](https://github.com/GriffinJohnston/ldrs)，保留原始动效、MIT 许可及[独立调整页](gallery/loaders/README.md) |
+| [47 款 Loading UI](index.html#loading-ui-ring) | 集成 Bartosz Zagrodzki 的 [Loading UI](https://github.com/turbostarter/loading-ui)，保留 React、CSS、SVG、Motion 实现及 [MIT 许可](gallery/loading-ui/README.md) |
+| [46 款 SVG Spinners](index.html#svg-spinner-gooey-balls-1) | 集成 Utkarsh Verma 的 [SVG Spinners](https://github.com/n3r4zzurr0/svg-spinners)，保留 CSS 和 SMIL 源码，以 CSS 版展示，采用 [MIT 许可](gallery/svg-spinners/README.md) |
+| [12 种 Micron 点击反馈](index.html#micron-jelly) | 复用 [Webkul / Micron.js](https://github.com/webkul/micron) 的 CSS 动效并单独设计操作按钮，采用 [MIT 许可](gallery/micron/README.md) |
+| [弹性控件](gallery/elastic-controls/) | 弹性滑尺、对齐拨片和夹页键。参考 [@yui540](https://x.com/yui540/status/2120825584947487170) 的回弹节奏，独立设计与实现 |
+| [日期选择器](index.html#date-picker) | UI Moments 编写的[基础日期组件](gallery/date-picker/README.md)，支持周视图、月视图和键盘操作 |
+| [昼夜开关](gallery/day-night-toggle/) | 参考 [@kaolti](https://x.com/kaolti/status/2119151022014894260) 的交互，独立实现像素重组、拖动停留和轮廓光 |
 
-每个作品是一个不依赖构建的 HTML 文件，下载后用浏览器直接打开即可。
+[风格库](styles.html)可操作弹性滑尺、对齐拨片、夹页键、日期选择器和折页动效，并在原版、孟菲斯、包豪斯和像素风之间切换。
 
 ## 本地运行
 
+需要 Node.js 22.12+（22 LTS 或 24+）、npm 和 Python 3。在仓库根目录运行：
+
 ```bash
-npm run dev        # 打开 http://localhost:5173
+npm run setup
+npm run dev
 ```
+
+打开 [http://127.0.0.1:5173](http://127.0.0.1:5173)。`setup` 根据锁文件安装依赖，`dev` 先构建所需资源，再启动本地服务。`npm run dev:date` 可单独调试日期选择器。
+
+## 检查与发布
+
+```bash
+npm run build
+npm run lint
+npm test
+npm run package:site
+npx playwright install --only-shell chromium
+npm run test:browser
+```
+
+`npm test` 检查分类、日期边界、导出和随附许可。浏览器测试把 `_site/` 作为站点子路径启动，验证画廊、风格库、日期、下载和复制。`npm run package:site` 使用 Git 已跟踪的站点文件和构建产物，新增站点文件需先加入 Git。GitHub Actions 对主分支的变更和 PR 执行检查，主分支通过后发布到 GitHub Pages。
 
 ## 录制视频
 
-支持逐帧录制的作品内置录制模式：画面由虚拟时钟逐帧推进，光标操作由脚本控制，所以每次录出来的视频完全一样，不掉帧。
+昼夜开关和光照场景由虚拟时钟逐帧推进。完成 `npm run setup` 后安装 Chromium 与 ffmpeg，再运行：
 
 ```bash
-npm install
+npx playwright install --only-shell chromium
 npm run record:toggle          # out/day-night-toggle.mp4，2880×2160，60fps
 npm run record:light-scenes    # out/light-scenes.mp4，2880×1800，60fps
 ```
 
-需要 Node.js 20+ 和 ffmpeg。用法见 [tools/record.js](tools/record.js) 开头的说明。
+录制器参数见 [tools/record.js](tools/record.js)。
 
 ## 新增作品
 
-1. 在 `gallery/<作品名>/` 放入 `index.html`、预览视频、封面图和 `README.md`（写明灵感来源和改进点）。
-2. 在 [gallery/works.js](gallery/works.js) 里加一项，首页会自动出现。
-
-## 参考与署名
-
-我们会参考别人的作品，也会把参考了谁写清楚。规则见 [参考与署名](docs/attribution.md)。
+1. 在 `gallery/<作品名>/` 添加可操作的页面和 README，记录来源、采用的实现与本站改动。
+2. 在 [gallery/works.js](gallery/works.js) 注册组件，并在 [assets/catalog.mjs](assets/catalog.mjs) 确认用途分类。
+3. 用画廊卡片、放大详情和独立入口验证组件。来源说明见[参考与署名](docs/attribution.md)，分类规则见[组件分类与展示](docs/component-categories.md)。
 
 ## 许可
 
-本项目新增代码以 [MIT](LICENSE) 许可发布。第三方实现保留原作者版权和原始许可证，见 [第三方声明](THIRD_PARTY_NOTICES.md)。
-
-## 加载动效
-
-44个加载指示器逐个展示在首页，独立调整页仍位于 `gallery/loaders/`，使用原样保存的 LDRS 1.1.9 发布包，在线预览无需第三方 CDN。可搜索、分类、调整每款支持的参数，复制或下载独立 HTML 与 React 示例；每份示例保留完整 MIT 许可。详见 [集成说明](gallery/loaders/README.md)。
-
-检查：`npm run test:ldrs`。加载动效页面不需要构建，通过静态服务器运行即可。
-
-## 界面与品牌
-
-主品牌统一为UI Moments，采用与本人Three Atlas一致的中性深色、紧凑导航、组件优先与同级展示；共享令牌与外壳位于 `assets/site.css`、`assets/site.mjs`。加载指示器逐个列在首页，`gallery/loaders/` 保留为独立调整页，旧入口继续跳转。第三方名称仅用于来源说明、许可及必要的代码依赖标识。字体自托管，并保留OFL。
-
-## 同级组件图鉴
-
-首页直接展示每个 UI，44个加载指示器不再作为一个合集入口。按「反馈与状态、选择与输入、导航、日期与时间」查找，加载形态作为二级筛选。所有 UI 无封面遮罩，可直接体验。详细分类和接入约定见 [组件分类与展示](docs/component-categories.md)。
+本项目新增代码以 [MIT](LICENSE) 许可发布。上游代码、资源和字体各自保留原作者声明及许可证。详见[第三方声明](THIRD_PARTY_NOTICES.md)。

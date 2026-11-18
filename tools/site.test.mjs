@@ -4,6 +4,10 @@ import {readFile,access} from 'node:fs/promises';
 import vm from 'node:vm';
 import {buildCatalog,categories,matches} from '../assets/catalog.mjs';
 import {componentPrompt,loaderPrompt} from '../assets/prompt.mjs';
+import {originalMarkup} from '../gallery/loaders/originals.mjs';
+import {htmlExample,reactExample} from '../gallery/loaders/snippets.mjs';
+import {formatMicronDownload} from '../gallery/micron/catalog.mjs';
+import {createSvgSpinnerIntegration} from '../gallery/svg-spinners/integration.mjs';
 const root=new URL('../',import.meta.url);
 const read=path=>readFile(new URL(path,root),'utf8');
 
@@ -25,26 +29,98 @@ test('主站与加载动效页统一品牌，原作只在来源与许可处署�
 test('新入口和旧链接兼容，画廊指向可用的代码与展示资源',async()=>{
   const context={window:{}};vm.runInNewContext(await read('gallery/works.js'),context);
   const items=buildCatalog(context.window.WORKS);
-  assert.equal(items.filter(item=>item.loader).length,44);
-  assert.equal(items.length,44+context.window.WORKS.filter(item=>!['ldrs','loaders'].includes(item.id)).length);
+  assert.equal(items.filter(item=>item.loader&&!item.loader.original&&!item.loader.provider).length,44);
+  assert.equal(items.filter(item=>item.loader?.provider==='loading-ui').length,47);
+  assert.equal(items.filter(item=>item.loader?.provider==='svg-spinners').length,46);
+  assert.equal(items.filter(item=>item.loader?.original).length,11);
+  assert.equal(items.filter(item=>item.type==='点击反馈').length,12);
+  assert.equal(items.length,160+context.window.WORKS.filter(item=>!['ldrs','loaders'].includes(item.id)).length);
   assert.equal(new Set(items.map(item=>item.id)).size,items.length);
   assert.ok(!items.some(item=>['ldrs','loaders'].includes(item.id)));
+  assert.deepEqual(items.filter(item=>!item.loader&&item.type!=='点击反馈').map(item=>item.id),[
+    'day-night-toggle','date-picker','elastic-ruler','alignment-switch','bookmark-press',
+  ]);
   for(const item of items){
     assert.ok(categories.some(category=>category.id===item.category),item.id);
     if(!item.loader)await access(new URL(item.demo.split('#')[0],root));
   }
+  const studies=items.filter(item=>matches(item,{category:'feedback',query:'加载微动效'}));
+  assert.equal(studies.length,9);
+  assert.ok(studies.every(item=>item.loader.original&&item.loader.reference.endsWith('2122045748623609935')));
   const redirect=await read('gallery/ldrs/index.html');
   assert.match(redirect,/location\.replace\('\.\.\/loaders\/'\+location\.search\+location\.hash\)/);
   for(const path of ['assets/fonts/OFL-Geist.txt','assets/fonts/OFL-GeistMono.txt'])assert.match(await read(path),/SIL OPEN FONT LICENSE/);
 });
 
-test('用途分类与形态筛选独立，加载指示器和交互控件保持同级',()=>{
-  const items=buildCatalog([{id:'day-night-toggle',title:'开关'},{id:'dimmer',title:'旋钮'},{id:'neon',title:'状态'}]);
-  assert.equal(items.filter(item=>matches(item,{category:'input'})).length,2);
-  assert.equal(items.filter(item=>matches(item,{category:'feedback'})).length,45);
+test('用途分类与形态筛选独立，日期选择器在日期与时间下',()=>{
+  const items=buildCatalog([{id:'day-night-toggle',title:'开关'},{id:'date-picker',title:'日期选择器'}]);
+  assert.equal(items.filter(item=>matches(item,{category:'input'})).length,1);
+  assert.equal(items.filter(item=>matches(item,{category:'feedback'})).length,160);
+  assert.deepEqual(items.filter(item=>matches(item,{category:'date'})).map(item=>item.id),['date-picker']);
   assert.equal(items.filter(item=>matches(item,{query:'Waveform'})).length,1);
   assert.ok(items.filter(item=>matches(item,{category:'feedback',shape:'环形'})).every(item=>item.loader.group==='环形'));
   assert.equal(items.filter(item=>matches(item,{category:'input',shape:'环形'})).length,0);
+});
+
+test('Micron 的每个按钮复用上游关键帧，独立 HTML 包含源码与完整许可',async()=>{
+  const page=await read('gallery/micron/index.html');
+  const micronItems=buildCatalog().filter(item=>item.type==='点击反馈');
+  const css=await read(micronItems[0].sourceFiles[0]);
+  const license=await read(micronItems[0].credit.licensePath);
+  assert.match(license,/Copyright \(c\) 2018 Webkul/);
+  for(const item of micronItems){
+    assert.match(css,new RegExp(`@keyframes action-${item.en}\\s*\\{`));
+    const html=formatMicronDownload(page,item.en,css,license);
+    assert.ok(html.includes(`data-effect="${item.en}"`));
+    assert.ok(html.includes(css));
+    assert.ok(html.includes(license.trim()));
+    assert.doesNotMatch(html,/<script src=|<link rel="stylesheet"/);
+    assert.match(componentPrompt(item),/vendor\/micron\/dist\/css\/micron\.css/);
+    assert.match(componentPrompt(item),/vendor\/micron\/LICENSE/);
+  }
+});
+
+test('SVG Spinners 导出复用原始 SVG 并保留作者和 MIT 许可',async()=>{
+  const items=buildCatalog().flatMap(item=>item.loader?.provider==='svg-spinners'?[item.loader]:[]);
+  const license=await read(items[0].origin.licensePath);
+  const sources=JSON.parse(await read('gallery/svg-spinners/dist/sources.json'));
+  const integration=createSvgSpinnerIntegration({license,sources});
+  const props={size:72,color:'#f7e5cc'};
+  assert.match(license,/Utkarsh Verma/);
+  assert.equal(Object.keys(sources).length,46);
+  for(const item of items){
+    const source=await read(`gallery/svg-spinners/vendor/svg-spinners/svg-css/${item.slug}.svg`);
+    assert.equal(sources[item.slug],source);
+    await access(new URL(`gallery/svg-spinners/vendor/svg-spinners/svg-smil/${item.slug}.svg`,root));
+    const html=integration.html(item,props,'#121214');
+    const react=integration.react(item,props);
+    assert.ok(html.includes(source));
+    assert.ok(react.includes(JSON.stringify(source).slice(1,-1)));
+    for(const output of [html,react,integration.prompt(item,props,'#121214')]){
+      assert.ok(output.includes(license.trim()));
+      assert.match(output,/prefers-reduced-motion/);
+    }
+  }
+});
+
+test('原创加载动效跨预览、HTML、React 和提示词复用同一份动效和项目许可',async()=>{
+  const license=await read('LICENSE');
+  for(const {loader} of buildCatalog().filter(item=>item.loader?.original)){
+    const props={size:100,color:'#7744aa',speed:1.3};
+    const markup=originalMarkup(loader,props);
+    const html=htmlExample(loader,props,markup,license);
+    const react=reactExample(loader,props,license);
+    const prompt=loaderPrompt(loader,props,markup,license,'#f7f4ee');
+    assert.ok(html.includes(markup));
+    assert.ok(react.includes(JSON.stringify(loader.css)));
+    assert.ok(react.includes(JSON.stringify(props,null,2)));
+    for(const output of [html,react,prompt]){
+      assert.match(output,/UI Moments 原创/);
+      assert.match(output,/prefers-reduced-motion/);
+      assert.doesNotMatch(output,/ldrs|Griffin Johnston/i);
+      assert.ok(output.includes(license.trim()));
+    }
+  }
 });
 
 test('复制提示词带上当前加载参数和许可，并指向对应的交互场景源码',async()=>{
@@ -57,10 +133,10 @@ test('复制提示词带上当前加载参数和许可，并指向对应的交�
   assert.ok(prompt.includes(license.trim()));
 
   const context={window:{}};vm.runInNewContext(await read('gallery/works.js'),context);
-  const horizon=buildCatalog(context.window.WORKS).find(item=>item.id==='horizon');
-  const component=componentPrompt(horizon);
-  assert.match(component,/blob\/main\/gallery\/light-scenes\/index\.html/);
-  assert.match(component,/raw\.githubusercontent\.com\/guanmo-ai\/ui-moments\/main\/gallery\/light-scenes\/index\.html/);
-  assert.match(component,/localhost:5173\/#horizon/);
-  assert.match(component,/金色时刻和蓝调时刻/);
+  const datePicker=buildCatalog(context.window.WORKS).find(item=>item.id==='date-picker');
+  const component=componentPrompt(datePicker);
+  assert.match(component,/tree\/main\/gallery\/date-picker/);
+  assert.match(component,/assets\/style-tokens\.css/);
+  await access(new URL('gallery/date-picker/dist/THIRD_PARTY_LICENSES.md',root));
+  assert.match(component,/DatePicker\.tsx/);
 });

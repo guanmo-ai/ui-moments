@@ -1,4 +1,8 @@
 import {loaders} from '../gallery/loaders/catalog.mjs';
+import {originalLoaders} from '../gallery/loaders/originals.mjs';
+import {loadingUILoaders} from '../gallery/loading-ui/catalog.mjs';
+import {svgSpinners} from '../gallery/svg-spinners/catalog.mjs';
+import {micronWorks} from '../gallery/micron/catalog.mjs';
 
 // 依据组件用途分类；库名和实现技术不作为信息层级。
 export const categories=[
@@ -9,21 +13,23 @@ export const categories=[
   {id:'date',name:'日期与时间'},
 ];
 const kinds={
-  'day-night-toggle':['input','开关'],dimmer:['input','旋钮'],
-  horizon:['input','时间滑块'],garden:['input','亮度滑块'],
-  neon:['feedback','状态反馈'],lamp:['input','色温滑块'],
-  'color-temperature':['input','色温滑块'],
-  'flow-tab-bar':['navigation','标签导航'],'holiday-calendar':['date','日期选择'],
+  'day-night-toggle':['input','开关'],'date-picker':['date','日期选择'],
+  'elastic-ruler':['input','滑块'],'alignment-switch':['input','分段控件'],'bookmark-press':['input','收藏按钮'],
 };
 export function buildCatalog(works=[]){
-  const effects=loaders.map(loader=>({id:loader.key,title:loader.name,en:loader.name,category:'feedback',type:'加载指示器',shape:loader.group,summary:loader.description,loader}));
+  const effects=[...originalLoaders,...loaders,...loadingUILoaders,...svgSpinners].map(loader=>({
+    id:loader.key,title:loader.name,en:loader.name,category:'feedback',type:'加载指示器',
+    shape:loader.group,summary:loader.description,
+    tags:loader.original?['原创','loading',loader.collection]:[loader.origin?.name||'LDRS',loader.origin?.author||'UI Ball','开源集成'],
+    loader,
+  }));
   const components=works.filter(work=>!['ldrs','loaders'].includes(work.id)).map(work=>{
     const [category,type]=kinds[work.id]||['input','交互控件'];
     return {...work,category,type};
   });
-  // 同级混排，首屏能看到不同用途；没有合集、推荐位或大卡片。
-  const byId=new Map([...effects,...components].map(item=>[item.id,item]));
-  const start=['ring','day-night-toggle','waveform','dimmer','square','flow-tab-bar','horizon','orbit','holiday-calendar','infinity','neon','color-temperature','lamp','grid','garden'];
+  // 同级混排，先展示原创动效和不同用途的互动作品。
+  const byId=new Map([...components,...effects,...micronWorks].map(item=>[item.id,item]));
+  const start=['shutter-steps','paper-fold','day-night-toggle','signal-return','date-picker','elastic-ruler','alignment-switch','bookmark-press','micron-jelly','svg-spinner-gooey-balls-1'];
   const result=[];
   for(const id of start){if(byId.has(id)){result.push(byId.get(id));byId.delete(id);}}
   return [...result,...byId.values()];

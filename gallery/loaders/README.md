@@ -23,6 +23,12 @@ https://guanmo-ai.github.io/ui-moments/gallery/loaders/
 
 UI Moments新增分类、中文说明、参数调整、代码生成/复制/下载及响应式界面；HTML导出保留原作实际渲染的标记与样式。`preview.mp4`为4:5、1080×1350、60fps、12秒无配乐合集，覆盖44款动效。
 
+## 加载微动效
+
+[主画廊里的九款组件](../../index.html?q=加载微动效)参考了 [Ramin Nasibov 并列展示小尺寸加载动效的形式](https://x.com/RaminNasibov/status/2122045748623609935)。九款组件的图形、运动路径与 CSS 均由 UI Moments 独立设计。每张卡片下方写明具体动作，可点开放大、调参并导出。
+
+源码位于 [studies.mjs](studies.mjs)，沿用项目 [MIT 许可证](../../LICENSE)。默认尺寸 48 px，支持在画廊调整到 16 px 或更大。导出的 HTML + CSS 与 React 示例无需安装动效库。
+
 ## 检查
 
 运行 `npm run test:ldrs`。完整许可见 [原始LICENSE](vendor/ldrs/LICENSE) 和 [第三方声明](../../THIRD_PARTY_NOTICES.md)。后续引入新的库时，各自记录来源、固定版本、接入范围及许可证，不替换上游署名。

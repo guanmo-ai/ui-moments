@@ -5,6 +5,9 @@ export function escapeHtml(value){
 }
 
 export function htmlExample(item,props,markup,license,background='#151517'){
+  const credit=item.original
+    ?'来源与许可：UI Moments 原创 · MIT'
+    :'来源与许可：LDRS 1.1.9 · Griffin Johnston / UI Ball\nhttps://github.com/GriffinJohnston/ldrs\n独立页面由 UI Moments 生成，动效保留原作实现。';
   return `<!doctype html>
 <html lang="zh-CN">
 <head>
@@ -26,9 +29,7 @@ ${markup}
 </div>
 </body>
 <!--
-来源与许可：LDRS 1.1.9 · Griffin Johnston / UI Ball
-https://github.com/GriffinJohnston/ldrs
-独立页面由 UI Moments 生成，动效保留原作实现。
+${credit}
 
 ${license.trim()}
 -->
@@ -37,6 +38,34 @@ ${license.trim()}
 }
 
 export function reactExample(item,props,license){
+  if(item.original)return `const defaults = ${JSON.stringify(props,null,2)};
+const css = ${JSON.stringify(item.css)};
+
+export default function LoadingIndicator({
+  size = defaults.size,
+  color = defaults.color,
+  speed = defaults.speed,
+} = {}) {
+  return (
+    <div role="status" aria-label="正在加载">
+      <style>{css}</style>
+      <span
+        aria-hidden="true"
+        className="${item.className}"
+        style={{ '--size': size + 'px', '--color': color, '--period': speed + 's' }}
+      >
+${item.parts.map(part=>`        <span className="${part}" />`).join('\n')}
+      </span>
+    </div>
+  );
+}
+
+/*
+来源与许可：UI Moments 原创 · MIT
+
+${license.trim()}
+*/
+`;
   return `'use client';
 // 安装：npm install ldrs@1.1.9
 import { useEffect, useRef } from 'react';

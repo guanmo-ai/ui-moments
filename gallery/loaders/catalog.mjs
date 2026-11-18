@@ -608,7 +608,9 @@ export const loaders=[
 ];
 
 export const groups=[...new Set(loaders.map(item=>item.group))];
-export function previewProps(item,color){
+export function previewProps(item,color,theme){
+  if(item.original)return {...item.defaults,color:theme==='dark'?item.darkColor:item.defaults.color};
+  if(item.provider)return {...item.defaults,color};
   const wide=["lineWobble","zoomies","dotStream","waveform","treadmill","newtonsCradle","leapfrog"];
   return {...item.defaults,size:item.key==="hatch"?42:wide.includes(item.key)?100:68,color};
 }

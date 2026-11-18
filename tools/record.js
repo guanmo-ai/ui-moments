@@ -6,6 +6,7 @@
 //        node tools/record.js <page.html> <out-prefix> --preview 1000,2500   (still frames at those ms)
 const { chromium } = require('playwright');
 const fs = require('fs'), path = require('path'), { spawn } = require('child_process');
+const { pathToFileURL } = require('node:url');
 const args = process.argv.slice(2);
 const opt = (k, d) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : d; };
 const [src, out] = args;
@@ -13,6 +14,7 @@ const fps = +opt('--fps', 60), W = +opt('--w', 1440), H = +opt('--h', 900), SCAL
 const preview = opt('--preview', null);
 (async () => {
   const body = fs.readFileSync(src, 'utf8');
+  fs.mkdirSync(path.dirname(path.resolve(out)), { recursive: true });
   // Full HTML documents load as-is; bare fragments get a minimal document around them.
   let target = path.resolve(src);
   if (!/^\s*<!doctype/i.test(body)) {
@@ -23,7 +25,7 @@ const preview = opt('--preview', null);
   const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: SCALE, colorScheme: 'light' });
   const errs = []; page.on('pageerror', e => errs.push(e.message)); page.on('console', m => m.type() === 'error' && errs.push(m.text()));
   await page.addInitScript(() => { window.__RECORD = true; });
-  await page.goto('file://' + target, { waitUntil: 'networkidle' });
+  await page.goto(pathToFileURL(target).href, { waitUntil: 'networkidle' });
   await page.evaluate(() => window.__ready);
   await page.waitForTimeout(800);
   const dt = 1000 / fps;

@@ -1,0 +1,2 @@
+# 上游原文件保留原始换行与格式，以便校验内容哈希。
+/gallery/**/vendor/** -text -whitespace

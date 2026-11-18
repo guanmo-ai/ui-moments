@@ -3,7 +3,7 @@ const moon='<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-wi
 
 export function setupSite(){
   const root=document.documentElement,button=document.getElementById('theme'),header=document.getElementById('top');
-  let theme='dark';try{theme=localStorage.getItem('ui-moments-theme')||theme;}catch{}
+  let theme=root.dataset.theme||'dark';try{theme=localStorage.getItem('ui-moments-theme')||theme;}catch{}
   root.dataset.theme=theme==='light'?'light':'dark';
   const paint=()=>{if(!button)return;const dark=root.dataset.theme!=='light';button.innerHTML=dark?sun:moon;button.setAttribute('aria-label',dark?'切换浅色模式':'切换深色模式');button.title=button.getAttribute('aria-label');};
   paint();
