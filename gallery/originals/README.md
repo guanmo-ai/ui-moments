@@ -1,11 +1,12 @@
 # 原创控件 · UI Moments Originals
 
-原创控件分在六个英文页面里（页面内不出现中文，配色为单色；只有 color.html 使用彩色）。打开页面可以同时操作该页全部控件；`<页面>.html#<id>` 只显示其中一个；主画廊通过 `?embed=ui&sample=<id>` 分别嵌入。
+原创控件分在七个英文页面里（页面内不出现中文，配色为单色；只有 color.html 使用彩色）。打开页面可以同时操作该页全部控件；`<页面>.html#<id>` 只显示其中一个；主画廊通过 `?embed=ui&sample=<id>` 分别嵌入。
 
 | 页面 | 内容 |
 | --- | --- |
 | [visual.html](visual.html) | 无文字的图形交互：磁吸点阵 `magnet-grid`、果冻方块 `jelly-pad`、融合水滴 `merge-drops`、涟漪画板 `ripple-pad`、花朵开关 `bloom-toggle` |
 | [motion.html](motion.html) | 微交互：`card-fan`、`depth-stack`、`cover-flow`、`tilt-card`、`magnetic-button`、`text-reveal`、`menu-morph`、`stagger-rows`（除 `menu-morph` 外的 7 个参考 amicro，MIT，见 works.js 的 `credit`） |
+| [gestures.html](gestures.html) | 手势与物理：`swipe-confirm`、`pull-refresh`、`elastic-string`、`domino-row`、`rocker-switch`、`scrub-wave`、`snap-grid`、`radial-menu`、`step-track`、`breath-orb` |
 | [color.html](color.html) | 多彩：色轮 `hue-orbit`、拉绳灯 `pull-cord`、抛硬币 `flip-coin` |
 | [index.html](index.html) | 基础控件（见下表） |
 | [actions.html](actions.html) | 操作反馈：复制按钮 `copy-morph`、点赞爆发 `like-burst`、纸飞机发送 `paper-plane`、下载进度环 `download-ring`、验证码 `code-shake`、通知铃 `bell-toggle` |
@@ -37,4 +38,4 @@
 
 1. 选一个合适的页面（或复制 `visual.html` 新建一页），在 `.samples` 中加一个 `<section class="sample" id="<id>">`，控件放在 `.stage > .widget` 里。
 2. 脚本写在独立的 `{ ... }` 块中，动画前先检查 `motionEnabled()`。
-3. 在 [gallery/works.js](../works.js) 对应的数组（`originalCore` / `originalVisuals` / `originalMotion` / `originalInputs` / `originalActions`）中登记，并运行 `npm test`。
+3. 在 [gallery/works.js](../works.js) 对应的数组（`originalCore` / `originalVisuals` / `originalMotion` / `originalGestures` / `originalInputs` / `originalActions`）中登记，并运行 `npm test`。

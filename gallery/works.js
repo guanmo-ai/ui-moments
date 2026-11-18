@@ -144,10 +144,25 @@ const originalMotion = [
   ['stagger-rows', '错落入场', 'Stagger Rows', '列表', '四行内容依次上浮淡入，点按重播。', ['列表', '入场', '错落'], amicro],
 ].map(([id, title, en, type, summary, tags, credit]) => ({id, title, en, type, summary, tags, page: 'motion', ...(credit && {credit})}));
 
+// 第五批原创：手势与物理（gestures.html）。单色、无文字。
+const originalGestures = [
+  ['swipe-confirm', '滑动确认', 'Swipe to Confirm', '滑块', '把圆钮拖到轨道尽头才确认，中途松手弹回；轨道里的箭头轻轻闪动提示方向。', ['滑动', '确认', '拖动']],
+  ['pull-refresh', '下拉刷新', 'Pull to Refresh', '列表', '下拉列表时转圈逐渐画满，松手超过阈值就刷新，新的一行从顶部落下。', ['下拉', '刷新', '列表']],
+  ['elastic-string', '弹弦', 'Elastic String', '拖动', '拉住琴弦任意一点再放手，弦按阻尼振动慢慢停下。', ['弦', '弹簧', '振动']],
+  ['domino-row', '多米诺', 'Domino Row', '按钮', '七块骨牌依次倒下；再点一次，从最后一块开始依次立起。', ['多米诺', '连锁', '错落']],
+  ['rocker-switch', '翘板开关', 'Rocker Switch', '开关', '像墙上的翘板开关一样在透视里左右翘起，按下的一侧变暗。', ['开关', '3D', '翘板']],
+  ['scrub-wave', '波形拖动', 'Scrub Wave', '滑块', '拖动或播放时，播放头经过的波形柱变成实色。', ['音频', '波形', '进度']],
+  ['snap-grid', '吸附网格', 'Snap Grid', '拖动', '把方块拖到任意位置，松手后弹进最近的格子；方向键逐格移动。', ['网格', '吸附', '拖动']],
+  ['radial-menu', '扇形菜单', 'Radial Menu', '菜单', '点按加号，四个操作沿弧线依次弹出；加号转成叉。', ['菜单', '弧形', '展开']],
+  ['step-track', '步骤条', 'Step Track', '进度', '前进时连线向前延伸，新到达的节点轻轻弹一下。', ['步骤', '进度', '引导']],
+  ['breath-orb', '呼吸球', 'Breath Orb', '节奏', '圆球四秒吸气、四秒呼气，外圈跟着慢半拍；点按暂停。', ['呼吸', '节奏', '冥想']],
+].map(([id, title, en, type, summary, tags]) => ({id, title, en, type, summary, tags, page: 'gestures'}));
+
 const originalControls = [
   ...originalCore.map(work => ({...work, page: 'index'})),
   ...originalVisuals,
   ...originalMotion,
+  ...originalGestures,
   ...originalInputs,
   ...originalActions,
 ].map(({page, ...work}) => ({

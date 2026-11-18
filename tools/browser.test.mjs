@@ -56,7 +56,7 @@ test('发布包子路径下可搜索、操作滑尺、下载 HTML 并复制提�
   });
   await page.goto(site);
   await page.locator('html[data-ready="true"]').waitFor({ state: 'attached' });
-  assert.equal(await page.locator('.ui-item').count(), 206);
+  assert.equal(await page.locator('.ui-item').count(), 224);
   await page.frameLocator('[data-ui="ink-switch"] iframe').getByRole('switch', { name: 'Ink Switch' }).waitFor();
   assert.equal(await page.evaluate(() => window.scrollY), 0, '嵌入控件载入后首页仍停在顶部');
   assert.ok(await page.locator('.ui-stage .ui-animation').count() < 35, '首页只挂载近屏的循环动效');
@@ -105,7 +105,7 @@ test('发布包子路径下可搜索、操作滑尺、下载 HTML 并复制提�
   await page.locator('[data-shape="摆动"]').click();
   assert.equal(await page.locator('.ui-item:visible').count(), 4);
   await page.locator('#categories [data-category="loading"]').click();
-  assert.equal(await page.locator('.ui-item:visible').count(), 156);
+  assert.equal(await page.locator('.ui-item:visible').count(), 164);
   const foldAnimations = () => {
     const shadow = document.querySelector('[data-ui="paper-fold"] .ui-animation')?.shadowRoot;
     return shadow?.getAnimations().map(animation => animation.playState) ?? [];
@@ -261,6 +261,24 @@ test('第二、三批原创控件可用键盘完成主要操作', { timeout: 25_
   const menu = page.getByRole('button', { name: 'Menu' });
   await menu.press('Enter');
   assert.equal(await page.locator('.menu').getAttribute('aria-expanded'), 'true');
+
+  await page.goto(new URL('gallery/originals/gestures.html', site).href);
+  const swipe = page.getByRole('button', { name: 'Swipe to Confirm' });
+  await swipe.press('Enter');
+  assert.equal(await page.locator('#swipe-status').textContent(), 'Confirmed');
+  const rocker = page.getByRole('switch', { name: 'Rocker Switch' });
+  await rocker.press('Space');
+  assert.equal(await rocker.getAttribute('aria-checked'), 'true');
+  const wave = page.getByRole('slider', { name: 'Scrub Wave' });
+  await wave.press('End');
+  assert.equal(await wave.getAttribute('aria-valuenow'), '100');
+  await page.getByRole('button', { name: 'Radial Menu' }).press('Enter');
+  await page.getByRole('button', { name: 'Save' }).waitFor();
+  const steps = page.getByRole('progressbar', { name: 'Step Track' });
+  await page.getByRole('button', { name: 'Next step' }).click();
+  assert.equal(await steps.getAttribute('aria-valuenow'), '3');
+  await page.getByRole('application', { name: 'Snap Grid' }).press('ArrowRight');
+  assert.equal(await page.locator('#snap-status').textContent(), 'Row 2, column 3');
 
   await page.goto(new URL('gallery/originals/inputs.html', site).href);
   const notch = page.getByRole('slider', { name: 'Notch Slider' });

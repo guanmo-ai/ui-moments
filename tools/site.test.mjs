@@ -32,9 +32,9 @@ test('新入口和旧链接兼容，画廊指向可用的代码与展示资源',
   assert.equal(items.filter(item=>item.loader&&!item.loader.original&&!item.loader.provider).length,44);
   assert.equal(items.filter(item=>item.loader?.provider==='loading-ui').length,47);
   assert.equal(items.filter(item=>item.loader?.provider==='svg-spinners').length,46);
-  assert.equal(items.filter(item=>item.loader?.original).length,19);
+  assert.equal(items.filter(item=>item.loader?.original).length,27);
   assert.equal(items.filter(item=>item.type==='点击反馈').length,12);
-  assert.equal(items.length,168+context.window.WORKS.filter(item=>!['ldrs','loaders'].includes(item.id)).length);
+  assert.equal(items.length,176+context.window.WORKS.filter(item=>!['ldrs','loaders'].includes(item.id)).length);
   assert.equal(new Set(items.map(item=>item.id)).size,items.length);
   assert.ok(!items.some(item=>['ldrs','loaders'].includes(item.id)));
   const controls=items.filter(item=>!item.loader&&item.type!=='点击反馈');
@@ -43,8 +43,8 @@ test('新入口和旧链接兼容，画廊指向可用的代码与展示资源',
     'alignment-switch','bookmark-press','day-night-toggle','elastic-ruler',
   ]);
   assert.equal(referenced.length,11);
-  assert.equal(controls.filter(item=>item.original).length,27);
-  assert.deepEqual(controls.slice(0,4).map(item=>item.id),['magnet-grid','card-fan','ink-switch','jelly-pad']);
+  assert.equal(controls.filter(item=>item.original).length,37);
+  assert.deepEqual(controls.slice(0,4).map(item=>item.id),['magnet-grid','card-fan','ink-switch','swipe-confirm']);
   const vivid=items.filter(item=>item.category==='color').map(item=>item.id);
   assert.deepEqual(vivid.sort(),['day-night-toggle','flip-coin','hue-orbit','pull-cord']);
   assert.ok(items.slice(-vivid.length).every(item=>item.category==='color'),'多彩作品排在最后');
@@ -63,12 +63,12 @@ test('新入口和旧链接兼容，画廊指向可用的代码与展示资源',
 test('原创控件不带外部来源，独立页面包含每个控件与无障碍角色',async()=>{
   const context={window:{}};vm.runInNewContext(await read('gallery/works.js'),context);
   const originals=context.window.WORKS.filter(work=>work.original);
-  assert.equal(originals.length,27);
+  assert.equal(originals.length,37);
   const pages=new Map();
   for(const work of originals){
     assert.equal(work.credit,undefined,work.id);
     const [path,id]=work.demo.split('#');
-    assert.match(path,/^gallery\/originals\/(index|visual|motion|color|inputs|actions)\.html$/);
+    assert.match(path,/^gallery\/originals\/(index|visual|motion|gestures|color|inputs|actions)\.html$/);
     assert.equal(id,work.id);
     if(!pages.has(path))pages.set(path,await read(path));
     assert.match(pages.get(path),new RegExp(`<section class="sample" id="${work.id}"`),work.id);
@@ -76,7 +76,7 @@ test('原创控件不带外部来源，独立页面包含每个控件与无障�
     assert.match(prompt,/实现来源：UI Moments/);
     assert.doesNotMatch(prompt,/原始参考/);
   }
-  assert.equal(pages.size,6);
+  assert.equal(pages.size,7);
   const inspired=context.window.WORKS.filter(work=>work.credit?.name==='amicro');
   assert.equal(inspired.length,7);
   assert.ok(inspired.every(work=>work.demo.startsWith('gallery/originals/motion.html#')));
@@ -95,9 +95,9 @@ test('用途分类与形态筛选独立',()=>{
   const items=buildCatalog([{id:'day-night-toggle',title:'开关'}]);
   assert.equal(items.filter(item=>matches(item,{category:'input'})).length,1);
   assert.equal(items.filter(item=>matches(item,{category:'feedback'})).length,12);
-  assert.equal(items.filter(item=>matches(item,{category:'loading'})).length,156);
+  assert.equal(items.filter(item=>matches(item,{category:'loading'})).length,164);
   assert.equal(items.filter(item=>matches(item,{query:'Waveform'})).length,1);
-  assert.equal(items.filter(item=>matches(item,{category:'loading',shape:'环形'})).length,37);
+  assert.equal(items.filter(item=>matches(item,{category:'loading',shape:'环形'})).length,39);
   assert.equal(items.filter(item=>matches(item,{category:'feedback',shape:'环形'})).length,0);
   assert.equal(items.filter(item=>matches(item,{category:'input',shape:'环形'})).length,0);
   assert.deepEqual(getCategoryFilters(items,'feedback').map(({id,count})=>[id,count]),[

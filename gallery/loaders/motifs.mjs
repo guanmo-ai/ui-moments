@@ -2,6 +2,7 @@
 const ink = {color: '#434eaa', darkColor: '#bcc4ff'};
 const warm = {color: '#a4492f', darkColor: '#ffbd99'};
 const sea = {color: '#2f6f86', darkColor: '#9fdcf0'};
+const mono = {color: '#18181b', darkColor: '#fafafa'};
 
 export const motifLoaders = [
   {
@@ -111,25 +112,21 @@ export const motifLoaders = [
     key: 'rising-words',
     name: '浮字',
     group: '文字',
-    ...ink,
+    ...mono,
     speed: 1.8,
-    description: '「加载中」三个字依次浮起再落回',
-    parts: ['ch ch-1', 'ch ch-2', 'ch ch-3'],
+    description: '“Loading” 的字母从左到右依次浮起再落回',
+    parts: Array.from({length: 7}, (_, index) => `ch ch-${index}`),
     css: `
 .um-rising-words {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 2%;
-  font: 600 calc(var(--size) * .24) / 1 system-ui, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  width: calc(var(--size) * 1.5);
+  font: 600 calc(var(--size) * .22) / 1 system-ui, -apple-system, 'Segoe UI', sans-serif;
+  letter-spacing: .01em;
 }
-.um-rising-words .ch { animation: um-words-rise var(--period) cubic-bezier(.3,.7,.3,1) var(--delay) infinite; }
-.um-rising-words .ch-1 { --delay: 0s; }
-.um-rising-words .ch-2 { --delay: calc(var(--period) * .1); }
-.um-rising-words .ch-3 { --delay: calc(var(--period) * .2); }
-.um-rising-words .ch-1::before { content: '加'; }
-.um-rising-words .ch-2::before { content: '载'; }
-.um-rising-words .ch-3::before { content: '中'; }
+.um-rising-words .ch { animation: um-words-rise var(--period) cubic-bezier(.3,.7,.3,1) infinite; }
+${'Loading'.split('').map((letter, index) => `.um-rising-words .ch-${index} { animation-delay: calc(var(--period) * ${(index * .07).toFixed(2)}); }\n.um-rising-words .ch-${index}::before { content: '${letter}'; }`).join('\n')}
 @keyframes um-words-rise {
   0%, 50%, 100% { transform: translateY(0); opacity: .4; }
   20% { transform: translateY(-22%); opacity: 1; }
@@ -247,6 +244,142 @@ export const motifLoaders = [
 .um-clock-hands .pin { position: absolute; inset: 46%; border-radius: 50%; background: currentColor; }
 @keyframes um-clock-spin { to { transform: rotate(1turn); } }
 @keyframes um-clock-tick { 0% { opacity: 1; } 25%, 100% { opacity: .3; } }
+`,
+  },
+  {
+    key: 'orbit-pair',
+    name: '双星',
+    group: '环形',
+    ...mono,
+    speed: 1.4,
+    description: '两颗圆点沿同一轨道相向而行，交会时一起变小',
+    parts: ['path', 'star star-a', 'star star-b'],
+    css: `
+.um-orbit-pair .path { position: absolute; inset: 18%; border-radius: 50%; border: calc(var(--size) * .03) solid currentColor; opacity: .2; }
+.um-orbit-pair .star { position: absolute; inset: 0; animation: um-pair-turn var(--period) cubic-bezier(.45,.05,.55,.95) infinite; }
+.um-orbit-pair .star::before { position: absolute; top: 12%; left: 50%; width: 16%; aspect-ratio: 1; margin-left: -8%; content: ''; border-radius: 50%; background: currentColor; animation: um-pair-size calc(var(--period) / 2) ease-in-out infinite; }
+.um-orbit-pair .star-b { animation-direction: reverse; }
+@keyframes um-pair-turn { to { transform: rotate(1turn); } }
+@keyframes um-pair-size { 0%, 100% { transform: scale(1); } 50% { transform: scale(.55); } }
+`,
+  },
+  {
+    key: 'level-bars',
+    name: '电平',
+    group: '线条',
+    ...mono,
+    speed: 1.2,
+    description: '五根竖条像音量电平一样此起彼伏',
+    parts: Array.from({length: 5}, (_, index) => `bar bar-${index}`),
+    css: `
+.um-level-bars { display: flex; align-items: center; justify-content: center; gap: 7%; }
+.um-level-bars .bar { width: 9%; height: 60%; border-radius: 100px; background: currentColor; transform-origin: center; animation: um-level var(--period) ease-in-out infinite; }
+.um-level-bars .bar-0 { animation-delay: calc(var(--period) * -.5); }
+.um-level-bars .bar-1 { animation-delay: calc(var(--period) * -.2); }
+.um-level-bars .bar-2 { animation-delay: calc(var(--period) * -.7); }
+.um-level-bars .bar-3 { animation-delay: calc(var(--period) * -.35); }
+.um-level-bars .bar-4 { animation-delay: calc(var(--period) * -.9); }
+@keyframes um-level { 0%, 100% { transform: scaleY(.25); } 30% { transform: scaleY(1); } 60% { transform: scaleY(.5); } }
+`,
+  },
+  {
+    key: 'square-lap',
+    name: '绕方',
+    group: '几何',
+    ...mono,
+    speed: 1.8,
+    description: '一颗方点沿方框的四条边绕圈，转角处停一下',
+    parts: ['frame', 'runner'],
+    css: `
+.um-square-lap .frame { position: absolute; inset: 22%; border: calc(var(--size) * .035) solid currentColor; border-radius: 12%; opacity: .25; }
+.um-square-lap .runner { position: absolute; top: 15%; left: 15%; width: 14%; aspect-ratio: 1; border-radius: 22%; background: currentColor; animation: um-lap var(--period) cubic-bezier(.6,0,.4,1) infinite; }
+@keyframes um-lap {
+  0%, 6% { transform: translate(0, 0); }
+  25%, 31% { transform: translate(400%, 0) rotate(90deg); }
+  50%, 56% { transform: translate(400%, 400%) rotate(180deg); }
+  75%, 81% { transform: translate(0, 400%) rotate(270deg); }
+  100% { transform: translate(0, 0) rotate(360deg); }
+}
+`,
+  },
+  {
+    key: 'pendulum',
+    name: '摆锤',
+    group: '线条',
+    ...mono,
+    speed: 1.6,
+    description: '摆锤从一侧荡到另一侧，到顶时放慢',
+    parts: ['pivot', 'arm'],
+    css: `
+.um-pendulum .pivot { position: absolute; top: 14%; left: 30%; right: 30%; height: 4%; border-radius: 100px; background: currentColor; opacity: .35; }
+.um-pendulum .arm { position: absolute; top: 16%; left: 49%; width: 2%; height: 48%; background: currentColor; transform-origin: 50% 0; animation: um-swing var(--period) ease-in-out infinite alternate; }
+.um-pendulum .arm::after { position: absolute; bottom: -9%; left: 50%; width: calc(var(--size) * .17); aspect-ratio: 1; margin-left: calc(var(--size) * -.085); content: ''; border-radius: 50%; background: currentColor; }
+@keyframes um-swing { from { transform: rotate(38deg); } to { transform: rotate(-38deg); } }
+`,
+  },
+  {
+    key: 'nested-squares',
+    name: '回字',
+    group: '几何',
+    ...mono,
+    speed: 2,
+    description: '三层方框由内向外扩散，最外层淡出',
+    parts: ['box box-1', 'box box-2', 'box box-3'],
+    css: `
+.um-nested-squares .box { position: absolute; inset: 0; margin: auto; width: 70%; aspect-ratio: 1; border: calc(var(--size) * .035) solid currentColor; border-radius: 14%; animation: um-nest var(--period) cubic-bezier(.3,.6,.4,1) infinite; }
+.um-nested-squares .box-2 { animation-delay: calc(var(--period) * -.33); }
+.um-nested-squares .box-3 { animation-delay: calc(var(--period) * -.66); }
+@keyframes um-nest { 0% { transform: scale(.15) rotate(0deg); opacity: 0; } 20% { opacity: 1; } 100% { transform: scale(1) rotate(90deg); opacity: 0; } }
+`,
+  },
+  {
+    key: 'gap-ring',
+    name: '缺环',
+    group: '环形',
+    ...mono,
+    speed: 1.3,
+    description: '虚线圆环一边旋转，缺口一边开合',
+    parts: ['ring'],
+    css: `
+.um-gap-ring .ring { position: absolute; inset: 14%; border-radius: 50%; border: calc(var(--size) * .07) dashed currentColor; animation: um-gap-spin var(--period) linear infinite, um-gap-breathe calc(var(--period) * 2) ease-in-out infinite; }
+@keyframes um-gap-spin { to { rotate: 1turn; } }
+@keyframes um-gap-breathe { 0%, 100% { scale: 1; opacity: 1; } 50% { scale: .82; opacity: .55; } }
+`,
+  },
+  {
+    key: 'pixel-snake',
+    name: '方阵蛇',
+    group: '几何',
+    ...mono,
+    speed: 1.8,
+    description: '四乘四方格里，一条亮起的小蛇沿 S 形路线爬过',
+    parts: Array.from({length: 16}, (_, index) => {
+      const row = Math.floor(index / 4), col = index % 4;
+      return `px px-${row * 4 + (row % 2 ? 3 - col : col)}`;
+    }),
+    css: `
+.um-pixel-snake { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6%; padding: 18%; }
+.um-pixel-snake .px { border-radius: 22%; background: currentColor; opacity: .14; animation: um-snake var(--period) linear infinite; }
+${Array.from({length: 16}, (_, index) => `.um-pixel-snake .px-${index} { animation-delay: calc(var(--period) * ${(index / 16 - 1).toFixed(4)}); }`).join('\n')}
+@keyframes um-snake { 0% { opacity: 1; } 22% { opacity: .14; } 100% { opacity: .14; } }
+`,
+  },
+  {
+    key: 'flip-tile',
+    name: '翻块',
+    group: '几何',
+    ...mono,
+    speed: 1.6,
+    description: '一块方片先横向翻、再纵向翻，像在纸上打滚',
+    parts: ['tile'],
+    css: `
+.um-flip-tile { perspective: calc(var(--size) * 3); }
+.um-flip-tile .tile { position: absolute; inset: 26%; border-radius: 12%; background: currentColor; animation: um-flip var(--period) cubic-bezier(.45,0,.55,1) infinite; }
+@keyframes um-flip {
+  0% { transform: rotateX(0) rotateY(0); }
+  50% { transform: rotateX(-180deg) rotateY(0); }
+  100% { transform: rotateX(-180deg) rotateY(-180deg); }
+}
 `,
   },
 ].map(({speed, color, darkColor, ...item}) => ({
