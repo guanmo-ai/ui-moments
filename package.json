@@ -41,6 +41,6 @@
     "test:loading-ui": "node --test gallery/loading-ui/tools/integration.test.mjs"
   },
   "devDependencies": {
-    "playwright": "1.63.0"
+    "playwright": "1.65.1"
   }
 }
