@@ -1,6 +1,7 @@
 import {foreground,background} from '../../assets/site.mjs';
 import {previewProps} from './catalog.mjs';
 import {escapeHtml as esc,htmlExample,reactExample} from './snippets.mjs';
+import {loaderPrompt,mountPrompt} from '../../assets/prompt.mjs';
 
 export function createLoaderEditor({license,isPlaying=()=>true}){
 const $=selector=>document.querySelector(selector);
@@ -34,7 +35,7 @@ function paintCode(){
 }
 function paintSelected(){
   $('#selected-preview').replaceChildren(effect(selected,props));
-  paintCode();requestAnimationFrame(syncMotion);
+  paintCode();refreshPrompt();requestAnimationFrame(syncMotion);
 }
 function open(item,button){
   selected=item;props=previewProps(item,foreground());format='html';trigger=button;
@@ -46,7 +47,7 @@ $('#close').addEventListener('click',()=>detail.close());
 detail.addEventListener('click',event=>{if(event.target===detail){const r=detail.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)detail.close();}});
 detail.addEventListener('close',()=>{
   $('#selected-preview').replaceChildren();document.body.style.overflow='';
-  history.replaceState(null,'',location.pathname+location.search);document.body.append(toast);trigger?.focus({preventScroll:true});
+  history.replaceState(null,'',location.pathname+location.search);clearFeedback();trigger?.focus({preventScroll:true});
 });
 $('#controls').addEventListener('input',event=>{
   const input=event.target,key=input.dataset.prop;if(!key)return;
@@ -63,6 +64,7 @@ for(const tab of document.querySelectorAll('[data-format]')){
 function notify(message){
   clearTimeout(toastTimer);(document.querySelector('dialog[open]')||document.body).append(toast);toast.textContent=message;toast.hidden=false;toastTimer=setTimeout(()=>{toast.hidden=true;},3200);
 }
+function clearFeedback(){clearTimeout(toastTimer);toast.hidden=true;document.body.append(toast);}
 async function copy(text){
   try{await navigator.clipboard.writeText(text);return true;}catch{
     const field=document.createElement('textarea');field.value=text;field.style.cssText='position:fixed;opacity:0;top:0;left:0';
@@ -70,14 +72,15 @@ async function copy(text){
     try{copied=document.execCommand('copy');}catch{}field.remove();return copied;
   }
 }
-async function copyWithFeedback(text){
-  const ok=await copy(text);notify(ok?'已复制，署名与许可证一并保留':'复制受限，请在代码框内全选复制');return ok;
+async function copyWithFeedback(text,{success='已复制，署名与许可证一并保留',failure='复制受限，请在代码框内全选复制'}={}){
+  const ok=await copy(text);notify(ok?success:failure);return ok;
 }
+const refreshPrompt=mountPrompt(detail,()=>loaderPrompt(selected,props,$('#selected-preview').firstElementChild.shadowRoot.innerHTML,license,background()),copyWithFeedback);
 $('#copy').addEventListener('click',()=>copyWithFeedback(currentCode()));
 $('#download').addEventListener('click',()=>{
   const url=URL.createObjectURL(new Blob([currentCode()],{type:format==='html'?'text/html;charset=utf-8':'text/plain;charset=utf-8'}));
   const link=document.createElement('a');link.href=url;link.download=`ui-moments-${selected.key}.${format==='html'?'html':'jsx'}`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 });
 root.addEventListener('ui-moments:theme',event=>{if(detail.open&&props.color===event.detail.previousForeground){props.color=foreground();controls();paintSelected();}});
-return {open,syncMotion,copy:copyWithFeedback,isOpen:()=>detail.open};
+return {open,syncMotion,copy:copyWithFeedback,clearFeedback,isOpen:()=>detail.open};
 }

@@ -4,6 +4,7 @@ import * as ldrs from '../gallery/loaders/vendor/ldrs/dist/index.js';
 import {previewProps,groups} from '../gallery/loaders/catalog.mjs';
 import {escapeHtml as esc} from '../gallery/loaders/snippets.mjs';
 import {createLoaderEditor} from '../gallery/loaders/editor.mjs';
+import {componentPrompt,mountPrompt} from './prompt.mjs';
 
 setupSite();
 const $=selector=>document.querySelector(selector),root=document.documentElement,grid=$('#ui-grid');
@@ -17,6 +18,7 @@ catch(error){$('#load-error').hidden=false;throw error;}
 const editor=createLoaderEditor({license,isPlaying:()=>playing});
 function effect(item){
   const element=document.createElement(item.tag);
+  element.className='ui-animation';
   for(const [name,value] of Object.entries(previewProps(item,foreground())))element.setAttribute(name,String(value));
   element.setAttribute('aria-hidden','true');return element;
 }
@@ -24,7 +26,13 @@ function embedUrl(item){const url=new URL(item.demo,location.href);url.searchPar
 for(const item of items){
   if(item.loader)ldrs[item.loader.key].register(item.loader.tag);
   const element=document.createElement('article');element.className='ui-item';element.dataset.ui=item.id;
-  element.innerHTML=`<div class="ui-stage" aria-label="${esc(item.title)}实时演示"></div><div class="ui-caption"><div><h2>${esc(item.title)}</h2><p>${esc(item.type)}${item.shape?' · '+esc(item.shape):''}</p></div><button type="button" data-detail aria-label="${esc(item.title)}：${item.loader?'调整与代码':'放大与代码'}">${item.loader?'代码':'放大'} <span aria-hidden="true">↗</span></button></div>`;
+  element.innerHTML=`
+    <div class="ui-stage" aria-label="${esc(item.title)}实时演示">
+      <button type="button" class="ui-expand${item.loader?' ui-expand-stage':''}" data-detail aria-label="放大 ${esc(item.title)}" aria-haspopup="dialog">
+        <span class="ui-expand-label">放大 <span aria-hidden="true">↗</span></span>
+      </button>
+    </div>
+    <div class="ui-caption"><div><h2>${esc(item.title)}</h2><p>${esc(item.type)}${item.shape?' · '+esc(item.shape):''}</p></div></div>`;
   if(item.loader)element.querySelector('.ui-stage').append(effect(item.loader));
   grid.append(element);
 }
@@ -44,7 +52,7 @@ function syncFrame(id){
 function syncMotion(){
   for(const element of grid.children){
     const item=byId.get(element.dataset.ui),run=playing&&!element.hidden&&visible.has(element)&&!document.hidden;
-    if(item.loader){for(const animation of element.querySelector('.ui-stage>*').shadowRoot?.getAnimations()||[])run?animation.play():animation.pause();}
+    if(item.loader){for(const animation of element.querySelector('.ui-animation').shadowRoot?.getAnimations()||[])run?animation.play():animation.pause();}
     else syncFrame(item.id);
   }
   editor.syncMotion();$('#motion').textContent=playing?'暂停动效':'播放动效';$('#motion').setAttribute('aria-pressed',String(!playing));
@@ -73,11 +81,12 @@ $('#motion').addEventListener('click',()=>{playing=!playing;syncMotion();});
 reduced.addEventListener('change',event=>{playing=!event.matches;syncMotion();});
 document.addEventListener('visibilitychange',syncMotion);
 root.addEventListener('ui-moments:theme',()=>{
-  for(const element of grid.children){const item=byId.get(element.dataset.ui);if(item.loader)element.querySelector('.ui-stage').replaceChildren(effect(item.loader));}
+  for(const element of grid.children){const item=byId.get(element.dataset.ui);if(item.loader)element.querySelector('.ui-animation').replaceWith(effect(item.loader));}
   requestAnimationFrame(syncMotion);
 });
 
 const componentDialog=$('#component-detail');
+const refreshComponentPrompt=mountPrompt(componentDialog,()=>componentPrompt(component),editor.copy);
 function openComponent(item,button){
   component=item;componentTrigger=button;
   $('#component-title').textContent=item.title;$('#component-kind').textContent=categories.find(cat=>cat.id===item.category).name+' / '+item.type;
@@ -88,6 +97,7 @@ function openComponent(item,button){
   $('#component-copy').hidden=item.demo.includes('/dist/');
   const credit=item.credit;
   $('#component-credit').innerHTML=credit?`来源：<a href="${esc(credit.url)}" target="_blank" rel="noopener">${esc(credit.name)} ↗</a> · ${esc(credit.note||'参考交互想法，由 UI Moments 实现。')}`:'UI Moments 原创实现 · MIT';
+  refreshComponentPrompt();
   componentDialog.showModal();document.body.style.overflow='hidden';history.replaceState(null,'','#'+item.id);
 }
 grid.addEventListener('click',event=>{
@@ -96,7 +106,13 @@ grid.addEventListener('click',event=>{
   item.loader?editor.open(item.loader,button):openComponent(item,button);
 });
 $('#component-close').addEventListener('click',()=>componentDialog.close());
-componentDialog.addEventListener('close',()=>{$('#component-frame').src='about:blank';document.body.append($('#toast'));document.body.style.overflow='';history.replaceState(null,'',location.pathname+location.search);componentTrigger?.focus({preventScroll:true});});
+componentDialog.addEventListener('close',()=>{
+  $('#component-frame').src='about:blank';
+  editor.clearFeedback();
+  document.body.style.overflow='';
+  history.replaceState(null,'',location.pathname+location.search);
+  componentTrigger?.focus({preventScroll:true});
+});
 $('#component-copy').addEventListener('click',async()=>{
   const button=$('#component-copy');button.disabled=true;
   try{

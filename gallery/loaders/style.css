@@ -6,3 +6,32 @@ dialog{width:min(940px,calc(100vw - 32px));max-height:calc(100dvh - 32px);paddin
 @media(max-width:760px){.browse{gap:10px}.filter-row{width:100%;gap:12px}.browse-tools{width:100%}.search{flex:1;width:auto}.search kbd{display:none}.editor{grid-template-columns:1fr;gap:20px;padding:20px}.large-preview{min-height:210px;gap:15px}.dialog-head{padding:18px 20px}.dialog-head h2{font-size:23px}.code-section{padding:0 20px 24px}.code-actions{margin-left:auto}}
 @media(max-width:640px){.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 14px}.card-info{gap:6px;padding-top:12px}.card-info strong{font-size:13px}.card-info small{font-size:10px}.card-number{top:10px;left:12px;font-size:9px}.sample{aspect-ratio:1.12}.card-copy{font-size:10px}.groups{gap:5px}.groups button{height:32px;padding:0 11px;font-size:12px}#count{font-size:11px}.filter-row{gap:10px}.code-tabs{width:100%}.code-tabs button{flex:1}.code-actions{width:100%}.code-actions button{flex:1}dialog{width:calc(100vw - 20px);max-height:calc(100dvh - 20px);border-radius:18px}}
 @media(max-width:360px){.groups button{padding-inline:8px}.filter-row{gap:7px}.card-info{flex-wrap:wrap;gap:4px}.card-info small{width:100%}}
+
+.dialog-head {gap:12px;}
+.dialog-head h2 {overflow-wrap:anywhere;}
+.dialog-actions {display:flex; align-items:center; gap:8px; flex:none;}
+.dialog-actions .primary {min-height:40px; padding:6px 12px; font-size:13px; white-space:nowrap;}
+#selected-preview > * {transform:scale(1.6);}
+.prompt-preview {margin:0 28px 22px; border-block-start:1px solid var(--c-line); padding-top:12px;}
+.prompt-preview summary {width:fit-content; cursor:pointer; color:var(--c-fg-2); font-size:13px;}
+.prompt-preview summary:hover {color:var(--c-fg);}
+.prompt-preview p {margin:8px 0; color:var(--c-fg-3); font-size:12px;}
+.prompt-preview textarea {
+  display:block;
+  width:100%;
+  resize:vertical;
+  padding:12px;
+  border:1px solid var(--c-line);
+  border-radius:var(--r-sm);
+  background:var(--c-surface);
+  font:12px/1.65 var(--f-mono);
+}
+@media (max-width:760px) {
+  .prompt-preview {margin-inline:20px;}
+  #selected-preview > * {transform:scale(1.25);}
+}
+@media (max-width:420px) {
+  .dialog-actions .primary {padding-inline:10px; font-size:12px;}
+  .dialog-head .eyebrow {letter-spacing:0;}
+  .dialog-head h2 {font-size:20px;}
+}

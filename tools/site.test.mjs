@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {readFile,access} from 'node:fs/promises';
 import vm from 'node:vm';
 import {buildCatalog,categories,matches} from '../assets/catalog.mjs';
+import {componentPrompt,loaderPrompt} from '../assets/prompt.mjs';
 const root=new URL('../',import.meta.url);
 const read=path=>readFile(new URL(path,root),'utf8');
 
@@ -44,4 +45,21 @@ test('用途分类与形态筛选独立，加载指示器和交互控件保持�
   assert.equal(items.filter(item=>matches(item,{query:'Waveform'})).length,1);
   assert.ok(items.filter(item=>matches(item,{category:'feedback',shape:'环形'})).every(item=>item.loader.group==='环形'));
   assert.equal(items.filter(item=>matches(item,{category:'input',shape:'环形'})).length,0);
+});
+
+test('复制提示词带上当前加载参数和许可，并指向对应的交互场景源码',async()=>{
+  const loader=buildCatalog().find(item=>item.id==='ring').loader;
+  const license=await read('gallery/loaders/vendor/ldrs/LICENSE');
+  const prompt=loaderPrompt(loader,{size:120,color:'#fcfcfc',speed:1.5},'<svg></svg>',license,'#050506');
+  assert.match(prompt,/size: 120.*speed: 1\.5/);
+  assert.match(prompt,/size=\{120\}/);
+  assert.match(prompt,/import 'ldrs\/react\/Ring\.css'/);
+  assert.ok(prompt.includes(license.trim()));
+
+  const context={window:{}};vm.runInNewContext(await read('gallery/works.js'),context);
+  const horizon=buildCatalog(context.window.WORKS).find(item=>item.id==='horizon');
+  const component=componentPrompt(horizon);
+  assert.match(component,/blob\/main\/gallery\/light-scenes\/index\.html/);
+  assert.match(component,/localhost:5173\/#horizon/);
+  assert.match(component,/金色时刻和蓝调时刻/);
 });
