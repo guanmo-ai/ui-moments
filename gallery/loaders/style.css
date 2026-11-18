@@ -10,12 +10,19 @@ dialog{width:min(940px,calc(100vw - 32px));max-height:calc(100dvh - 32px);paddin
 .dialog-head {gap:12px;}
 .dialog-head h2 {overflow-wrap:anywhere;}
 .dialog-actions {display:flex; align-items:center; gap:8px; flex:none;}
-.dialog-actions .primary {min-height:40px; padding:6px 12px; font-size:13px; white-space:nowrap;}
+.dialog-actions .primary {min-height:44px; padding:6px 14px; font-size:13px; white-space:nowrap;}
+.dialog-actions .close {width:44px; height:44px;}
+.dialog-actions button:active, .prompt-copy:active {opacity:.7;}
 #selected-preview > * {transform:scale(1.6);}
-.prompt-preview {margin:0 28px 22px; border-block-start:1px solid var(--c-line); padding-top:12px;}
-.prompt-preview summary {width:fit-content; cursor:pointer; color:var(--c-fg-2); font-size:13px;}
+.prompt-preview {margin:0 28px 22px; border-block-start:1px solid var(--c-line);}
+.prompt-preview summary {width:fit-content; padding:12px 0; cursor:pointer; color:var(--c-fg-2); font-size:13px;}
 .prompt-preview summary:hover {color:var(--c-fg);}
-.prompt-preview p {margin:8px 0; color:var(--c-fg-3); font-size:12px;}
+.prompt-toolbar {display:flex; align-items:center; justify-content:space-between; gap:12px; margin:0 0 10px;}
+.prompt-toolbar p {margin:0; color:var(--c-fg-2); font-size:12px;}
+.prompt-copy {flex:none; min-height:44px; min-width:94px; padding:6px 12px; font-size:12px; color:var(--c-fg-2);}
+.prompt-copy:hover {color:var(--c-fg);}
+#copy {background:transparent; color:var(--c-fg); border-color:var(--c-line-2);}
+#copy:hover {background:var(--c-surface-2); opacity:1;}
 .prompt-preview textarea {
   display:block;
   width:100%;

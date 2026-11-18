@@ -52,14 +52,15 @@ test('复制提示词带上当前加载参数和许可，并指向对应的交�
   const license=await read('gallery/loaders/vendor/ldrs/LICENSE');
   const prompt=loaderPrompt(loader,{size:120,color:'#fcfcfc',speed:1.5},'<svg></svg>',license,'#050506');
   assert.match(prompt,/size: 120.*speed: 1\.5/);
-  assert.match(prompt,/size=\{120\}/);
-  assert.match(prompt,/import 'ldrs\/react\/Ring\.css'/);
+  assert.match(prompt,/"size": 120/);
+  assert.match(prompt,/ring\.register\('l-ring'\)/);
   assert.ok(prompt.includes(license.trim()));
 
   const context={window:{}};vm.runInNewContext(await read('gallery/works.js'),context);
   const horizon=buildCatalog(context.window.WORKS).find(item=>item.id==='horizon');
   const component=componentPrompt(horizon);
   assert.match(component,/blob\/main\/gallery\/light-scenes\/index\.html/);
+  assert.match(component,/raw\.githubusercontent\.com\/guanmo-ai\/ui-moments\/main\/gallery\/light-scenes\/index\.html/);
   assert.match(component,/localhost:5173\/#horizon/);
   assert.match(component,/金色时刻和蓝调时刻/);
 });

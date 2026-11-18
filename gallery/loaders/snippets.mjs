@@ -1,3 +1,5 @@
+const reducedMotion = '@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-play-state: paused !important; } }';
+
 export function escapeHtml(value){
   return String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
@@ -18,7 +20,7 @@ body{margin:0;min-height:100svh;display:grid;place-items:center;background:${esc
   <div>
     <template shadowrootmode="open">
 ${markup}
-<style>@media(prefers-reduced-motion:reduce){*{animation-play-state:paused!important}}</style>
+<style>${reducedMotion}</style>
     </template>
   </div>
 </div>
@@ -35,22 +37,45 @@ ${license.trim()}
 }
 
 export function reactExample(item,props,license){
-  const attributes=Object.entries(props).map(([name,value])=>{
-    const attr=name.replaceAll('-','_');
-    return `      ${attr}=${typeof value==='number'?`{${value}}`:JSON.stringify(value)}`;
-  }).join('\n');
-  return `// 安装：npm install ldrs@1.1.9
-import { ${item.react} } from 'ldrs/react';
-import 'ldrs/react/${item.react}.css';
+  return `'use client';
+// 安装：npm install ldrs@1.1.9
+import { useEffect, useRef } from 'react';
 
-export default function LoadingIndicator() {
-  return (
-    <span role="status" aria-label="正在加载">
-      <${item.react}
-${attributes}
-      />
-    </span>
-  );
+const defaults = ${JSON.stringify(props,null,2)};
+
+export default function LoadingIndicator(props = {}) {
+  const host = useRef(null);
+  const values = JSON.stringify(Object.keys(defaults).map(name =>
+    [name, props[name] ?? defaults[name]]
+  ));
+
+  useEffect(() => {
+    const container = host.current;
+    let disposed = false;
+    let indicator;
+
+    // 在浏览器注册同一个 Web Component，便于在 React 和 Next.js 中复用。
+    import('ldrs').then(({ ${item.key} }) => {
+      if (disposed) return;
+      ${item.key}.register('${item.tag}');
+      indicator = document.createElement('${item.tag}');
+      for (const [name, value] of JSON.parse(values)) {
+        indicator.setAttribute(name, String(value));
+      }
+      container.append(indicator);
+
+      const style = document.createElement('style');
+      style.textContent = ${JSON.stringify(reducedMotion)};
+      indicator.shadowRoot.append(style);
+    });
+
+    return () => {
+      disposed = true;
+      indicator?.remove();
+    };
+  }, [values]);
+
+  return <div ref={host} role="status" aria-label="正在加载" />;
 }
 
 /*

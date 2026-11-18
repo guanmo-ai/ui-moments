@@ -35,12 +35,19 @@ test('独立HTML保留完整许可与样式隔离，浅色示例与预览背景�
   assert.match(code,/prefers-reduced-motion/);
 });
 
-test('44份React示例使用对应组件和CSS，连字符属性转换为上游React参数',()=>{
+test('44份 React 示例引用预览所用的 Web Component，并保留参数和许可',async()=>{
   for(const item of loaders){
-    const props=previewProps(item,'#ffb547');const code=reactExample(item,props,license);
-    assert.ok(code.includes(`import { ${item.react} } from 'ldrs/react'`));
-    assert.ok(code.includes(`ldrs/react/${item.react}.css`));assert.ok(code.includes(license.trim()));
-    for(const [key,value] of Object.entries(props))assert.ok(code.includes(`${key.replaceAll('-','_')}=${typeof value==='number'?`{${value}}`:JSON.stringify(value)}`),`${item.key}: ${key}`);
-    assert.doesNotMatch(code,/bg-opacity=|stroke-length=/);
+    const props={...previewProps(item,'#ffb547'),speed:1.35};
+    const code=reactExample(item,props,license);
+    assert.ok(code.includes(`import('ldrs').then(({ ${item.key} })`));
+    assert.ok(code.includes(`${item.key}.register('${item.tag}')`));
+    assert.ok(code.includes(`document.createElement('${item.tag}')`));
+    assert.deepEqual(JSON.parse(code.match(/const defaults = (\{[\s\S]+?\});/)[1]),props);
+    assert.ok(code.includes(license.trim()));
+    assert.match(code,/prefers-reduced-motion/);
   }
+  const ring2=loaders.find(item=>item.key==='ring2');
+  const example=reactExample(ring2,{'bg-opacity':0.75,'stroke-length':0.6},license);
+  assert.match(example,/"bg-opacity": 0\.75/);
+  assert.match(example,/"stroke-length": 0\.6/);
 });

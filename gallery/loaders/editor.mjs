@@ -28,7 +28,7 @@ function currentCode(){
 }
 function paintCode(){
   $('#code').value=currentCode();
-  $('#code-help').textContent=format==='html'?'独立 HTML 页面，无需安装依赖。保存为 .html 文件后即可打开。':'React 示例包含组件、样式导入及依赖安装说明。';
+  $('#code-help').textContent=format==='html'?'独立 HTML 页面，无需安装依赖。保存为 .html 文件后即可打开。':'安装示例中指定的依赖版本，在 React 项目中使用该组件。动效与预览使用同一实现。';
   $('#download').textContent=format==='html'?'下载 HTML':'下载 JSX';
   $('#code-panel').setAttribute('aria-labelledby','tab-'+format);
   for(const tab of document.querySelectorAll('[data-format]')){const active=tab.dataset.format===format;tab.setAttribute('aria-selected',String(active));tab.tabIndex=active?0:-1;}
