@@ -56,7 +56,7 @@ test('发布包子路径下可搜索、操作滑尺、下载 HTML 并复制提�
   });
   await page.goto(site);
   await page.locator('html[data-ready="true"]').waitFor({ state: 'attached' });
-  assert.equal(await page.locator('.ui-item').count(), 164);
+  assert.equal(await page.locator('.ui-item').count(), 170);
   await page.frameLocator('[data-ui="bookmark-press"] iframe').getByRole('button', { name: '收藏' }).waitFor();
   assert.equal(await page.evaluate(() => window.scrollY), 0, '嵌入控件载入后首页仍停在顶部');
   assert.ok(await page.locator('.ui-stage .ui-animation').count() < 35, '首页只挂载近屏的循环动效');
@@ -164,6 +164,8 @@ test('手机风格库切换外观时保留控件状态，深链接可直接打�
   await page.locator('#component-close').tap();
   await page.locator('#categories [data-category="input"]').tap();
   const card = page.locator('[data-ui="bookmark-press"]');
+  // 交互控件按需挂载：卡片接近视口后才创建 iframe。
+  await card.scrollIntoViewIfNeeded();
   const inlineBookmark = card.frameLocator('iframe').getByRole('button', { name: '收藏' });
   await inlineBookmark.tap();
   assert.equal(await inlineBookmark.getAttribute('aria-pressed'), 'true');
@@ -185,4 +187,48 @@ test('动效资源失败时其余画廊可浏览，失败卡片可重试', { tim
   await card.locator('.ui-animation').waitFor();
   await page.locator('#work-search').fill('折页');
   await page.locator('[data-ui="paper-fold"] .ui-animation').waitFor();
+});
+
+test('原创控件支持键盘操作，嵌入时只显示所选控件', { timeout: 20_000 }, async t => {
+  const page = await browser.newPage({ viewport: { width: 1024, height: 768 } });
+  t.after(() => page.close());
+  const errors = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await page.goto(new URL('gallery/originals/index.html', site).href);
+
+  const ink = page.getByRole('switch', { name: '墨滴开关' });
+  await ink.press('Space');
+  assert.equal(await ink.getAttribute('aria-checked'), 'true');
+
+  const dial = page.getByRole('slider', { name: '刻度旋钮' });
+  await dial.press('ArrowUp');
+  await dial.press('PageUp');
+  assert.equal(await dial.getAttribute('aria-valuenow'), '7');
+  await dial.press('End');
+  assert.equal(await dial.getAttribute('aria-valuenow'), '10');
+
+  const stepper = page.getByRole('spinbutton', { name: '滚轮步进器' });
+  await stepper.press('ArrowUp');
+  await stepper.press('ArrowUp');
+  assert.equal(await stepper.getAttribute('aria-valuenow'), '10');
+  await stepper.press('Home');
+  assert.equal(await stepper.getAttribute('aria-valuenow'), '0');
+
+  const tabs = page.getByRole('tab');
+  await tabs.nth(1).press('ArrowRight');
+  assert.equal(await tabs.nth(2).getAttribute('aria-selected'), 'true');
+  assert.equal(await page.evaluate(() => document.activeElement.textContent), '月');
+
+  const hold = page.locator('.hold');
+  await hold.focus();
+  await page.keyboard.down('Space');
+  await page.waitForTimeout(1350);
+  await page.keyboard.up('Space');
+  assert.equal(await page.locator('#hold-status').textContent(), '已删除');
+
+  await page.goto(new URL('gallery/originals/index.html?embed=ui&theme=light&sample=tide-progress', site).href);
+  assert.equal(await page.locator('.sample:visible').count(), 1);
+  assert.equal(await page.locator('#tide-progress').isVisible(), true);
+  assert.equal(await page.evaluate(() => document.documentElement.dataset.theme), 'light');
+  assert.deepEqual(errors, []);
 });

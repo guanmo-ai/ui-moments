@@ -137,10 +137,12 @@ for(const item of items){
   element.dataset.ui=item.id;
   element.dataset.category=item.category;
   if(item.loader)element.dataset.kind=item.loader.original?'original':'loader';
+  else if(item.original)element.dataset.kind='original-control';
   let meta=item.type;
   if(item.loader)meta=item.loader.original?'原创':`${item.loader.origin?.name||'LDRS'} 开源`;
   else if(item.credit?.licensePath===micronLicensePath)meta='Micron.js 开源';
   else if(item.credit)meta=`参考后实现 · ${item.type}`;
+  else if(item.original)meta=`原创 · ${item.type}`;
   const caption=item.shape?`${meta} · ${item.shape}`:meta;
   const titleId=`work-title-${item.id}`,actionId=`work-action-${item.id}`;
   element.innerHTML=`
@@ -161,6 +163,9 @@ for(const item of items){
   cardFragment.append(element);
 }
 grid.append(cardFragment);
+
+const stats={total:items.length,original:items.filter(item=>item.original||item.loader?.original).length};
+for(const element of document.querySelectorAll('[data-stat]'))element.textContent=stats[element.dataset.stat];
 
 categoryButtons.innerHTML=categories.map(({id,name})=>{
   const count=id==='all'?items.length:items.filter(item=>item.category===id).length;
@@ -205,7 +210,10 @@ function mountFrame(card){
   frame.title=`${card.item.title}：直接操作`;
   frame.src=embedUrl(card.item.demo,root.dataset.theme).href;
   frame.allow='fullscreen; clipboard-write';
-  frame.addEventListener('load',()=>syncCard(card,{reload:true}));
+  frame.addEventListener('load',()=>{
+    frame.dataset.loaded='';
+    syncCard(card,{reload:true});
+  });
   card.frame=frame;
   card.stage.append(frame);
   mounted.add(card);
@@ -351,6 +359,7 @@ root.addEventListener('ui-moments:theme',()=>{
   if(componentDialog.open)sendEmbed(componentFrame,canAnimate());
 });
 componentFrame.addEventListener('load',()=>{
+  if(componentFrame.src!=='about:blank')componentFrame.dataset.loaded='';
   if(componentDialog.open)sendEmbed(componentFrame,canAnimate());
 });
 loaderDialog.addEventListener('close',syncMotion);
@@ -363,6 +372,7 @@ function openComponent(item,button){
   const categoryName=categories.find(cat=>cat.id===item.category).name;
   $('#component-kind').textContent=item.category==='feedback'?`${categoryName} / ${item.shape}`:`${categoryName} / ${item.type}`;
   $('#component-description').textContent=item.summary;
+  delete componentFrame.dataset.loaded;
   componentFrame.src=embedUrl(item.demo,root.dataset.theme).href;
   componentFrame.title=`${item.title}放大体验`;
   $('#component-source').href='https://github.com/guanmo-ai/ui-moments/tree/main/'+item.source;
@@ -496,7 +506,10 @@ $('#component-copy').addEventListener('click',async()=>{
     const [page,license]=await Promise.all([fetchText(url.pathname),fetchText('LICENSE')]);
     let code=page.replace('<script src="../../assets/embed.js"></script>','');
     if(url.hash)code=code.replace('<head>',`<head>\n<script>history.replaceState(null,'',${JSON.stringify(url.hash)})</script>`);
-    code+=`\n<!-- UI Moments\n来源：${item.credit?.name||'原创'} ${item.credit?.url||''}\n${item.credit?.note||'参考交互想法，由 UI Moments 实现。'}\n${license.trim()}\n-->\n`;
+    const origin=item.credit
+      ?`参考：${item.credit.name} ${item.credit.url}\n${item.credit.note||'参考交互想法，由 UI Moments 实现。'}`
+      :'UI Moments 原创设计与实现。';
+    code+=`\n<!-- UI Moments\n${origin}\n${license.trim()}\n-->\n`;
     await editor.copy(code);
   }catch{
     if(component===item)button.textContent='载入失败，重试';
@@ -507,6 +520,10 @@ $('#component-copy').addEventListener('click',async()=>{
 
 function fromHash(){
   const id=location.hash.slice(1);
+  if(id==='sources'){
+    $('#source-details').open=true;
+    return;
+  }
   if(['loaders','ldrs'].includes(id)){
     selectCategory('loading');
     return;

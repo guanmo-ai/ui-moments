@@ -38,7 +38,8 @@ test('新入口和旧链接兼容，画廊指向可用的代码与展示资源',
   assert.equal(new Set(items.map(item=>item.id)).size,items.length);
   assert.ok(!items.some(item=>['ldrs','loaders'].includes(item.id)));
   assert.deepEqual(items.filter(item=>!item.loader&&item.type!=='点击反馈').map(item=>item.id),[
-    'day-night-toggle','elastic-ruler','alignment-switch','bookmark-press',
+    'day-night-toggle','ink-switch','detent-dial','hold-confirm','odometer-stepper',
+    'elastic-ruler','leaf-tabs','tide-progress','alignment-switch','bookmark-press',
   ]);
   for(const item of items){
     assert.ok(categories.some(category=>category.id===item.category),item.id);
@@ -50,6 +51,25 @@ test('新入口和旧链接兼容，画廊指向可用的代码与展示资源',
   const redirect=await read('gallery/ldrs/index.html');
   assert.match(redirect,/location\.replace\('\.\.\/loaders\/'\+location\.search\+location\.hash\)/);
   for(const path of ['assets/fonts/OFL-Geist.txt','assets/fonts/OFL-GeistMono.txt'])assert.match(await read(path),/SIL OPEN FONT LICENSE/);
+});
+
+test('原创控件不带外部来源，独立页面包含每个控件与无障碍角色',async()=>{
+  const context={window:{}};vm.runInNewContext(await read('gallery/works.js'),context);
+  const originals=context.window.WORKS.filter(work=>work.original);
+  assert.equal(originals.length,6);
+  const page=await read('gallery/originals/index.html');
+  for(const work of originals){
+    assert.equal(work.credit,undefined,work.id);
+    assert.equal(work.demo,`gallery/originals/index.html#${work.id}`);
+    assert.match(page,new RegExp(`<section class="sample" id="${work.id}"`));
+    const prompt=componentPrompt(work);
+    assert.match(prompt,/实现来源：UI Moments/);
+    assert.doesNotMatch(prompt,/原始参考/);
+  }
+  for(const role of ['role="switch"','role="slider"','role="spinbutton"','role="tablist"','role="tabpanel"'])assert.ok(page.includes(role),role);
+  assert.match(page,/prefers-reduced-motion/);
+  assert.match(page,/data-gallery-active="false"/);
+  assert.doesNotMatch(page,/https?:\/\/(?!x\.com)/,'原创控件不加载外部资源');
 });
 
 test('用途分类与形态筛选独立',()=>{

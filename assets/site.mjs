@@ -49,11 +49,16 @@ export function setupSite(){
   root.dataset.theme=theme==='light'?'light':'dark';
   const paint=()=>{if(!button)return;const dark=root.dataset.theme!=='light';button.innerHTML=dark?sun:moon;button.setAttribute('aria-label',dark?'切换浅色模式':'切换深色模式');button.title=button.getAttribute('aria-label');};
   paint();
-  button?.addEventListener('click',()=>{
+  const switchTheme=()=>{
     const previousForeground=foreground();
     root.dataset.theme=root.dataset.theme==='light'?'dark':'light';paint();
     try{localStorage.setItem('ui-moments-theme',root.dataset.theme);}catch{}
     root.dispatchEvent(new CustomEvent('ui-moments:theme',{detail:{theme:root.dataset.theme,previousForeground}}));
+  };
+  // 支持 View Transitions 的浏览器里，深浅切换以交叉淡化完成，避免卡片逐个闪变。
+  button?.addEventListener('click',()=>{
+    if(document.startViewTransition&&!reducedMotion.matches)document.startViewTransition(switchTheme);
+    else switchTheme();
   });
   const scroll=()=>header?.classList.toggle('scrolled',scrollY>8);scroll();addEventListener('scroll',scroll,{passive:true});
   addEventListener('keydown',event=>{

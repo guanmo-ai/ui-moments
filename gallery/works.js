@@ -37,7 +37,73 @@ const elasticControls = [
   },
 }));
 
+// UI Moments 原创控件：构思、造型、动效与代码均由本项目完成，MIT 许可。
+const originalControls = [
+  {
+    id: 'ink-switch',
+    title: '墨滴开关',
+    en: 'Ink Switch',
+    type: '开关',
+    summary: '拨钮里存着一滴墨。打开时墨滴落进轨道并晕开，关闭时墨水沿原路收回拨钮。',
+    tags: ['开关', 'switch', '墨水', '晕染'],
+    notes: ['真实的 role="switch"，空格与回车均可切换。', '墨水用 clip-path 圆形扩散，拨钮在移动时压扁再回弹。'],
+  },
+  {
+    id: 'detent-dial',
+    title: '刻度旋钮',
+    en: 'Detent Dial',
+    type: '旋钮',
+    summary: '围绕旋钮拖动来调值。指针被最近的刻度吸住，跨过刻度时数字翻动，松手弹回刻度。',
+    tags: ['旋钮', 'slider', '刻度', '拖动'],
+    notes: ['role="slider"，方向键、PageUp/PageDown、Home/End 可调。', '拖过底部空隙时停在端点，不会在 0 和 10 之间跳动。'],
+  },
+  {
+    id: 'hold-confirm',
+    title: '长按确认',
+    en: 'Hold to Confirm',
+    type: '按钮',
+    summary: '危险操作需要按住。进度填满才执行，中途松手会快速退回；快结束时文字轻微颤动提示。',
+    tags: ['按钮', '删除', '长按', '确认'],
+    notes: ['鼠标、触摸和键盘（按住空格或回车）都能操作。', '轻点会提示“继续按住才会删除”，避免误以为没反应。'],
+  },
+  {
+    id: 'odometer-stepper',
+    title: '滚轮步进器',
+    en: 'Odometer Stepper',
+    type: '步进器',
+    summary: '每一位数字像里程表一样朝变化方向滚动；长按加减号会逐渐加速，到达上下限时轻轻顶一下。',
+    tags: ['步进器', '计数', 'spinbutton', '数字'],
+    notes: ['role="spinbutton"，方向键、PageUp/PageDown、Home/End 可调。', '9→0 继续向上滚，0→9 从下方滚回，方向始终一致。'],
+  },
+  {
+    id: 'leaf-tabs',
+    title: '翻页标签',
+    en: 'Leaf Tabs',
+    type: '标签页',
+    summary: '选中的底卡像一页纸翻到新标签，下方柱形依次长到新的数据。',
+    tags: ['标签页', 'tabs', '翻页', '图表'],
+    notes: ['标准 tablist / tab / tabpanel 结构，方向键与 Home/End 切换。', '翻转方向跟随切换方向。'],
+  },
+  {
+    id: 'tide-progress',
+    title: '潮汐进度',
+    en: 'Tide Progress',
+    type: '进度',
+    summary: '液面按弹簧追上目标进度，变化越快晃得越厉害；数字在液面上下自动反色。',
+    tags: ['进度', 'progress', '液体', 'canvas'],
+    notes: ['画面离开屏幕或画廊暂停时停止绘制。', '开启“减少动态效果”时直接显示结果，不晃动。'],
+  },
+].map(work => ({
+  ...work,
+  tags: [...work.tags, '原创控件'],
+  demo: 'gallery/originals/index.html#' + work.id,
+  source: 'gallery/originals',
+  live: true,
+  original: true,
+}));
+
 window.WORKS = [
+  ...originalControls,
   ...elasticControls,
   {
     id: 'day-night-toggle',

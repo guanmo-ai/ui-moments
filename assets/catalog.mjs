@@ -31,9 +31,10 @@ const shapeFilters = {
 };
 
 const featured = [
-  'day-night-toggle', 'paper-fold', 'elastic-ruler', 'alignment-switch', 'bookmark-press',
-  'shutter-steps', 'micron-jelly', 'signal-return', 'svg-spinner-gooey-balls-1', 'micron-swing',
-  'ring', 'micron-fade', 'bow-spring', 'svg-spinner-wifi', 'square',
+  'day-night-toggle', 'ink-switch', 'detent-dial', 'paper-fold', 'hold-confirm',
+  'odometer-stepper', 'elastic-ruler', 'leaf-tabs', 'tide-progress', 'alignment-switch',
+  'bookmark-press', 'shutter-steps', 'micron-jelly', 'signal-return', 'svg-spinner-gooey-balls-1',
+  'micron-swing', 'ring', 'micron-fade', 'bow-spring', 'svg-spinner-wifi', 'square',
   'micron-squeeze', 'svg-spinner-bars-scale-middle', 'corner-lock', 'micron-shake', 'lineWobble',
   'loading-ui-terminal', 'svg-spinner-clock', 'micron-tada', 'loading-ui-morphing-infinity', 'svg-spinner-blocks-wave',
   'loading-ui-text-shimmer-wave',
@@ -49,7 +50,7 @@ export function buildCatalog(works = []) {
     loader,
   }));
   const controls = works.filter(work => !['ldrs', 'loaders'].includes(work.id)).map(work => ({
-    ...work, category: 'input', type: controlTypes[work.id] || '交互控件',
+    ...work, category: 'input', type: work.type || controlTypes[work.id] || '交互控件',
   }));
   const feedback = micronWorks.map(work => ({...work, shape: feedbackShapes[work.en]}));
 

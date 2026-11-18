@@ -1,5 +1,7 @@
 # 第三方代码与许可
 
+本页保存上游许可证原文与接入细节。所有来源（含字体、依赖与灵感参考）的总览见 [CREDITS.md](CREDITS.md)。
+
 ## LDRS 1.1.9
 
 - 原作者：Griffin Johnston / UI Ball

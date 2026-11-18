@@ -291,6 +291,10 @@
 
     .bookmark[aria-pressed="true"] .bookmark-mark::after { opacity: 0; }
 
+    /* 嵌入画廊时与卡片舞台同色，避免灰色块。风格库的变体自带底色，不受影响。 */
+    :root[data-embedded]:not([data-ui-style]) { --surface: #f1f2f8; }
+    :root[data-embedded][data-theme="dark"]:not([data-ui-style]) { --surface: #1c1e27; }
+
     [data-single] .samples { grid-template-columns: 1fr; }
     [data-single] .sample { width: min(100%, 340px); }
     [data-embedded] .page, [data-embedded] .sample { width: 100%; max-width: none; padding: 0; }

@@ -1,7 +1,26 @@
 {
   "name": "ui-moments",
   "private": true,
-  "description": "可交互的界面与动效图鉴：整合获授权的开源组件，收录原创与AI辅助开发实验，逐项标注来源、许可和改动",
+  "description": "开源的 UI 交互与动效图鉴：原创控件与获授权的开源组件，逐项标注来源、许可和改动",
+  "license": "MIT",
+  "author": "观默 (https://x.com/guanmo_ai)",
+  "homepage": "https://guanmo-ai.github.io/ui-moments/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/guanmo-ai/ui-moments.git"
+  },
+  "bugs": {
+    "url": "https://github.com/guanmo-ai/ui-moments/issues"
+  },
+  "keywords": [
+    "ui",
+    "motion",
+    "animation",
+    "loaders",
+    "micro-interactions",
+    "design",
+    "gallery"
+  ],
   "engines": {
     "node": "^22.12.0 || >=24"
   },
