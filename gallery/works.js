@@ -40,27 +40,6 @@ const elasticControls = [
 window.WORKS = [
   ...elasticControls,
   {
-    id: 'date-picker',
-    title: '日期选择器',
-    en: 'Date Picker',
-    summary: '选择日期、切换月份，或一键回到今天。小卡片显示一周，放大后查看整月。',
-    tags: ['日历', '日期', '基础组件'],
-    demo: 'gallery/date-picker/dist/index.html',
-    source: 'gallery/date-picker',
-    sourceFiles: ['assets/style-tokens.css'],
-    live: true,
-    credit: {
-      name: 'Uberdesigner Holiday Calendar',
-      url: 'https://uberdesigner.ai/',
-      note: '参考日期选择的用途，由 UI Moments 编写日期逻辑和基础交互界面。',
-    },
-    notes: [
-      '使用 src/components/DatePicker.tsx、DatePicker.module.css 和 src/lib/calendar.ts',
-      '在卡片里选择日期或切换周，放大后可以连续切换月份',
-      '今天和已选日期各有状态，支持键盘方向键与 Page Up / Down',
-    ],
-  },
-  {
     id: 'day-night-toggle',
     title: '昼夜开关',
     en: 'Day / Night Toggle',

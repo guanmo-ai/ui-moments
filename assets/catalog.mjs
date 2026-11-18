@@ -10,10 +10,9 @@ export const categories=[
   {id:'feedback',name:'反馈与状态'},
   {id:'input',name:'选择与输入'},
   {id:'navigation',name:'导航'},
-  {id:'date',name:'日期与时间'},
 ];
 const kinds={
-  'day-night-toggle':['input','开关'],'date-picker':['date','日期选择'],
+  'day-night-toggle':['input','开关'],
   'elastic-ruler':['input','滑块'],'alignment-switch':['input','分段控件'],'bookmark-press':['input','收藏按钮'],
 };
 export function buildCatalog(works=[]){
@@ -29,7 +28,7 @@ export function buildCatalog(works=[]){
   });
   // 同级混排，先展示原创动效和不同用途的互动作品。
   const byId=new Map([...components,...effects,...micronWorks].map(item=>[item.id,item]));
-  const start=['shutter-steps','paper-fold','day-night-toggle','signal-return','date-picker','elastic-ruler','alignment-switch','bookmark-press','micron-jelly','svg-spinner-gooey-balls-1'];
+  const start=['shutter-steps','paper-fold','day-night-toggle','signal-return','elastic-ruler','alignment-switch','bookmark-press','micron-jelly','svg-spinner-gooey-balls-1'];
   const result=[];
   for(const id of start){if(byId.has(id)){result.push(byId.get(id));byId.delete(id);}}
   return [...result,...byId.values()];

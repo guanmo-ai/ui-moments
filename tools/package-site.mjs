@@ -8,10 +8,11 @@ const output = join(root, '_site');
 const rootFiles = new Set(['index.html', 'styles.html', 'LICENSE', 'THIRD_PARTY_NOTICES.md', '.nojekyll']);
 const tracked = execFileSync('git', ['ls-files', '-z'], {cwd: root, encoding: 'utf8'}).split('\0');
 const siteFiles = tracked.filter(path => rootFiles.has(path) || (
-  /^(assets|gallery)\//.test(path) && !path.split('/').some(part => part.startsWith('.'))
+  /^(assets|gallery)\//.test(path) &&
+  !path.startsWith('gallery/date-picker/') &&
+  !path.split('/').some(part => part.startsWith('.'))
 ));
 const generated = [
-  'gallery/date-picker/dist',
   'gallery/loading-ui/dist',
   'gallery/svg-spinners/dist',
 ];

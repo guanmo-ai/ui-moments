@@ -38,7 +38,7 @@ test('新入口和旧链接兼容，画廊指向可用的代码与展示资源',
   assert.equal(new Set(items.map(item=>item.id)).size,items.length);
   assert.ok(!items.some(item=>['ldrs','loaders'].includes(item.id)));
   assert.deepEqual(items.filter(item=>!item.loader&&item.type!=='点击反馈').map(item=>item.id),[
-    'day-night-toggle','date-picker','elastic-ruler','alignment-switch','bookmark-press',
+    'day-night-toggle','elastic-ruler','alignment-switch','bookmark-press',
   ]);
   for(const item of items){
     assert.ok(categories.some(category=>category.id===item.category),item.id);
@@ -52,11 +52,10 @@ test('新入口和旧链接兼容，画廊指向可用的代码与展示资源',
   for(const path of ['assets/fonts/OFL-Geist.txt','assets/fonts/OFL-GeistMono.txt'])assert.match(await read(path),/SIL OPEN FONT LICENSE/);
 });
 
-test('用途分类与形态筛选独立，日期选择器在日期与时间下',()=>{
-  const items=buildCatalog([{id:'day-night-toggle',title:'开关'},{id:'date-picker',title:'日期选择器'}]);
+test('用途分类与形态筛选独立',()=>{
+  const items=buildCatalog([{id:'day-night-toggle',title:'开关'}]);
   assert.equal(items.filter(item=>matches(item,{category:'input'})).length,1);
   assert.equal(items.filter(item=>matches(item,{category:'feedback'})).length,160);
-  assert.deepEqual(items.filter(item=>matches(item,{category:'date'})).map(item=>item.id),['date-picker']);
   assert.equal(items.filter(item=>matches(item,{query:'Waveform'})).length,1);
   assert.ok(items.filter(item=>matches(item,{category:'feedback',shape:'环形'})).every(item=>item.loader.group==='环形'));
   assert.equal(items.filter(item=>matches(item,{category:'input',shape:'环形'})).length,0);
@@ -133,10 +132,9 @@ test('复制提示词带上当前加载参数和许可，并指向对应的交�
   assert.ok(prompt.includes(license.trim()));
 
   const context={window:{}};vm.runInNewContext(await read('gallery/works.js'),context);
-  const datePicker=buildCatalog(context.window.WORKS).find(item=>item.id==='date-picker');
-  const component=componentPrompt(datePicker);
-  assert.match(component,/tree\/main\/gallery\/date-picker/);
-  assert.match(component,/assets\/style-tokens\.css/);
-  await access(new URL('gallery/date-picker/dist/THIRD_PARTY_LICENSES.md',root));
-  assert.match(component,/DatePicker\.tsx/);
+  const ruler=buildCatalog(context.window.WORKS).find(item=>item.id==='elastic-ruler');
+  const component=componentPrompt(ruler);
+  assert.match(component,/blob\/main\/gallery\/elastic-controls\/index\.html/);
+  assert.match(component,/使用 #elastic-ruler 场景/);
+  assert.match(component,/键盘方向键/);
 });

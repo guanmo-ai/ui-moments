@@ -1,26 +1,14 @@
 # UI Moments · 界面图鉴
 
-UI Moments 收录可直接操作的界面组件和动效。每个组件在主画廊逐个运行，按用途分类。点击名称旁的放大按钮可打开详情，加载动效还提供参数调整、代码下载和提示词复制。
+可直接操作的 UI 控件和动效。加载动效支持调参、导出代码和复制复刻提示词。
 
-[在线画廊](https://guanmo-ai.github.io/ui-moments/) · [风格库](https://guanmo-ai.github.io/ui-moments/styles.html)
+[**打开在线图鉴 →**](https://guanmo-ai.github.io/ui-moments/)
 
-[![作品预览](assets/og.jpg)](https://guanmo-ai.github.io/ui-moments/)
+[![深色 UI 预览，包含昼夜开关、折页、弹性滑尺、对齐拨片和夹页键](docs/assets/gallery-preview.jpg)](https://guanmo-ai.github.io/ui-moments/)
 
-## 收录内容
+[昼夜开关](https://guanmo-ai.github.io/ui-moments/#day-night-toggle) · [折页](https://guanmo-ai.github.io/ui-moments/#paper-fold) · [弹性滑尺](https://guanmo-ai.github.io/ui-moments/#elastic-ruler) · [对齐拨片](https://guanmo-ai.github.io/ui-moments/#alignment-switch) · [夹页键](https://guanmo-ai.github.io/ui-moments/#bookmark-press)
 
-| 作品 | 实现与来源 |
-| --- | --- |
-| [9 款加载微动效](index.html?q=加载微动效) | UI Moments 原创动效。并列展示形式参考 [Ramin Nasibov](https://x.com/RaminNasibov/status/2122045748623609935) |
-| [折页](index.html#paper-fold) · [回信](index.html#signal-return) | UI Moments 构思、AI 辅助实现的动效实验 |
-| [44 款 LDRS](index.html#ring) | 集成 Griffin Johnston / UI Ball 的 [LDRS 1.1.9](https://github.com/GriffinJohnston/ldrs)，保留原始动效、MIT 许可及[独立调整页](gallery/loaders/README.md) |
-| [47 款 Loading UI](index.html#loading-ui-ring) | 集成 Bartosz Zagrodzki 的 [Loading UI](https://github.com/turbostarter/loading-ui)，保留 React、CSS、SVG、Motion 实现及 [MIT 许可](gallery/loading-ui/README.md) |
-| [46 款 SVG Spinners](index.html#svg-spinner-gooey-balls-1) | 集成 Utkarsh Verma 的 [SVG Spinners](https://github.com/n3r4zzurr0/svg-spinners)，保留 CSS 和 SMIL 源码，以 CSS 版展示，采用 [MIT 许可](gallery/svg-spinners/README.md) |
-| [12 种 Micron 点击反馈](index.html#micron-jelly) | 复用 [Webkul / Micron.js](https://github.com/webkul/micron) 的 CSS 动效并单独设计操作按钮，采用 [MIT 许可](gallery/micron/README.md) |
-| [弹性控件](gallery/elastic-controls/) | 弹性滑尺、对齐拨片和夹页键。参考 [@yui540](https://x.com/yui540/status/2120825584947487170) 的回弹节奏，独立设计与实现 |
-| [日期选择器](index.html#date-picker) | UI Moments 编写的[基础日期组件](gallery/date-picker/README.md)，支持周视图、月视图和键盘操作 |
-| [昼夜开关](gallery/day-night-toggle/) | 参考 [@kaolti](https://x.com/kaolti/status/2119151022014894260) 的交互，独立实现像素重组、拖动停留和轮廓光 |
-
-[风格库](styles.html)可操作弹性滑尺、对齐拨片、夹页键、日期选择器和折页动效，并在原版、孟菲斯、包豪斯和像素风之间切换。
+由观默 [@guanmo_ai](https://x.com/guanmo_ai) 创作与维护。LDRS、Loading UI、SVG Spinners 和 Micron.js 的作者与许可见[第三方声明](THIRD_PARTY_NOTICES.md)。
 
 ## 本地运行
 
@@ -31,7 +19,7 @@ npm run setup
 npm run dev
 ```
 
-打开 [http://127.0.0.1:5173](http://127.0.0.1:5173)。`setup` 根据锁文件安装依赖，`dev` 先构建所需资源，再启动本地服务。`npm run dev:date` 可单独调试日期选择器。
+打开 [http://127.0.0.1:5173](http://127.0.0.1:5173)。`setup` 根据锁文件安装依赖，`dev` 先构建所需资源，再启动本地服务。
 
 ## 检查与发布
 
@@ -44,7 +32,7 @@ npx playwright install --only-shell chromium
 npm run test:browser
 ```
 
-`npm test` 检查分类、日期边界、导出和随附许可。浏览器测试把 `_site/` 作为站点子路径启动，验证画廊、风格库、日期、下载和复制。`npm run package:site` 使用 Git 已跟踪的站点文件和构建产物，新增站点文件需先加入 Git。GitHub Actions 对主分支的变更和 PR 执行检查，主分支通过后发布到 GitHub Pages。
+`npm test` 检查分类、导出和随附许可。浏览器测试把 `_site/` 作为站点子路径启动，验证画廊、风格库、下载和复制。`npm run package:site` 使用 Git 已跟踪的站点文件和构建产物，新增站点文件需先加入 Git。GitHub Actions 对主分支的变更和 PR 执行检查，主分支通过后发布到 GitHub Pages。
 
 ## 录制视频
 

@@ -36,7 +36,7 @@ after(async () => {
   if (temp) await rm(temp, { recursive: true, force: true });
 });
 
-test('发布包子路径下可搜索、操作日期、下载 HTML 并复制提示词', { timeout: 30_000 }, async t => {
+test('发布包子路径下可搜索、操作滑尺、下载 HTML 并复制提示词', { timeout: 30_000 }, async t => {
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, permissions: ['clipboard-read', 'clipboard-write'] });
   t.after(() => page.close());
   const errors = [];
@@ -46,25 +46,25 @@ test('发布包子路径下可搜索、操作日期、下载 HTML 并复制提�
   });
   await page.goto(site);
   await page.locator('html[data-ready="true"]').waitFor({ state: 'attached' });
-  assert.equal(await page.locator('.ui-item').count(), 165);
+  assert.equal(await page.locator('.ui-item').count(), 164);
 
   const search = page.locator('#work-search');
   await search.fill('日期选择器');
-  const card = page.locator('[data-ui="date-picker"]');
+  await page.locator('#empty').waitFor();
+  for (const path of ['gallery/date-picker/', 'gallery/date-picker/dist/']) {
+    const response = await page.request.get(new URL(path, site).href);
+    assert.equal(response.status(), 404, path);
+  }
+
+  await search.fill('弹性滑尺');
+  const card = page.locator('[data-ui="elastic-ruler"]');
   assert.equal(await page.locator('.ui-item:visible').count(), 1);
-  const week = card.frameLocator('iframe');
-  await week.getByRole('button', { name: '下一周' }).click();
-  assert.equal(await week.locator('button[data-date]').count(), 7);
-  await card.getByRole('button', { name: '放大 日期选择器' }).click();
-  const month = page.frameLocator('#component-frame');
-  await month.getByRole('button', { name: '下个月' }).click();
-  assert.equal(await month.locator('button[data-date]').count(), 42);
-  const cursor = month.locator('button[data-date][tabindex="0"]');
-  const previous = await cursor.getAttribute('data-date');
-  await cursor.press('ArrowRight');
-  await month.locator('button[data-date]:focus').press('Enter');
-  assert.notEqual(await month.locator('time').innerText(), previous);
-  assert.equal(await month.locator('time').innerText(), await cursor.getAttribute('data-date'));
+  const ruler = card.frameLocator('iframe').getByRole('slider', { name: '滑尺位置' });
+  const value = Number(await ruler.inputValue());
+  await ruler.press('ArrowRight');
+  assert.equal(Number(await ruler.inputValue()), value + 1);
+  await card.getByRole('button', { name: '放大 弹性滑尺' }).click();
+  await page.frameLocator('#component-frame').getByRole('slider', { name: '滑尺位置' }).waitFor();
   await page.locator('#component-close').click();
   await search.fill('');
 
@@ -102,12 +102,9 @@ test('手机风格库切换外观时保留控件状态，深链接可直接打�
   assert.equal(new URL(page.url()).searchParams.get('style'), 'pixel');
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth), 390);
 
-  await page.locator('#component-options label').filter({ hasText: '日期选择器' }).tap();
-  const date = preview.getByRole('region', { name: '日期选择器' });
-  await date.getByRole('button', { name: '下个月' }).tap();
-  assert.equal(await date.locator('button[data-date]').count(), 42);
+  assert.equal(await page.locator('#component-options label').filter({ hasText: '日期选择器' }).count(), 0);
   await page.locator('#catalog-link').click();
-  await page.locator('#component-detail[open]').waitFor();
+  await page.locator('#component-detail[open]').getByRole('heading', { name: '夹页键' }).waitFor();
   assert.deepEqual(errors, []);
 });
 

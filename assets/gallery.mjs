@@ -197,7 +197,7 @@ $('#component-copy').addEventListener('click',async()=>{
 function fromHash(){
   const id=location.hash.slice(1);
   if(['loaders','ldrs'].includes(id)){category='feedback';shape='all';filter();return;}
-  const item=byId.get(id==='holiday-calendar'?'date-picker':id);if(!item||editor.isOpen()||componentDialog.open)return;
+  const item=byId.get(id);if(!item||editor.isOpen()||componentDialog.open)return;
   const button=grid.querySelector(`[data-ui="${item.id}"] [data-detail]`);item.loader?editor.open(item.loader,button):openComponent(item,button);
 }
 addEventListener('hashchange',fromHash);

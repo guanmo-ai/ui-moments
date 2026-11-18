@@ -58,7 +58,7 @@ SOFTWARE.
 
 ## 日期选择器运行依赖
 
-日期选择器的构建附带 React、React DOM 和 Scheduler 的 MIT 许可证。完整文本随发布包生成，见[日期选择器运行依赖许可](https://guanmo-ai.github.io/ui-moments/gallery/date-picker/dist/THIRD_PARTY_LICENSES.md)。
+已下架的日期选择器保留源码。独立构建时，React、React DOM 和 Scheduler 的 MIT 许可证写入 `gallery/date-picker/dist/THIRD_PARTY_LICENSES.md`。
 
 ## Loading UI（47个动效）
 

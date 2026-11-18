@@ -18,7 +18,6 @@ const fold = originalLoaders.find(loader => loader.key === 'paper-fold');
 
 const works = [
   {id: 'elastic-ruler'}, {id: 'alignment-switch'}, {id: 'bookmark-press'},
-  {id: 'date-picker', summary: '选择日期、切换月份，或一键回到今天。'},
 ].map(example => ({...window.WORKS.find(work => work.id === example.id), ...example}));
 works.push({id: fold.key, title: fold.name, summary: fold.description});
 
