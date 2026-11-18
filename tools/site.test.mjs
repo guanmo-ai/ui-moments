@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile,access} from 'node:fs/promises';
 import vm from 'node:vm';
-import {buildCatalog,categories,matches} from '../assets/catalog.mjs';
+import {buildCatalog,categories,getCategoryFilters,matches} from '../assets/catalog.mjs';
 import {componentPrompt,loaderPrompt} from '../assets/prompt.mjs';
 import {originalMarkup} from '../gallery/loaders/originals.mjs';
 import {htmlExample,reactExample} from '../gallery/loaders/snippets.mjs';
@@ -44,7 +44,7 @@ test('新入口和旧链接兼容，画廊指向可用的代码与展示资源',
     assert.ok(categories.some(category=>category.id===item.category),item.id);
     if(!item.loader)await access(new URL(item.demo.split('#')[0],root));
   }
-  const studies=items.filter(item=>matches(item,{category:'feedback',query:'加载微动效'}));
+  const studies=items.filter(item=>matches(item,{category:'loading',query:'加载微动效'}));
   assert.equal(studies.length,9);
   assert.ok(studies.every(item=>item.loader.original&&item.loader.reference.endsWith('2122045748623609935')));
   const redirect=await read('gallery/ldrs/index.html');
@@ -55,10 +55,17 @@ test('新入口和旧链接兼容，画廊指向可用的代码与展示资源',
 test('用途分类与形态筛选独立',()=>{
   const items=buildCatalog([{id:'day-night-toggle',title:'开关'}]);
   assert.equal(items.filter(item=>matches(item,{category:'input'})).length,1);
-  assert.equal(items.filter(item=>matches(item,{category:'feedback'})).length,160);
+  assert.equal(items.filter(item=>matches(item,{category:'feedback'})).length,12);
+  assert.equal(items.filter(item=>matches(item,{category:'loading'})).length,148);
   assert.equal(items.filter(item=>matches(item,{query:'Waveform'})).length,1);
-  assert.ok(items.filter(item=>matches(item,{category:'feedback',shape:'环形'})).every(item=>item.loader.group==='环形'));
+  assert.equal(items.filter(item=>matches(item,{category:'loading',shape:'环形'})).length,36);
+  assert.equal(items.filter(item=>matches(item,{category:'feedback',shape:'环形'})).length,0);
   assert.equal(items.filter(item=>matches(item,{category:'input',shape:'环形'})).length,0);
+  assert.deepEqual(getCategoryFilters(items,'feedback').map(({id,count})=>[id,count]),[
+    ['all',12],['回弹',5],['摆动',4],['闪动',3],
+  ]);
+  const [all,...shapeFilters]=getCategoryFilters(items,'loading');
+  assert.equal(all.count,shapeFilters.reduce((total,{count})=>total+count,0));
 });
 
 test('Micron 的每个按钮复用上游关键帧，独立 HTML 包含源码与完整许可',async()=>{

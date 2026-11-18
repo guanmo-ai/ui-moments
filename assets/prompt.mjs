@@ -67,7 +67,9 @@ export function mountPrompt(dialog, getPrompt, copy) {
   const actions = document.createElement('div');
   actions.className = 'dialog-actions';
   actions.innerHTML = '<button type="button" class="primary">复制提示词</button>';
+  const save = dialog.querySelector('[data-save-work]');
   close.before(actions);
+  if (save) actions.append(save);
   actions.append(close);
 
   const preview = document.createElement('details');

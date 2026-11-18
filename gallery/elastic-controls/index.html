@@ -112,6 +112,7 @@
       min-width: 70px;
       height: 56px;
       --value: 48;
+      touch-action: pan-y;
     }
 
     .ruler::before {
@@ -158,15 +159,21 @@
       transition: transform 85ms ease-out, border-radius 85ms ease-out;
     }
 
-    .ruler-input {
+    .ruler::after, .ruler-input {
       position: absolute;
       inset: 0 -21px;
+    }
+    .ruler::after {
+      content: "";
+      cursor: ew-resize;
+    }
+    .ruler-input {
       width: calc(100% + 42px);
       height: 100%;
       margin: 0;
       opacity: 0;
-      cursor: ew-resize;
-      touch-action: none;
+      /* 保留原生键盘操作，由外层处理触摸方向。 */
+      pointer-events: none;
     }
 
     .ruler:has(:focus-visible) .ruler-knob { outline: 2px solid var(--ink); outline-offset: 3px; }
@@ -425,23 +432,33 @@
     }
 
     range.addEventListener('input', () => setRuler(range.valueAsNumber));
-    range.addEventListener('pointerdown', (event) => {
+    ruler.addEventListener('pointerdown', (event) => {
       if (event.button !== 0 || drag) return;
       event.preventDefault();
       range.focus({ preventScroll: true });
-      range.setPointerCapture(event.pointerId);
+      ruler.setPointerCapture(event.pointerId);
       const box = ruler.getBoundingClientRect();
       const knobCenter = box.left + box.width * range.valueAsNumber / 100;
       const offset = Math.abs(event.clientX - knobCenter) <= 21 ? event.clientX - knobCenter : 0;
-      drag = { id: event.pointerId, origin: box.left + offset, width: box.width, previous: event.clientX };
+      const touchStart = event.pointerType === 'touch' ? { x: event.clientX, y: event.clientY } : null;
+      drag = { id: event.pointerId, origin: box.left + offset, width: box.width, previous: event.clientX, touchStart };
+      if (!touchStart) dragTo(event.clientX);
+    });
+    ruler.addEventListener('pointermove', (event) => {
+      if (drag?.id !== event.pointerId) return;
+      if (drag.touchStart) {
+        const horizontal = Math.abs(event.clientX - drag.touchStart.x);
+        const vertical = Math.abs(event.clientY - drag.touchStart.y);
+        if (horizontal < 5 || horizontal <= vertical) return;
+        drag.touchStart = null;
+      }
       dragTo(event.clientX);
     });
-    range.addEventListener('pointermove', (event) => {
-      if (drag?.id === event.pointerId) dragTo(event.clientX);
-    });
     for (const event of ['pointerup', 'pointercancel', 'lostpointercapture']) {
-      range.addEventListener(event, (event) => {
+      ruler.addEventListener(event, (event) => {
         if (drag?.id !== event.pointerId) return;
+        if (event.type === 'pointerup' && drag.touchStart &&
+            Math.hypot(event.clientX - drag.touchStart.x, event.clientY - drag.touchStart.y) < 8) dragTo(event.clientX);
         drag = null;
         delete ruler.dataset.pulling;
       });

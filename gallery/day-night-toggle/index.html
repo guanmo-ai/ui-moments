@@ -11,8 +11,8 @@
 :root[data-theme="dark"] { --bg: #17161c; color-scheme: dark; }
 html, body { height: 100%; margin: 0; }
 body { background: var(--bg); overflow: hidden; }
-#c { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
-#sw { position: fixed; margin: 0; padding: 0; border: 0; background: transparent; opacity: 0; cursor: pointer; }
+#c { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: pan-y; }
+#sw { position: fixed; margin: 0; padding: 0; border: 0; background: transparent; opacity: 0; cursor: pointer; touch-action: pan-y; }
 .rec, .rec * { cursor: none !important; }
 </style>
 </head>
@@ -22,9 +22,11 @@ body { background: var(--bg); overflow: hidden; }
 <script>
 (() => {
   const REC = !!window.__RECORD;
-  if (REC) document.documentElement.classList.add('rec');
+  const root = document.documentElement;
+  if (REC) root.classList.add('rec');
   const cv = document.getElementById('c'), ctx = cv.getContext('2d'), sw = document.getElementById('sw');
-  const reduced = !REC && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+  const motionPaused = () => !REC && (reduced.matches || root.dataset.galleryActive === 'false');
 
   /* ---------- math + colour ---------- */
   const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
@@ -110,28 +112,38 @@ body { background: var(--bg); overflow: hidden; }
   const thumbX = () => lerp(G.x0, G.x1, S.pos);
   const inTrack = (x, y) => x >= G.tx && x <= G.tx + G.tw && y >= G.ty && y <= G.ty + G.th;
   const inThumb = (x, y) => { const tx = thumbX(); return x >= tx && x <= tx + G.ts && y >= G.y && y <= G.y + G.ts; };
-  function toggle() { S.target = S.target > 0.5 ? 0 : 1; S.settled = false; sw.setAttribute('aria-checked', String(S.target > 0.5)); }
+  function toggle() { S.target = S.target > 0.5 ? 0 : 1; S.settled = false; sw.setAttribute('aria-checked', String(S.target > 0.5)); refreshPaused(); }
   function onDown(x, y) { if (!inTrack(x, y)) return false; S.down = { x, pos0: S.pos, moved: false }; return true; }
   function onMove(x, y) {
     S.hoverT = inThumb(x, y) || (S.down && S.down.moved) ? 1 : 0;
     if (!S.down) return;
     const dx = x - S.down.x;
     if (!S.down.moved && Math.abs(dx) > 6 * G.u) S.down.moved = true;
-    if (S.down.moved) S.drag = clamp(S.down.pos0 + dx / G.travel, -0.03, 1.03);
+    if (S.down.moved) {
+      S.drag = clamp(S.down.pos0 + dx / G.travel, -0.03, 1.03);
+      refreshPaused();
+    }
   }
   function onUp() {
     if (!S.down) return;
-    if (S.down.moved) { S.target = S.drag > 0.5 ? 1 : 0; S.settled = false; sw.setAttribute('aria-checked', String(S.target > 0.5)); }
-    else toggle();
+    const moved = S.down.moved, released = S.drag;
     S.down = null; S.drag = null;
+    if (moved) {
+      S.target = released > 0.5 ? 1 : 0;
+      S.settled = false;
+      sw.setAttribute('aria-checked', String(S.target > 0.5));
+      refreshPaused();
+    } else toggle();
   }
   if (!REC) {
     cv.addEventListener('pointerdown', (e) => { if (onDown(e.clientX, e.clientY)) { e.preventDefault(); try { cv.setPointerCapture(e.pointerId); } catch (_) {} } });
     sw.addEventListener('pointerdown', (e) => { if (onDown(e.clientX, e.clientY)) { e.preventDefault(); try { sw.setPointerCapture(e.pointerId); } catch (_) {} } });
     addEventListener('pointermove', (e) => onMove(e.clientX, e.clientY));
-    addEventListener('pointerup', onUp); addEventListener('pointercancel', onUp);
+    addEventListener('pointerup', onUp);
+    addEventListener('pointercancel', () => { if (S.down) { S.down = null; S.drag = null; refreshPaused(); } });
     sw.addEventListener('click', (e) => { if (e.detail === 0) toggle(); });
-    sw.addEventListener('focus', () => (S.focusT = 1)); sw.addEventListener('blur', () => (S.focusT = 0));
+    sw.addEventListener('focus', () => { S.focusT = 1; refreshPaused(); });
+    sw.addEventListener('blur', () => { S.focusT = 0; refreshPaused(); });
     addEventListener('keydown', (e) => { if (e.key === ' ' && document.activeElement !== sw) { e.preventDefault(); toggle(); } });
   }
 
@@ -140,7 +152,6 @@ body { background: var(--bg); overflow: hidden; }
     const s = dt / 1000;
     const k = S.drag != null ? 900 : 190, c = 2 * Math.sqrt(k) * (S.drag != null ? 1 : 0.58), tgt = S.drag != null ? S.drag : S.target;
     for (let i = 0; i < 4; i++) { const a = k * (tgt - S.pos) - c * S.vel; S.vel += a * s / 4; S.pos += S.vel * s / 4; }
-    if (reduced) { S.pos = tgt; S.vel = 0; }
     const lp = (v, t, tau) => v + (t - v) * (1 - Math.exp(-dt / tau));
     S.press = lp(S.press, S.down ? 1 : 0, 70);
     S.hover = lp(S.hover, S.hoverT, 140);
@@ -347,16 +358,58 @@ body { background: var(--bg); overflow: hidden; }
 
   /* ---------- loop ---------- */
   function step(dt) { now += dt; if (script) script.next(); physics(dt); draw(); drawCursor(); }
+  function refreshPaused() {
+    if (!motionPaused()) return;
+    S.pos = S.drag ?? S.target;
+    S.bg = smooth(clamp(S.pos));
+    S.vel = 0;
+    S.hover = S.press = 0;
+    S.focus = S.focusT || 0;
+    S.settled = true;
+    S.ripple = -1e9;
+    draw();
+  }
   layout();
   addEventListener('resize', () => { layout(); if (!REC) draw(); });
   const onTheme = () => { if (!REC && (S.target > 0.5) !== sysDark()) toggle(); };
-  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', onTheme);
-  new MutationObserver(onTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  if (!root.dataset.embedded) matchMedia('(prefers-color-scheme: dark)').addEventListener('change', onTheme);
+  // 父页同步动画状态时也会带上主题。相同的值不能重置用户手动切换的状态。
+  function observeValue(name, callback) {
+    new MutationObserver(records => {
+      if (records[0].oldValue !== root.getAttribute(name)) callback();
+    }).observe(root, { attributeFilter: [name], attributeOldValue: true });
+  }
+  observeValue('data-theme', onTheme);
   sw.setAttribute('aria-checked', String(S.target > 0.5));
   window.__step = step;
   window.__ready = Promise.resolve(true);
   step(0);
-  if (!REC) { let last = performance.now(); const loop = (t) => { if(!document.documentElement.dataset.embedded||document.documentElement.dataset.galleryActive!=='false')step(Math.min(50, t - last)); last = t; requestAnimationFrame(loop); }; requestAnimationFrame(loop); }
+  if (!REC) {
+    let frame = 0, last = 0;
+    const loop = (time) => {
+      const idle = S.settled && !S.down && now - S.ripple > 1100 &&
+        Math.abs(S.focus - (S.focusT || 0)) < .01 && Math.abs(S.hover - S.hoverT) < .01;
+      if (!root.dataset.embedded || !idle || time - last >= 45) {
+        step(Math.min(50, time - last));
+        last = time;
+      }
+      frame = requestAnimationFrame(loop);
+    };
+    const syncLoop = () => {
+      if (motionPaused() || document.hidden) {
+        cancelAnimationFrame(frame);
+        frame = 0;
+        if (!document.hidden) refreshPaused();
+      } else if (!frame) {
+        last = performance.now();
+        frame = requestAnimationFrame(loop);
+      }
+    };
+    observeValue('data-gallery-active', syncLoop);
+    document.addEventListener('visibilitychange', syncLoop);
+    reduced.addEventListener('change', syncLoop);
+    syncLoop();
+  }
 })();
 </script>
 </body>

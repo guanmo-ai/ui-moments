@@ -21,7 +21,7 @@ test('47个组件逐个接入，重名实现保留独立ID、来源与用途',()
   assert.equal(items.find(item=>item.id==='loading-ui-ring').loader.tag,'um-loading-ui-ring');
   assert.equal(items.filter(item=>matches(item,{query:'Bartosz'})).length,47);
   assert.ok(loadingUILoaders.every(item=>item.origin===loadingUIOrigin));
-  assert.ok(items.filter(item=>matches(item,{category:'feedback',shape:'文字'})).length>=4);
+  assert.ok(items.filter(item=>matches(item,{category:'loading',shape:'文字'})).length>=4);
 });
 
 test('固定上游版本的每份原文件保持字节一致，源码清单完整',async()=>{

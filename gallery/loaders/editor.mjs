@@ -19,14 +19,19 @@ export function createLoaderPreview(item,values,providers={}){
   return element;
 }
 
-export function createLoaderEditor({license,originalLicense,providers={},isPlaying=()=>true}){
+export function setPreviewPlaying(preview,playing){
+  if(preview?.setPlaying)preview.setPlaying(playing);
+  else for(const animation of preview?.shadowRoot?.getAnimations()||[])playing?animation.play():animation.pause();
+}
+
+export function createLoaderEditor({license,providers={},isPlaying=()=>true,restoreFocus=button=>button?.focus({preventScroll:true})}){
 const $=selector=>document.querySelector(selector);
 const root=document.documentElement,detail=$('#detail'),toast=$('#toast');
-let selected=null,props={},format='html',trigger=null,toastTimer;
+let selected=null,props={},format='html',trigger=null,toastTimer,itemLicense;
 const provider=()=>providers[selected?.provider];
-const selectedLicense=()=>provider()?.license||(selected.original?originalLicense:license);
+const selectedLicense=()=>provider()?.license||itemLicense;
 const defaults=()=>previewProps(selected,foreground(),root.dataset.theme);
-function syncMotion(){const preview=$('#selected-preview').firstElementChild,run=isPlaying()&&detail.open;if(preview?.setPlaying)preview.setPlaying(run);else for(const animation of preview?.shadowRoot?.getAnimations()||[])run?animation.play():animation.pause();}
+function syncMotion(){setPreviewPlaying($('#selected-preview').firstElementChild,isPlaying()&&detail.open);}
 const ranges={
   size:{label:'尺寸',min:16,max:160,step:1,suffix:' px'},
   speed:{label:'周期',min:.2,max:5,step:.05,suffix:' 秒'},
@@ -59,12 +64,14 @@ function paintSelected(){
   $('#selected-preview').replaceChildren(createLoaderPreview(selected,props,providers));
   paintCode();refreshPrompt();requestAnimationFrame(syncMotion);
 }
-function open(item,button){
+function open(item,button,sourceLicense=license){
+  itemLicense=sourceLicense;
   selected=item;props=defaults();format='html';trigger=button;
   $('#detail-title').textContent=item.name;$('#detail-group').textContent='加载动效 / '+item.group;$('#detail-description').textContent=item.description;
   const credit=detail.querySelector('.code-credit');
-  if(originalLicense){
-    credit.querySelector('span').textContent=item.origin?`原作：${item.origin.name} · ${item.origin.author} · ${item.origin.license}。UI Moments 负责整合与预览。`:item.original?'UI Moments 原创 · MIT。':'示例保留 LDRS 原作者署名与 MIT 许可证。';
+  const creditText=credit.querySelector('span');
+  if(creditText){
+    creditText.textContent=item.origin?`原作：${item.origin.name} · ${item.origin.author} · ${item.origin.license}。UI Moments 负责整合与预览。`:item.original?'UI Moments 原创 · MIT。':'示例保留 LDRS 原作者署名与 MIT 许可证。';
     credit.querySelector('a').href=item.origin?.licensePath||(item.original?'LICENSE':'gallery/loaders/vendor/ldrs/LICENSE');
     let source=credit.querySelector('[data-upstream]');
     if(!source){source=document.createElement('a');source.dataset.upstream='';source.target='_blank';source.rel='noopener';credit.append(source);}
@@ -75,11 +82,16 @@ function open(item,button){
   controls();paintSelected();detail.showModal();document.body.style.overflow='hidden';
   history.replaceState(null,'','#'+item.key);
 }
-$('#close').addEventListener('click',()=>detail.close());
-detail.addEventListener('click',event=>{if(event.target===detail){const r=detail.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)detail.close();}});
+function clearDetailHash(){
+  if(location.hash==='#'+selected?.key)history.replaceState(null,'',location.pathname+location.search);
+}
+function closeDetail(){clearDetailHash();detail.close();}
+$('#close').addEventListener('click',closeDetail);
+detail.addEventListener('cancel',clearDetailHash);
+detail.addEventListener('click',event=>{if(event.target===detail){const r=detail.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)closeDetail();}});
 detail.addEventListener('close',()=>{
   $('#selected-preview').replaceChildren();document.body.style.overflow='';
-  history.replaceState(null,'',location.pathname+location.search);clearFeedback();trigger?.focus({preventScroll:true});
+  clearDetailHash();clearFeedback();restoreFocus(trigger);
 });
 $('#controls').addEventListener('input',event=>{
   const input=event.target,key=input.dataset.prop;if(!key)return;
@@ -120,5 +132,5 @@ root.addEventListener('ui-moments:theme',event=>{
     props.color=defaults().color;controls();paintSelected();
   }else if(provider())paintSelected();
 });
-return {open,syncMotion,copy:copyWithFeedback,clearFeedback,isOpen:()=>detail.open};
+return {open,syncMotion,copy:copyWithFeedback,notify,clearFeedback,isOpen:()=>detail.open};
 }

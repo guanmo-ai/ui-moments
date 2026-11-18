@@ -36,10 +36,20 @@ after(async () => {
   if (temp) await rm(temp, { recursive: true, force: true });
 });
 
+async function clickHeading(page, card, name) {
+  const heading = card.getByRole('heading', { name, exact: true });
+  await heading.scrollIntoViewIfNeeded();
+  const box = await heading.boundingBox();
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+}
+
 test('发布包子路径下可搜索、操作滑尺、下载 HTML 并复制提示词', { timeout: 30_000 }, async t => {
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, permissions: ['clipboard-read', 'clipboard-write'] });
   t.after(() => page.close());
+  page.setDefaultTimeout(5_000);
   const errors = [];
+  const requests = [];
+  page.on('request', request => requests.push(request.url()));
   page.on('pageerror', error => errors.push(error.message));
   page.on('response', response => {
     if (response.url().startsWith(site) && response.status() >= 400) errors.push(response.url());
@@ -49,6 +59,8 @@ test('发布包子路径下可搜索、操作滑尺、下载 HTML 并复制提�
   assert.equal(await page.locator('.ui-item').count(), 164);
   await page.frameLocator('[data-ui="bookmark-press"] iframe').getByRole('button', { name: '收藏' }).waitFor();
   assert.equal(await page.evaluate(() => window.scrollY), 0, '嵌入控件载入后首页仍停在顶部');
+  assert.ok(await page.locator('.ui-stage .ui-animation').count() < 35, '首页只挂载近屏的循环动效');
+  assert.ok(!requests.some(url => url.endsWith('/gallery/loading-ui/dist/THIRD_PARTY_LICENSES.txt')), '首屏不请求第三方导出许可');
   await page.getByRole('link', { name: '试试昼夜开关' }).click();
   await page.locator('#component-detail[open]').getByRole('heading', { name: '昼夜开关' }).waitFor();
   await page.locator('#component-close').click();
@@ -68,12 +80,51 @@ test('发布包子路径下可搜索、操作滑尺、下载 HTML 并复制提�
   const value = Number(await ruler.inputValue());
   await ruler.press('ArrowRight');
   assert.equal(Number(await ruler.inputValue()), value + 1);
-  await card.getByRole('button', { name: '放大 弹性滑尺' }).click();
+  assert.equal(await page.locator('dialog[open]').count(), 0);
+  await clickHeading(page, card, '弹性滑尺');
   await page.frameLocator('#component-frame').getByRole('slider', { name: '滑尺位置' }).waitFor();
+  const save = page.locator('#component-detail [data-save-work]');
+  await save.click();
+  assert.equal(await save.getAttribute('aria-pressed'), 'true');
   await page.locator('#component-close').click();
+  await page.waitForURL(url => !url.hash);
   await search.fill('');
+  await page.reload();
+  await page.locator('#gallery-favorites').click();
+  assert.equal(await page.locator('.ui-item:visible').count(), 1);
+  await card.getByRole('button', { name: '详情 弹性滑尺' }).press('Enter');
+  await save.waitFor({ state: 'visible' });
+  assert.equal(await save.getAttribute('aria-pressed'), 'true');
+  await save.click();
+  await page.locator('#component-close').click();
+  await page.locator('#empty').waitFor();
+  await page.locator('#gallery-favorites').click();
 
-  await page.locator('[data-ui="ring"] [data-detail]').click();
+  await page.locator('#categories [data-category="feedback"]').click();
+  assert.equal(await page.locator('.ui-item:visible').count(), 12);
+  await page.locator('[data-shape="摆动"]').click();
+  assert.equal(await page.locator('.ui-item:visible').count(), 4);
+  await page.locator('#categories [data-category="loading"]').click();
+  assert.equal(await page.locator('.ui-item:visible').count(), 148);
+  const foldAnimations = () => {
+    const shadow = document.querySelector('[data-ui="paper-fold"] .ui-animation')?.shadowRoot;
+    return shadow?.getAnimations().map(animation => animation.playState) ?? [];
+  };
+  await page.locator('[data-ui="paper-fold"] .ui-animation').waitFor();
+  await page.locator('#motion').click();
+  assert.ok(await page.locator('[data-ui="paper-fold"] .ui-playback').isDisabled());
+  const states = await page.evaluate(foldAnimations);
+  assert.ok(states.length > 0 && states.every(state => state === 'paused'));
+  await page.locator('#motion').click();
+  const ring = page.locator('[data-ui="ring"]');
+  const playback = ring.locator('.ui-playback');
+  await playback.click();
+  assert.equal(await playback.getAttribute('aria-pressed'), 'true');
+  assert.equal(await page.locator('dialog[open]').count(), 0);
+  await playback.click();
+  assert.equal(await playback.getAttribute('aria-pressed'), 'false');
+  await clickHeading(page, ring, 'Ring');
+  await page.locator('#detail[open]').waitFor();
   await page.locator('#prop-size').fill('96');
   assert.match(await page.locator('#code').inputValue(), /Griffin Johnston/);
   await page.locator('#tab-html').press('ArrowRight');
@@ -110,13 +161,28 @@ test('手机风格库切换外观时保留控件状态，深链接可直接打�
   assert.equal(await page.locator('#component-options label').filter({ hasText: '日期选择器' }).count(), 0);
   await page.locator('#catalog-link').click();
   await page.locator('#component-detail[open]').getByRole('heading', { name: '夹页键' }).waitFor();
+  await page.locator('#component-close').tap();
+  await page.locator('#categories [data-category="input"]').tap();
+  const card = page.locator('[data-ui="bookmark-press"]');
+  const inlineBookmark = card.frameLocator('iframe').getByRole('button', { name: '收藏' });
+  await inlineBookmark.tap();
+  assert.equal(await inlineBookmark.getAttribute('aria-pressed'), 'true');
+  assert.equal(await page.locator('dialog[open]').count(), 0);
+  await card.getByRole('button', { name: '详情 夹页键' }).tap();
+  await page.locator('#component-detail[open]').getByRole('heading', { name: '夹页键' }).waitFor();
   assert.deepEqual(errors, []);
 });
 
-test('运行资源缺失时显示载入错误', { timeout: 15_000 }, async t => {
+test('动效资源失败时其余画廊可浏览，失败卡片可重试', { timeout: 15_000 }, async t => {
   const page = await browser.newPage();
   t.after(() => page.close());
-  await page.route('**/gallery/loading-ui/dist/runtime.js', route => route.fulfill({ status: 404 }));
-  await page.goto(site);
-  await page.locator('#load-error').waitFor({ state: 'visible' });
+  await page.route('**/gallery/loading-ui/dist/runtime.js', route => route.fulfill({ status: 404 }), { times: 1 });
+  await page.goto(`${site}?q=loading-ui-ring`);
+  const card = page.locator('[data-ui="loading-ui-ring"]');
+  const retry = card.getByRole('button', { name: '重试 Ring 预览' });
+  await retry.waitFor({ state: 'visible' });
+  await retry.click();
+  await card.locator('.ui-animation').waitFor();
+  await page.locator('#work-search').fill('折页');
+  await page.locator('[data-ui="paper-fold"] .ui-animation').waitFor();
 });
