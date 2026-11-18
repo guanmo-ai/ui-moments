@@ -47,6 +47,11 @@ test('发布包子路径下可搜索、操作滑尺、下载 HTML 并复制提�
   await page.goto(site);
   await page.locator('html[data-ready="true"]').waitFor({ state: 'attached' });
   assert.equal(await page.locator('.ui-item').count(), 164);
+  await page.frameLocator('[data-ui="bookmark-press"] iframe').getByRole('button', { name: '收藏' }).waitFor();
+  assert.equal(await page.evaluate(() => window.scrollY), 0, '嵌入控件载入后首页仍停在顶部');
+  await page.getByRole('link', { name: '试试昼夜开关' }).click();
+  await page.locator('#component-detail[open]').getByRole('heading', { name: '昼夜开关' }).waitFor();
+  await page.locator('#component-close').click();
 
   const search = page.locator('#work-search');
   await search.fill('日期选择器');

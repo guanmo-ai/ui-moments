@@ -23,3 +23,15 @@ export function setupSite(){
 
 export const foreground=()=>getComputedStyle(document.documentElement).getPropertyValue('--c-fg').trim();
 export const background=()=>getComputedStyle(document.documentElement).getPropertyValue('--c-bg').trim();
+
+export function embedUrl(demo, theme) {
+  const url = new URL(demo, location.href);
+  url.searchParams.set('embed', 'ui');
+  url.searchParams.set('theme', theme);
+  if (url.hash) {
+    // 使用查询参数选择控件，避免 iframe 内的锚点滚动外层页面。
+    url.searchParams.set('sample', url.hash.slice(1));
+    url.hash = '';
+  }
+  return url;
+}

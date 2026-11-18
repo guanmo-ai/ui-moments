@@ -83,7 +83,8 @@
     if (!root.dataset.theme) {
       root.dataset.theme = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
     }
-    const effect = root.dataset.effect || location.hash.slice(1) || 'jelly';
+    const sample = root.dataset.embedded && new URLSearchParams(location.search).get('sample');
+    const effect = root.dataset.effect || sample || location.hash.slice(1) || 'jelly';
     const button = document.querySelector('.press');
     const animation = 'mjs-' + (/^[a-z]+$/.test(effect) ? effect : 'jelly');
     button.addEventListener('click', () => {

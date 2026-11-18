@@ -1,14 +1,31 @@
-# UI Moments · 界面图鉴
+<h1 align="center">UI Moments · 界面图鉴</h1>
 
-可直接操作的 UI 控件和动效。加载动效支持调参、导出代码和复制复刻提示词。
+<p align="center">
+  <strong>面向设计师与开发者的开源 UI 交互与动效图鉴。</strong><br>
+  160+ 个实时示例，从弹性控件到加载动效与点击反馈。
+</p>
 
-[**打开在线图鉴 →**](https://guanmo-ai.github.io/ui-moments/)
+<p align="center">
+  <a href="https://guanmo-ai.github.io/ui-moments/"><strong>打开在线图鉴 ↗</strong></a>
+  · <a href="https://guanmo-ai.github.io/ui-moments/styles.html">对比组件风格</a>
+  · <a href="#本地运行">本地运行</a>
+</p>
 
 [![深色 UI 预览，包含昼夜开关、折页、弹性滑尺、对齐拨片和夹页键](docs/assets/gallery-preview.jpg)](https://guanmo-ai.github.io/ui-moments/)
 
-[昼夜开关](https://guanmo-ai.github.io/ui-moments/#day-night-toggle) · [折页](https://guanmo-ai.github.io/ui-moments/#paper-fold) · [弹性滑尺](https://guanmo-ai.github.io/ui-moments/#elastic-ruler) · [对齐拨片](https://guanmo-ai.github.io/ui-moments/#alignment-switch) · [夹页键](https://guanmo-ai.github.io/ui-moments/#bookmark-press)
+<p align="center">
+  <a href="https://guanmo-ai.github.io/ui-moments/#day-night-toggle">昼夜开关</a>
+  · <a href="https://guanmo-ai.github.io/ui-moments/#paper-fold">折页</a>
+  · <a href="https://guanmo-ai.github.io/ui-moments/#elastic-ruler">弹性滑尺</a>
+  · <a href="https://guanmo-ai.github.io/ui-moments/#alignment-switch">对齐拨片</a>
+  · <a href="https://guanmo-ai.github.io/ui-moments/#bookmark-press">夹页键</a>
+</p>
 
-由观默 [@guanmo_ai](https://x.com/guanmo_ai) 创作与维护。LDRS、Loading UI、SVG Spinners 和 Micron.js 的作者与许可见[第三方声明](THIRD_PARTY_NOTICES.md)。
+## 从体验到实现
+
+- **在卡片里上手。** 拖动滑尺、拨动开关，或按用途筛选实时示例。点击卡片右下角可以放大体验。
+- **用同一个控件对比四种风格。** 在原版、孟菲斯、包豪斯和像素风之间切换，直接体验外观改变后的交互。[试试对齐拨片](https://guanmo-ai.github.io/ui-moments/styles.html?style=memphis#alignment-switch)
+- **调好动效，导出实现。** 在加载动效详情里调整尺寸、颜色和支持的节奏参数，导出 HTML 或 React，也可以复制包含当前参数的复刻提示词。[试试折页动效](https://guanmo-ai.github.io/ui-moments/#paper-fold)
 
 ## 本地运行
 
@@ -54,4 +71,4 @@ npm run record:light-scenes    # out/light-scenes.mp4，2880×1800，60fps
 
 ## 许可
 
-本项目新增代码以 [MIT](LICENSE) 许可发布。上游代码、资源和字体各自保留原作者声明及许可证。详见[第三方声明](THIRD_PARTY_NOTICES.md)。
+由观默 [@guanmo_ai](https://x.com/guanmo_ai) 创作与维护。项目新增代码以 [MIT](LICENSE) 许可发布。LDRS、Loading UI、SVG Spinners、Micron.js 等上游作品保留作者声明与许可证，详见[第三方声明](THIRD_PARTY_NOTICES.md)。

@@ -355,8 +355,8 @@ body { background: var(--bg); overflow: hidden; }
   sw.setAttribute('aria-checked', String(S.target > 0.5));
   window.__step = step;
   window.__ready = Promise.resolve(true);
+  step(0);
   if (!REC) { let last = performance.now(); const loop = (t) => { if(!document.documentElement.dataset.embedded||document.documentElement.dataset.galleryActive!=='false')step(Math.min(50, t - last)); last = t; requestAnimationFrame(loop); }; requestAnimationFrame(loop); }
-  else step(0);
 })();
 </script>
 </body>

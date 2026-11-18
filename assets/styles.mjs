@@ -1,4 +1,4 @@
-import {foreground, setupSite} from './site.mjs';
+import {embedUrl, foreground, setupSite} from './site.mjs';
 import {originalLoaders, originalMarkup} from '../gallery/loaders/originals.mjs';
 
 setupSite();
@@ -71,15 +71,8 @@ function mountPreview(work) {
   if (previews.has(work.id)) return previews.get(work.id);
   let preview;
   if (work.demo) {
-    const url = new URL(work.demo, location.href);
-    url.searchParams.set('embed', 'ui');
-    url.searchParams.set('theme', root.dataset.theme);
+    const url = embedUrl(work.demo, root.dataset.theme);
     url.searchParams.set('style', selection.style.id);
-    if (url.hash) {
-      // 使用查询参数选择控件，避免 iframe 内的锚点滚动外层页面。
-      url.searchParams.set('sample', url.hash.slice(1));
-      url.hash = '';
-    }
     preview = document.createElement('iframe');
     preview.src = url.href;
     preview.addEventListener('load', () => syncEmbed(preview));

@@ -1,4 +1,4 @@
-import {setupSite,foreground} from './site.mjs';
+import {setupSite,foreground,embedUrl} from './site.mjs';
 import {buildCatalog,categories,matches} from './catalog.mjs';
 import * as ldrs from '../gallery/loaders/vendor/ldrs/dist/index.js';
 import {previewProps,groups} from '../gallery/loaders/catalog.mjs';
@@ -57,7 +57,6 @@ function effect(item){
   element.className='ui-animation';
   return element;
 }
-function embedUrl(item){const url=new URL(item.demo,location.href);url.searchParams.set('embed','ui');url.searchParams.set('theme',root.dataset.theme);return url.href;}
 for(const item of items){
   if(item.loader&&!item.loader.original&&!item.loader.provider)ldrs[item.loader.key].register(item.loader.tag);
   const element=document.createElement('article');element.className='ui-item';element.dataset.ui=item.id;
@@ -83,7 +82,7 @@ const shapes=[...new Set([...groups,...items.filter(item=>item.shape).map(item=>
 $('#shapes').innerHTML=[['all','全部形态'],...shapes.map(name=>[name,name])].map(([key,name])=>`<button type="button" data-shape="${key}">${name}</button>`).join('');
 function mountFrame(element,item){
   if(frames.has(item.id))return;
-  const frame=document.createElement('iframe');frame.title=item.title+'：直接操作';frame.src=embedUrl(item);frame.allow='fullscreen; clipboard-write';
+  const frame=document.createElement('iframe');frame.title=item.title+'：直接操作';frame.src=embedUrl(item.demo,root.dataset.theme).href;frame.allow='fullscreen; clipboard-write';
   frame.addEventListener('load',()=>syncFrame(item.id));element.querySelector('.ui-stage').append(frame);frames.set(item.id,frame);
 }
 function syncFrame(id){
@@ -141,7 +140,7 @@ function openComponent(item,button){
   component=item;componentTrigger=button;
   $('#component-title').textContent=item.title;$('#component-kind').textContent=categories.find(cat=>cat.id===item.category).name+' / '+item.type;
   $('#component-description').textContent=item.summary;
-  componentFrame.src=embedUrl(item);componentFrame.title=item.title+'放大体验';
+  componentFrame.src=embedUrl(item.demo,root.dataset.theme).href;componentFrame.title=item.title+'放大体验';
   $('#component-source').href='https://github.com/guanmo-ai/ui-moments/tree/main/'+item.source;
   $('#component-open').href=item.demo;
   $('#component-copy').hidden=item.demo.includes('/dist/');
