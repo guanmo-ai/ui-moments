@@ -1,6 +1,15 @@
 # 原创控件 · UI Moments Originals
 
-打开 [交互页](index.html) 可以同时操作六个控件；`index.html#<id>` 只显示其中一个。主画廊通过 `?embed=ui&sample=<id>` 分别嵌入。
+26 个原创控件分在四个页面里。打开页面可以同时操作该页全部控件；`<页面>.html#<id>` 只显示其中一个；主画廊通过 `?embed=ui&sample=<id>` 分别嵌入。
+
+| 页面 | 内容 |
+| --- | --- |
+| [visual.html](visual.html) | 无文字的图形交互：磁吸点阵 `magnet-grid`、果冻方块 `jelly-pad`、色轮 `hue-orbit`、融合水滴 `merge-drops`、拉绳灯 `pull-cord`、抛硬币 `flip-coin`、涟漪画板 `ripple-pad`、花朵开关 `bloom-toggle` |
+| [index.html](index.html) | 基础控件（见下表） |
+| [actions.html](actions.html) | 操作反馈：复制按钮 `copy-morph`、点赞爆发 `like-burst`、纸飞机发送 `paper-plane`、下载进度环 `download-ring`、验证码 `code-shake`、通知铃 `bell-toggle` |
+| [inputs.html](inputs.html) | 表单控件：划线清单 `stroke-checklist`、石子评分 `pebble-rating`、档位滑块 `notch-slider`、密码强度 `strength-meter`、标签输入 `chip-input`、方案卡片 `plan-picker` |
+
+## 基础控件（index.html）
 
 | 控件 | ID | 交互 | 无障碍 |
 | --- | --- | --- | --- |
@@ -13,7 +22,7 @@
 
 ## 来源
 
-六个控件的构思、造型、动效与代码均由 UI Moments 原创，没有参考特定作品，也没有使用第三方代码、字体以外的素材或依赖。字体 Geist 按 SIL OFL 1.1 自托管，见 [assets/fonts](../../assets/fonts/)。源码按项目 [MIT 许可证](../../LICENSE) 提供。
+全部控件的构思、造型、动效与代码均由 UI Moments 原创，没有参考特定作品，也没有使用第三方代码、字体以外的素材或依赖。字体 Geist 按 SIL OFL 1.1 自托管，见 [assets/fonts](../../assets/fonts/)。源码按项目 [MIT 许可证](../../LICENSE) 提供。
 
 ## 设计约定
 
@@ -24,6 +33,6 @@
 
 ## 新增一个原创控件
 
-1. 在 `index.html` 的 `.samples` 中加一个 `<section class="sample" id="<id>">`，控件放在 `.stage > .widget` 里。
+1. 选一个合适的页面（或复制 `visual.html` 新建一页），在 `.samples` 中加一个 `<section class="sample" id="<id>">`，控件放在 `.stage > .widget` 里。
 2. 脚本写在独立的 `{ ... }` 块中，动画前先检查 `motionEnabled()`。
-3. 在 [gallery/works.js](../works.js) 的 `originalControls` 中登记，并运行 `npm test`。
+3. 在 [gallery/works.js](../works.js) 对应的数组（`originalCore` / `originalVisuals` / `originalInputs` / `originalActions`）中登记，并运行 `npm test`。

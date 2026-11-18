@@ -5,6 +5,7 @@ UI Moments 用到的每一个外部仓库、字体、依赖和灵感来源都列
 - 想知道**某个作品是谁做的**：看下面的「作品来源总表」。
 - 想看**许可证原文**：见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)，以及各 `vendor/` 目录里随附的 `LICENSE`。
 - 想知道**我们怎样判断能不能用**：见 [docs/attribution.md](docs/attribution.md)。
+- 参考想法的作品不在本页逐条列出，来源写在每个作品的 `credit` 字段里，见第 5 节。
 
 > 根目录 [LICENSE](LICENSE)（MIT）只覆盖 UI Moments 自己写的代码，**不会**替换或覆盖任何上游作者的版权与许可。
 
@@ -14,10 +15,10 @@ UI Moments 用到的每一个外部仓库、字体、依赖和灵感来源都列
 
 | 来源类型 | 数量 | 作品 | 代码归属 | 许可 |
 | --- | ---: | --- | --- | --- |
-| **UI Moments 原创** | 17 | 6 个原创控件、2 款原创加载动效、9 款加载微动效 | UI Moments | MIT |
+| **UI Moments 原创** | 45 | 26 个原创控件、10 款原创加载动效、9 款加载微动效 | UI Moments | MIT |
 | **开源完整集成** | 149 | LDRS 44 款、Loading UI 47 款、SVG Spinners 46 款、Micron.js 12 款 | 各上游作者 | MIT（保留原文） |
 | **参考想法后独立实现** | 4 | 昼夜开关、弹性滑尺、对齐拨片、夹页键 | UI Moments | MIT |
-| **合计** | **170** | | | |
+| **合计** | **198** | | | |
 
 画廊卡片会分别标注「原创」「×× 开源」「参考后实现」。打开详情后能看到来源链接和许可。
 
@@ -54,16 +55,17 @@ Loading UI 需要 React 运行。构建脚本 `gallery/loading-ui/tools/build.mj
 | [Vite](https://github.com/vitejs/vite) · [TypeScript](https://github.com/microsoft/TypeScript) · [oxlint](https://github.com/oxc-project/oxc) | 已下架日期选择器的构建与检查 | MIT / Apache-2.0 / MIT |
 | [ffmpeg](https://ffmpeg.org/) | 把录制帧合成为视频（本地安装，不在仓库内） | LGPL / GPL |
 
-## 5. 只借鉴了想法的作品（没有使用对方的代码或素材）
+## 5. 参考想法的作品
 
-这些作品没有开源许可，我们只参考了交互想法或展示形式，图形、动效和代码都由 UI Moments 自己完成。
+想法本身不受版权保护；我们只借鉴交互思路时，代码、图形和素材全部自己完成，这部分代码属于 UI Moments，按 MIT 发布。
 
-| UI Moments 作品 | 参考对象 | 借鉴了什么 | 我们自己做了什么 |
-| --- | --- | --- | --- |
-| [昼夜开关](gallery/day-night-toggle/) | [@kaolti（Zsolt Kacso）](https://x.com/kaolti/status/2119151022014894260) | 玻璃质感方形拨钮、点阵图标、琥珀与淡紫轮廓光 | 像素一一对应的螺旋变形、可停在中间态的拖动、canvas 渲染与无障碍 |
-| [弹性滑尺 / 对齐拨片 / 夹页键](gallery/elastic-controls/) | [@yui540](https://x.com/yui540/status/2120825584947487170) | 黑白灰配色、紧凑尺度、压缩与回弹的节奏 | 控件用途、造型、排版与全部实现 |
-| [光照场景](gallery/light-scenes/)（实验，未进入画廊） | [@chetaslua](https://x.com/chetaslua/status/2119353034165891308) | 「旋钮就是灯」「拖动天空」「色温滑块」三个点子 | 连续光照模型、对比度兜底、浦肯野花园与霓虹招牌 |
-| [9 款加载微动效](gallery/loaders/studies.mjs) | [Ramin Nasibov](https://x.com/RaminNasibov/status/2122045748623609935) | 把小尺寸加载动效并列展示的形式 | 九款动效的图形、运动路径与 CSS |
+这类来源**不在这里逐条维护**。规则很简单：
+
+- 明显受某一个具体作品启发时，在 [`gallery/works.js`](gallery/works.js) 对应条目写一行 `credit`（作者与链接）。画廊卡片会显示「参考后实现」，详情里自动出现来源链接。
+- 开关、步进器、长按确认这类通用交互模式，不需要标注。
+- 不照搬对方的具体视觉造型、配色组合、文案或素材；如果做出来几乎一样，就改造型，或先征得原作者同意。
+
+当前标注了参考来源的作品可以在图鉴里直接筛到：卡片副标题为「参考后实现」。
 
 ## 6. 我们自己的其它仓库
 
@@ -73,8 +75,8 @@ Loading UI 需要 React 运行。构建脚本 `gallery/loading-ui/tools/build.mj
 
 | 作品 | 位置 |
 | --- | --- |
-| 墨滴开关、刻度旋钮、长按确认、滚轮步进器、翻页标签、潮汐进度 | [gallery/originals/](gallery/originals/) |
-| 折页、回信 | [gallery/loaders/originals.mjs](gallery/loaders/originals.mjs) |
+| 26 个原创控件：图形交互、表单控件、操作反馈等 | [gallery/originals/](gallery/originals/) |
+| 折页、回信与 8 款原创加载动效 | [gallery/loaders/originals.mjs](gallery/loaders/originals.mjs)、[gallery/loaders/motifs.mjs](gallery/loaders/motifs.mjs) |
 | 风格库的「像素风」变体 | [gallery/elastic-controls/variants.css](gallery/elastic-controls/variants.css) |
 | 站点外壳、画廊、导出与提示词生成 | `assets/`、`index.html`、`styles.html` |
 

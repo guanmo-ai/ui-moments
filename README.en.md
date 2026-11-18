@@ -4,7 +4,7 @@
 
 # UI Moments
 
-**An open-source gallery of UI interactions and motion.** 170 live examples you can poke, drag and tune — then take the HTML or React code with you.
+**An open-source gallery of UI interactions and motion.** 198 live examples you can poke, drag and tune — then take the HTML or React code with you.
 
 [![Check and deploy](https://github.com/guanmo-ai/ui-moments/actions/workflows/pages.yml/badge.svg)](https://github.com/guanmo-ai/ui-moments/actions/workflows/pages.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-434eaa.svg)](LICENSE)
@@ -35,22 +35,22 @@
 
 | Category | Count | Includes |
 | --- | ---: | --- |
-| Controls | 10 | 6 **original controls**, Day/Night Toggle, Elastic Slider, Alignment Switch, Bookmark Button |
+| Controls | 30 | 26 **original controls**, Day/Night Toggle, Elastic Slider, Alignment Switch, Bookmark Button |
 | Tap feedback | 12 | Micron.js bounce, wobble and blink effects |
-| Loaders | 148 | 11 originals, 44 LDRS, 47 Loading UI, 46 SVG Spinners |
+| Loaders | 156 | 19 originals, 44 LDRS, 47 Loading UI, 46 SVG Spinners |
 
 ### Original controls
 
-Six controls designed from scratch. One HTML file, no dependencies, keyboard and reduced-motion support.
+26 controls designed from scratch, grouped into four single-file pages with no dependencies. All support keyboard and reduced motion.
 
-| Control | Interaction |
+| Page | Controls |
 | --- | --- |
-| [Ink Switch](https://guanmo-ai.github.io/ui-moments/#ink-switch) | A drop of ink falls from the knob and spreads along the track; it is drawn back when switched off. |
-| [Detent Dial](https://guanmo-ai.github.io/ui-moments/#detent-dial) | Drag around the knob; it is pulled toward the nearest detent and springs into place on release. |
-| [Hold to Confirm](https://guanmo-ai.github.io/ui-moments/#hold-confirm) | The action fires only after the fill completes; letting go early drains it back. |
-| [Odometer Stepper](https://guanmo-ai.github.io/ui-moments/#odometer-stepper) | Each digit rolls in the direction of change, like a mechanical counter. |
-| [Leaf Tabs](https://guanmo-ai.github.io/ui-moments/#leaf-tabs) | The selected card turns over like a page to land on the new tab. |
-| [Tide Progress](https://guanmo-ai.github.io/ui-moments/#tide-progress) | Liquid springs toward the target; the faster it changes, the more it sloshes. |
+| [Visual](https://guanmo-ai.github.io/ui-moments/gallery/originals/visual.html) (no text) | Magnet Grid · Jelly Cube · Hue Orbit · Merge Drops · Pull Cord Lamp · Flip Coin · Ripple Pad · Bloom Toggle |
+| [Core](https://guanmo-ai.github.io/ui-moments/gallery/originals/) | Ink Switch · Detent Dial · Hold to Confirm · Odometer Stepper · Leaf Tabs · Tide Progress |
+| [Actions](https://guanmo-ai.github.io/ui-moments/gallery/originals/actions.html) | Copy Button · Like Burst · Paper Plane Send · Download Ring · Code Shake · Bell Toggle |
+| [Forms](https://guanmo-ai.github.io/ui-moments/gallery/originals/inputs.html) | Stroke Checklist · Pebble Rating · Notch Slider · Strength Meter · Chip Input · Plan Picker |
+
+Plus 10 original loaders.
 
 ## Quick start
 

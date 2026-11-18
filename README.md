@@ -4,7 +4,7 @@
 
 # UI Moments · 界面图鉴
 
-**开源的 UI 交互与动效图鉴。** 170 个可以直接上手的实时示例：点按、拖动、调参，再把 HTML 或 React 代码带走。
+**开源的 UI 交互与动效图鉴。** 198 个可以直接上手的实时示例：点按、拖动、调参，再把 HTML 或 React 代码带走。
 
 [![Check and deploy](https://github.com/guanmo-ai/ui-moments/actions/workflows/pages.yml/badge.svg)](https://github.com/guanmo-ai/ui-moments/actions/workflows/pages.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-434eaa.svg)](LICENSE)
@@ -34,22 +34,22 @@
 
 | 分类 | 数量 | 包含 |
 | --- | ---: | --- |
-| 交互控件 | 10 | 6 个**原创控件**、昼夜开关、弹性滑尺、对齐拨片、夹页键 |
+| 交互控件 | 30 | 26 个**原创控件**、昼夜开关、弹性滑尺、对齐拨片、夹页键 |
 | 点击反馈 | 12 | Micron.js 的回弹、摆动、闪动效果 |
-| 加载动效 | 148 | 11 款原创、44 款 LDRS、47 款 Loading UI、46 款 SVG Spinners |
+| 加载动效 | 156 | 19 款原创、44 款 LDRS、47 款 Loading UI、46 款 SVG Spinners |
 
 ### 原创控件
 
-从零设计的六个控件，单个 HTML 文件、无依赖，均支持键盘与「减少动态效果」。[一起打开 ↗](https://guanmo-ai.github.io/ui-moments/gallery/originals/)
+26 个从零设计的控件，分在四个单文件页面里，无依赖，均支持键盘与「减少动态效果」。
 
-| | 控件 | 交互 |
-| --- | --- | --- |
-| ◐ | [墨滴开关](https://guanmo-ai.github.io/ui-moments/#ink-switch) | 拨钮里的墨滴落进轨道并晕开，关闭时沿原路收回 |
-| ◎ | [刻度旋钮](https://guanmo-ai.github.io/ui-moments/#detent-dial) | 围绕旋钮拖动，指针被最近的刻度吸住，松手弹回 |
-| ▭ | [长按确认](https://guanmo-ai.github.io/ui-moments/#hold-confirm) | 按住填满才执行，中途松手快速退回 |
-| ⇅ | [滚轮步进器](https://guanmo-ai.github.io/ui-moments/#odometer-stepper) | 每一位数字像里程表一样朝变化方向滚动 |
-| ▤ | [翻页标签](https://guanmo-ai.github.io/ui-moments/#leaf-tabs) | 选中底卡像一页纸翻到新标签 |
-| ◒ | [潮汐进度](https://guanmo-ai.github.io/ui-moments/#tide-progress) | 液面按弹簧追上目标，变化越快晃得越厉害 |
+| 页面 | 控件 |
+| --- | --- |
+| [图形交互](https://guanmo-ai.github.io/ui-moments/gallery/originals/visual.html)（无文字） | [磁吸点阵](https://guanmo-ai.github.io/ui-moments/#magnet-grid) · [果冻方块](https://guanmo-ai.github.io/ui-moments/#jelly-pad) · [色轮](https://guanmo-ai.github.io/ui-moments/#hue-orbit) · [融合水滴](https://guanmo-ai.github.io/ui-moments/#merge-drops) · [拉绳灯](https://guanmo-ai.github.io/ui-moments/#pull-cord) · [抛硬币](https://guanmo-ai.github.io/ui-moments/#flip-coin) · [涟漪画板](https://guanmo-ai.github.io/ui-moments/#ripple-pad) · [花朵开关](https://guanmo-ai.github.io/ui-moments/#bloom-toggle) |
+| [基础控件](https://guanmo-ai.github.io/ui-moments/gallery/originals/) | [墨滴开关](https://guanmo-ai.github.io/ui-moments/#ink-switch) · [刻度旋钮](https://guanmo-ai.github.io/ui-moments/#detent-dial) · [长按确认](https://guanmo-ai.github.io/ui-moments/#hold-confirm) · [滚轮步进器](https://guanmo-ai.github.io/ui-moments/#odometer-stepper) · [翻页标签](https://guanmo-ai.github.io/ui-moments/#leaf-tabs) · [潮汐进度](https://guanmo-ai.github.io/ui-moments/#tide-progress) |
+| [操作反馈](https://guanmo-ai.github.io/ui-moments/gallery/originals/actions.html) | [复制按钮](https://guanmo-ai.github.io/ui-moments/#copy-morph) · [点赞爆发](https://guanmo-ai.github.io/ui-moments/#like-burst) · [纸飞机发送](https://guanmo-ai.github.io/ui-moments/#paper-plane) · [下载进度环](https://guanmo-ai.github.io/ui-moments/#download-ring) · [验证码](https://guanmo-ai.github.io/ui-moments/#code-shake) · [通知铃](https://guanmo-ai.github.io/ui-moments/#bell-toggle) |
+| [表单控件](https://guanmo-ai.github.io/ui-moments/gallery/originals/inputs.html) | [划线清单](https://guanmo-ai.github.io/ui-moments/#stroke-checklist) · [石子评分](https://guanmo-ai.github.io/ui-moments/#pebble-rating) · [档位滑块](https://guanmo-ai.github.io/ui-moments/#notch-slider) · [密码强度](https://guanmo-ai.github.io/ui-moments/#strength-meter) · [标签输入](https://guanmo-ai.github.io/ui-moments/#chip-input) · [方案卡片](https://guanmo-ai.github.io/ui-moments/#plan-picker) |
+
+另有 10 款原创加载动效：折页、回信、潮环、叠块、节拍、浮字、点阵波、沙漏、文稿、时针。
 
 ## 快速开始
 
@@ -81,10 +81,10 @@ ui-moments/
 │   └── site.css            # 全站颜色令牌与导航
 ├── gallery/
 │   ├── works.js            # 交互控件清单（新增控件从这里登记）
-│   ├── originals/          # 6 个原创控件
+│   ├── originals/          # 26 个原创控件（4 个页面）
 │   ├── elastic-controls/   # 弹性滑尺 / 对齐拨片 / 夹页键 + 风格变体
 │   ├── day-night-toggle/   # 昼夜开关（canvas）
-│   ├── loaders/            # LDRS 集成、原创加载动效与编辑器
+│   ├── loaders/            # LDRS 集成、原创加载动效（originals / motifs）与编辑器
 │   ├── loading-ui/         # Loading UI 集成与构建脚本
 │   ├── svg-spinners/       # SVG Spinners 集成
 │   ├── micron/             # Micron.js 点击反馈

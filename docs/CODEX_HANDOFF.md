@@ -41,12 +41,13 @@ git add -A && npm run package:site && npx playwright install --only-shell chromi
 ## 1. 这次已经完成
 
 ### 原创内容
+- 第二次更新：再加 20 个原创控件与 8 款原创加载动效。`gallery/originals/` 现有四个页面：`index.html`（基础 6）、`visual.html`（无文字图形交互 8）、`inputs.html`（表单 6）、`actions.html`（操作反馈 6）；新增加载动效在 `gallery/loaders/motifs.mjs`。四个页面共用同一套外壳，生成脚本未入库，新增页面时复制 `visual.html` 的结构即可。
 - 新增 `gallery/originals/`：**墨滴开关、刻度旋钮、长按确认、滚轮步进器、翻页标签、潮汐进度** 六个从零设计的控件。单文件、无依赖；有正确的 ARIA 角色与键盘操作；支持深浅主题、`prefers-reduced-motion`、画廊离屏暂停；用 `container-type: size` 让控件在不同卡片尺寸下缩放。
 - 已登记到 `gallery/works.js`（`originalControls`，`original: true`，无 `credit`），卡片显示「原创 · 类型」，复制 HTML 时注释写「UI Moments 原创设计与实现」。
 - 新测试：`tools/site.test.mjs`「原创控件不带外部来源…」，`tools/browser.test.mjs`「原创控件支持键盘操作…」。
 
 ### 来源与许可
-- 新增 **[CREDITS.md](../CREDITS.md)**：作品来源总表（原创 17 / 开源集成 149 / 参考后实现 4 = 170），收录的第三方代码（固定版本与位置）、打包进网站的运行时依赖、开发工具、只借鉴想法的作品、明确不使用的内容、原作者联系方式。
+- 新增 **[CREDITS.md](../CREDITS.md)**：作品来源总表（原创 45 / 开源集成 149 / 参考后实现 4 = 198），收录的第三方代码（固定版本与位置）、打包进网站的运行时依赖、开发工具、只借鉴想法的作品、明确不使用的内容、原作者联系方式。
 - `THIRD_PARTY_NOTICES.md` 顶部指向 CREDITS.md。
 
 ### 网站
@@ -73,9 +74,7 @@ git add -A && npm run package:site && npx playwright install --only-shell chromi
    - 做法：把 Martian Mono、Noto Sans SC、Noto Serif SC、Roboto Flex 子集化后自托管到 `assets/fonts/`，附上 OFL 原文；或换用系统字体栈。
    - 验收：`grep -rn "fonts.g" gallery/` 无结果；在 `tools/site.test.mjs` 第一个测试的循环里加入 `gallery/light-scenes/index.html`。
 
-2. **「参考后实现」作品需要原作者层面的复核。** 昼夜开关借鉴了 @kaolti 的「玻璃质感方形拨钮、点阵图标、琥珀与淡紫轮廓光」，视觉相似度较高。按 `docs/attribution.md`「太像就不发」的规则，建议：
-   - 由维护者（观默）亲自比对原帖，必要时向原作者征得同意，或调整配色 / 拨钮造型以拉开差距。
-   - 这是需要人来判断的事项，**不要自动修改**；请在 PR 中只提出建议。
+2. **昼夜开关的视觉与参考原帖较接近。** 借鉴想法本身没有问题，代码也是自己写的，**不需要删除**。唯一的风险是照搬了具体造型（玻璃方形拨钮 + 点阵图标 + 琥珀/淡紫轮廓光的组合）。如需降低风险，调整配色或拨钮造型即可。是否调整由维护者决定，**不要自动修改**。
 
 3. **风格库链接到 `guanmo-ai/design-style`。** `assets/styles.mjs` 中的「Design Style ↗」与 `CREDITS.md` 都指向该仓库。请确认它是公开仓库；若为私有，访客会看到 404，应改为说明文字。
 
@@ -104,8 +103,8 @@ git add -A && npm run package:site && npx playwright install --only-shell chromi
 
 11. **首屏的「开源来源 4」是写死的。** `index.html` 的 `.hero-stats` 第三格；可以在 `catalog.mjs` 中按 `loader.provider` / `credit.licensePath` 统计后用 `data-stat="sources"` 填充。
 12. **国际化。** 站点只有中文。`README.en.md` 已提供英文说明；可考虑为 `works.js` / 各 `catalog.mjs` 中已有的 `en` 字段加一个界面语言切换。
-13. **原创控件尚未进入风格库。** `styles.html` 只支持弹性控件与折页。可以为原创控件写孟菲斯 / 包豪斯 / 像素风变体（参考 `gallery/elastic-controls/variants.css` 的 `[data-ui-style]` 写法）。
-14. **复制原创控件 HTML 时字体回退。** `gallery/originals/index.html` 用相对路径引用 Geist；独立保存后会回退到系统字体（功能不受影响）。可在复制时去掉 `@font-face`，或提示「字体可选」。
+13. **原创控件尚未进入风格库。**（现在有 26 个，适合挑 3–4 个图形交互先做） `styles.html` 只支持弹性控件与折页。可以为原创控件写孟菲斯 / 包豪斯 / 像素风变体（参考 `gallery/elastic-controls/variants.css` 的 `[data-ui-style]` 写法）。
+14. **复制原创控件 HTML 会复制整页。** 详情里的「复制 HTML」复制的是控件所在的整个页面（6–8 个控件），并依赖 hash 只显示一个。更好的做法：复制时只保留对应的 `<section>`、它的 CSS 块和 JS 块（各块已用注释分隔），或者把每个控件拆成独立文件。另外 Geist 用相对路径引用，独立保存后回退到系统字体（不影响功能）。
 15. **SEO 基础设施。** 缺少 `sitemap.xml`、`robots.txt`、`manifest.webmanifest`；`gallery/originals/index.html` 等子页面没有 OG 图。
 16. **GitHub 仓库设置（需要维护者在网页上操作）：** 填写 About 描述与网站链接、添加 Topics（`ui`, `animation`, `micro-interactions`, `loaders`, `design`）、上传 Social preview（可用 `assets/og.jpg`）、开启 Private vulnerability reporting（`SECURITY.md` 依赖它）、视需要开启 Discussions。
 
@@ -132,5 +131,5 @@ git add -A && npm run package:site && npx playwright install --only-shell chromi
 - **来源规则优先于一切。** 新增任何作品前先读 `docs/attribution.md`，并同步更新 `CREDITS.md`；`vendor/` 下的上游文件必须字节一致（`.gitattributes` 已关闭换行转换，测试会校验哈希）。
 - **组件三件套。** 键盘可达、深浅主题、`prefers-reduced-motion`；嵌入时遵守 `data-gallery-active="false"`。
 - **不引入外部运行时资源。** 网站与导出代码不请求 CDN、字体服务或统计脚本。
-- **测试先行。** 改目录 / 数量时同步更新 `tools/site.test.mjs` 与 `tools/browser.test.mjs` 中的断言（例如卡片总数 170）。
+- **测试先行。** 改目录 / 数量时同步更新 `tools/site.test.mjs` 与 `tools/browser.test.mjs` 中的断言（例如卡片总数 198）。
 - **提交信息** 使用简洁的中文祈使句，与现有历史一致。

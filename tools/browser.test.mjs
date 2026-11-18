@@ -56,8 +56,8 @@ test('发布包子路径下可搜索、操作滑尺、下载 HTML 并复制提�
   });
   await page.goto(site);
   await page.locator('html[data-ready="true"]').waitFor({ state: 'attached' });
-  assert.equal(await page.locator('.ui-item').count(), 170);
-  await page.frameLocator('[data-ui="bookmark-press"] iframe').getByRole('button', { name: '收藏' }).waitFor();
+  assert.equal(await page.locator('.ui-item').count(), 198);
+  await page.frameLocator('[data-ui="ink-switch"] iframe').getByRole('switch', { name: '墨滴开关' }).waitFor();
   assert.equal(await page.evaluate(() => window.scrollY), 0, '嵌入控件载入后首页仍停在顶部');
   assert.ok(await page.locator('.ui-stage .ui-animation').count() < 35, '首页只挂载近屏的循环动效');
   assert.ok(!requests.some(url => url.endsWith('/gallery/loading-ui/dist/THIRD_PARTY_LICENSES.txt')), '首屏不请求第三方导出许可');
@@ -105,7 +105,7 @@ test('发布包子路径下可搜索、操作滑尺、下载 HTML 并复制提�
   await page.locator('[data-shape="摆动"]').click();
   assert.equal(await page.locator('.ui-item:visible').count(), 4);
   await page.locator('#categories [data-category="loading"]').click();
-  assert.equal(await page.locator('.ui-item:visible').count(), 148);
+  assert.equal(await page.locator('.ui-item:visible').count(), 156);
   const foldAnimations = () => {
     const shadow = document.querySelector('[data-ui="paper-fold"] .ui-animation')?.shadowRoot;
     return shadow?.getAnimations().map(animation => animation.playState) ?? [];
@@ -230,5 +230,43 @@ test('原创控件支持键盘操作，嵌入时只显示所选控件', { timeou
   assert.equal(await page.locator('.sample:visible').count(), 1);
   assert.equal(await page.locator('#tide-progress').isVisible(), true);
   assert.equal(await page.evaluate(() => document.documentElement.dataset.theme), 'light');
+  assert.deepEqual(errors, []);
+});
+
+test('第二、三批原创控件可用键盘完成主要操作', { timeout: 25_000 }, async t => {
+  const page = await browser.newPage({ viewport: { width: 1024, height: 900 } });
+  t.after(() => page.close());
+  const errors = [];
+  page.on('pageerror', error => errors.push(error.message));
+
+  await page.goto(new URL('gallery/originals/visual.html', site).href);
+  const bloom = page.getByRole('switch', { name: '花朵开关' });
+  await bloom.press('Space');
+  assert.equal(await bloom.getAttribute('aria-checked'), 'true');
+  const cord = page.getByRole('switch', { name: '拉绳灯' });
+  await cord.press('Enter');
+  assert.equal(await cord.getAttribute('aria-checked'), 'true');
+  const hue = page.getByRole('slider', { name: '色轮' });
+  await hue.press('ArrowRight');
+  assert.equal(await hue.getAttribute('aria-valuenow'), '300');
+
+  await page.goto(new URL('gallery/originals/inputs.html', site).href);
+  const notch = page.getByRole('slider', { name: '档位滑块' });
+  await notch.press('ArrowRight');
+  assert.equal(await notch.getAttribute('aria-valuetext'), 'L');
+  const chips = page.getByRole('textbox', { name: '新标签' });
+  await chips.fill('原创');
+  await chips.press('Enter');
+  assert.equal(await page.locator('.chip').count(), 3);
+  await chips.press('Backspace');
+  await page.waitForFunction(() => document.querySelectorAll('.chip').length === 2);
+
+  await page.goto(new URL('gallery/originals/actions.html', site).href);
+  const like = page.getByRole('button', { name: '喜欢' });
+  await like.press('Enter');
+  assert.equal(await like.getAttribute('aria-pressed'), 'true');
+  await page.getByRole('textbox', { name: '第 1 位' }).focus();
+  await page.keyboard.type('2468');
+  assert.equal(await page.locator('.code-hint').textContent(), '验证成功');
   assert.deepEqual(errors, []);
 });

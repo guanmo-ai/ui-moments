@@ -1,0 +1,526 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>原创操作反馈 · UI Moments</title>
+  <meta name="description" content="UI Moments 原创操作反馈：复制按钮、点赞爆发、纸飞机发送、下载进度环、验证码与通知铃。">
+  <link rel="icon" href="../../assets/icon.svg">
+  <script src="../../assets/embed.js"></script>
+  <script>
+    // 独立打开时跟随站点主题；嵌入画廊时由 embed.js 决定。
+    (() => {
+      const root = document.documentElement;
+      if (root.dataset.embedded) return;
+      let theme;
+      try { theme = localStorage.getItem('ui-moments-theme'); } catch {}
+      root.dataset.theme = theme || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+    })();
+  </script>
+  <style>
+    @font-face { font-family: Geist; src: url('../../assets/fonts/Geist-latin-wght.woff2') format('woff2'); font-weight: 100 900; font-display: swap; }
+
+    :root {
+      color-scheme: light;
+      --page: #f8f8fb;
+      --surface: #f1f2f8;
+      --raised: #fff;
+      --ink: #20212a;
+      --muted: #65697b;
+      --rail: rgb(34 38 81 / .13);
+      --line: rgb(34 38 81 / .12);
+      --accent: #434eaa;
+      --on-accent: #fff;
+      --accent-soft: rgb(67 78 170 / .14);
+      --danger: #c6402f;
+      --danger-soft: rgb(198 64 47 / .14);
+      --shadow: 0 1px 2px rgb(20 22 50 / .14), 0 6px 18px rgb(20 22 50 / .09);
+      --spring: cubic-bezier(.3, 1.45, .5, 1);
+      --ease: cubic-bezier(.16, 1, .3, 1);
+      --font: Geist, -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    }
+
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --page: #111217;
+      --surface: #1c1e27;
+      --raised: #2b2e3d;
+      --ink: #f4f3f8;
+      --muted: #a0a2b5;
+      --rail: rgb(216 219 249 / .15);
+      --line: rgb(216 219 249 / .12);
+      --accent: #bcc4ff;
+      --on-accent: #1c2142;
+      --accent-soft: rgb(188 196 255 / .16);
+      --danger: #ff8f80;
+      --danger-soft: rgb(255 143 128 / .17);
+      --shadow: 0 1px 2px rgb(0 0 0 / .45), 0 8px 24px rgb(0 0 0 / .3);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    html { background: var(--page); }
+    body { margin: 0; background: var(--page); color: var(--ink); font: 400 14px/1.6 var(--font); -webkit-font-smoothing: antialiased; }
+    button, input, output { font: inherit; color: inherit; }
+    button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    a { color: inherit; text-underline-offset: .25em; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+    .page { max-width: 1040px; padding: 0 28px; margin-inline: auto; }
+    .masthead { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 24px; font-size: 12px; color: var(--muted); }
+    .masthead nav { display: flex; align-items: center; gap: 16px; }
+    .brand { color: var(--ink); font-size: 13px; font-weight: 700; text-decoration: none; }
+    .site-link { text-decoration: none; }
+    .site-link:hover { color: var(--ink); }
+    .theme { width: 32px; height: 32px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 9px; background: none; color: var(--muted); }
+    .theme:hover { color: var(--ink); }
+    .theme svg { width: 15px; height: 15px; }
+    .intro { margin: clamp(48px, 10vh, 96px) 0 26px; }
+    .intro p:first-child { margin: 0 0 8px; font: 500 11px/1.4 ui-monospace, monospace; letter-spacing: .12em; color: var(--accent); text-transform: uppercase; }
+    h1 { margin: 0; font-size: clamp(30px, 6vw, 44px); letter-spacing: -.05em; line-height: 1.1; font-weight: 680; }
+    .intro p:last-child { margin: 12px 0 0; max-width: 34em; color: var(--muted); }
+
+    .samples { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+    .sample { min-width: 0; }
+    .stage {
+      position: relative;
+      display: grid;
+      place-items: center;
+      height: 220px;
+      border-radius: 22px;
+      background: var(--surface);
+      container-type: size;
+      overflow: hidden;
+    }
+    .caption { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 11px 4px 0; }
+    .caption h2 { margin: 0; font-size: 14px; line-height: 1.4; font-weight: 650; }
+    .caption p, .credit { margin: 0; font-size: 12px; color: var(--muted); }
+    .credit { margin: 40px 0 28px; padding-top: 18px; border-top: 1px solid var(--line); }
+
+    /* 卡片尺寸不同：控件按舞台大小缩放，指针坐标仍以实际尺寸计算。 */
+    .widget { display: grid; place-items: center; transition: scale .3s var(--ease); }
+    @container (max-height: 160px) { .widget { scale: .82; } }
+    @container (max-width: 215px) { .widget { scale: .8; } }
+    @container (max-height: 128px) { .widget { scale: .7; } }
+    @container (max-width: 180px) { .widget { scale: .66; } }
+    @container (min-height: 300px) and (min-width: 440px) { .widget { scale: 1.35; } }
+
+
+    :root { --love: #d63a6a; --ok: #2c8655; --warn: #c6402f; }
+    :root[data-theme="dark"] { --love: #ff8fb1; --ok: #7fe0a8; --warn: #ff8f80; }
+    .pill { display: inline-flex; align-items: center; justify-content: center; gap: 9px; height: 46px; padding: 0 20px; border: 1px solid var(--line); border-radius: 23px; background: var(--raised); box-shadow: var(--shadow); font-size: 14px; font-weight: 620; transition: scale .3s var(--spring), background .3s, color .3s, border-color .3s; }
+    .pill:active { scale: .95; transition-duration: .1s; }
+    .pill svg { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+    .swap { display: grid; overflow: hidden; }
+    .swap > * { grid-area: 1 / 1; transition: translate .4s var(--spring), opacity .25s; }
+    .swap > :last-child { translate: 0 110%; opacity: 0; }
+    [data-done] .swap > :first-child { translate: 0 -110%; opacity: 0; }
+    [data-done] .swap > :last-child { translate: 0 0; opacity: 1; }
+
+    /* 复制按钮 */
+    .copy[data-done] { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 40%, transparent); }
+    .copy-icon { display: grid; }
+    .copy-icon svg { grid-area: 1 / 1; transition: scale .35s var(--spring), opacity .2s; }
+    .copy-icon .check { stroke-width: 2.2; stroke-dasharray: 16; stroke-dashoffset: 16; transition: stroke-dashoffset .35s var(--ease) .1s; }
+    .copy[data-done] .copy-icon .clip { scale: .4; opacity: 0; }
+    .copy[data-done] .copy-icon .check { stroke-dashoffset: 0; }
+
+    /* 点赞爆发 */
+    .like-wrap { display: flex; align-items: center; gap: 10px; }
+    .like { position: relative; display: grid; place-items: center; width: 54px; height: 54px; padding: 0; border: 1px solid var(--line); border-radius: 50%; background: var(--raised); box-shadow: var(--shadow); color: var(--muted); transition: color .25s; }
+    .like svg { width: 24px; height: 24px; fill: transparent; stroke: currentColor; stroke-width: 1.8; stroke-linejoin: round; transition: fill .25s; }
+    .like[aria-pressed="true"] { color: var(--love); }
+    .like[aria-pressed="true"] svg { fill: currentColor; }
+    .like-ring { position: absolute; inset: -2px; border: 2px solid var(--love); border-radius: 50%; opacity: 0; pointer-events: none; }
+    .like-sparks { position: absolute; inset: 0; pointer-events: none; }
+    .like-sparks i { position: absolute; top: 50%; left: 50%; width: 6px; height: 6px; margin: -3px; border-radius: 50%; background: var(--love); opacity: 0; pointer-events: none; }
+    .like-sparks i:nth-child(even) { background: var(--accent); width: 4px; height: 4px; margin: -2px; }
+    .like-count { display: grid; height: 22px; overflow: hidden; font-size: 16px; font-weight: 650; font-variant-numeric: tabular-nums; min-width: 34px; }
+
+    /* 纸飞机发送 */
+    .send { min-width: 120px; background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+    .send-plane { display: grid; transition: width .35s var(--spring), margin .35s var(--spring); width: 18px; }
+    .send[data-done] .send-plane { width: 0; margin-right: -9px; }
+    .send[data-done] { background: var(--raised); color: var(--accent); }
+
+    /* 下载进度环 */
+    .dl { position: relative; width: 124px; padding: 0; overflow: hidden; transition: width .45s var(--spring), scale .3s var(--spring), color .3s, background .3s; }
+    .dl[data-state="loading"], .dl[data-state="done"] { width: 46px; }
+    .dl-label { display: inline-flex; align-items: center; gap: 8px; transition: opacity .2s; white-space: nowrap; }
+    .dl:not([data-state="idle"]) .dl-label { opacity: 0; }
+    .dl-ring, .dl-check { position: absolute; inset: 0; margin: auto; opacity: 0; transition: opacity .25s .15s; }
+    .dl-ring { width: 32px; height: 32px; rotate: -90deg; }
+    .dl-ring circle { fill: none; stroke-width: 3; }
+    .dl-ring .track { stroke: var(--rail); }
+    .dl-ring .bar { stroke: var(--accent); stroke-linecap: round; stroke-dasharray: 81.7; stroke-dashoffset: 81.7; }
+    .dl[data-state="loading"] .dl-ring { opacity: 1; }
+    .dl .dl-check { width: 20px; height: 20px; stroke-width: 2.4; stroke-dasharray: 18; stroke-dashoffset: 18; transition: opacity .2s, stroke-dashoffset .35s var(--ease) .1s; }
+    .dl[data-state="done"] { background: var(--ok); border-color: var(--ok); color: var(--page); }
+    .dl[data-state="done"] .dl-check { opacity: 1; stroke-dashoffset: 0; }
+
+    /* 验证码 */
+    .code { display: grid; justify-items: center; gap: 10px; }
+    .code-boxes { display: flex; gap: 8px; }
+    .code-boxes input { width: 42px; height: 50px; padding: 0; border: 1.5px solid var(--line); border-radius: 12px; background: var(--raised); text-align: center; font-size: 22px; font-weight: 650; caret-color: var(--accent); outline: 0; transition: border-color .2s, background .3s, color .3s, box-shadow .2s; }
+    .code-boxes input:focus { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+    .code[data-state="error"] input { border-color: var(--warn); color: var(--warn); }
+    .code[data-state="ok"] input { border-color: var(--ok); background: color-mix(in srgb, var(--ok) 14%, var(--raised)); color: var(--ok); }
+    .code-hint { margin: 0; font-size: 12px; color: var(--muted); }
+    .code[data-state="error"] .code-hint { color: var(--warn); }
+    .code[data-state="ok"] .code-hint { color: var(--ok); }
+
+    /* 通知铃 */
+    .bell-wrap { display: grid; justify-items: center; gap: 10px; }
+    .bell { position: relative; display: grid; place-items: center; width: 58px; height: 58px; padding: 0; border: 1px solid var(--line); border-radius: 18px; background: var(--raised); box-shadow: var(--shadow); color: var(--muted); transition: color .3s, scale .3s var(--spring); }
+    .bell:active { scale: .93; }
+    .bell[aria-pressed="true"] { color: var(--accent); }
+    .bell svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; overflow: visible; }
+    .bell .body, .bell .clapper { transform-box: view-box; transform-origin: 12px 3px; }
+    .bell .slash { stroke-dasharray: 26; stroke-dashoffset: 26; transition: stroke-dashoffset .35s var(--ease); }
+    .bell[aria-pressed="false"] .slash { stroke-dashoffset: 0; }
+    .bell-badge { position: absolute; top: -6px; right: -6px; display: grid; place-items: center; min-width: 20px; height: 20px; padding: 0 5px; border: 2px solid var(--surface); border-radius: 10px; background: var(--warn); color: #fff; font-size: 11px; font-weight: 700; transition: scale .35s var(--spring); }
+    .bell[aria-pressed="false"] .bell-badge { scale: 0; }
+    .bell-state { margin: 0; font-size: 12px; color: var(--muted); }
+
+    [data-single] .samples { grid-template-columns: 1fr; }
+    [data-single] .sample { width: min(100%, 420px); }
+    [data-embedded] body, [data-embedded] html { background: var(--surface); }
+    [data-embedded] .page, [data-embedded] .sample { width: 100%; max-width: none; padding: 0; }
+    [data-embedded] .intro, [data-embedded] .masthead, [data-embedded] .credit, [data-embedded] .caption, [data-embedded] .tide-hint { display: none; }
+    [data-embedded] .stage { height: 100dvh; border-radius: 0; }
+
+    @media (max-width: 820px) { .samples { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 520px) {
+      .page { padding: 0 18px; }
+      .samples { grid-template-columns: 1fr; }
+      .stage { height: 190px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { transition-duration: 0s !important; transition-delay: 0s !important; }
+    }
+    [data-gallery-active="false"] * { transition-duration: 0s !important; transition-delay: 0s !important; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="masthead">
+      <a class="brand" href="../../">UI Moments</a>
+      <nav>
+        <a class="site-link" id="gallery-link" href="../../">图鉴 ↗</a>
+        <a class="site-link" id="all-controls" href="./actions.html" hidden>本页全部控件 ↗</a>
+        <button class="theme" id="theme" type="button" aria-label="切换深浅色"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="M10 3a7 7 0 0 0 0 14Z" fill="currentColor"/></svg></button>
+      </nav>
+    </header>
+    <main>
+      <header class="intro">
+        <p>UI Moments Originals</p>
+        <h1>原创操作反馈</h1>
+        <p>六个点按后给出清晰反馈的按钮与输入。动画只用来说明发生了什么，关掉动效时状态依然清楚。</p>
+      </header>
+
+
+      <div class="samples">
+
+        <section class="sample" id="copy-morph" aria-labelledby="copy-title">
+          <div class="stage"><div class="widget">
+            <button class="pill copy" type="button">
+              <span class="copy-icon" aria-hidden="true"><svg class="clip" viewBox="0 0 20 20"><rect x="6.5" y="6.5" width="10" height="10" rx="2.5"/><path d="M13.5 6.5V5a1.5 1.5 0 0 0-1.5-1.5H5A1.5 1.5 0 0 0 3.5 5v7A1.5 1.5 0 0 0 5 13.5h1.5"/></svg><svg class="check" viewBox="0 0 20 20"><path d="M4.5 10.5l3.5 3.5 7.5-8"/></svg></span>
+              <span class="swap"><span>复制链接</span><span aria-hidden="true">已复制</span></span>
+            </button>
+            <span class="sr-only" id="copy-status" aria-live="polite"></span>
+          </div></div>
+          <div class="caption"><h2 id="copy-title">复制按钮</h2><p>点按复制</p></div>
+        </section>
+
+        <section class="sample" id="like-burst" aria-labelledby="like-title">
+          <div class="stage"><div class="widget like-wrap">
+            <button class="like" type="button" aria-pressed="false" aria-label="喜欢">
+              <span class="like-ring" aria-hidden="true"></span>
+              <span class="like-sparks" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.4a4.3 4.3 0 0 1 7.5 2.9c0 5.6-7.5 10.2-7.5 10.2Z"/></svg>
+            </button>
+            <span class="like-count" aria-live="polite"><span>128</span></span>
+          </div></div>
+          <div class="caption"><h2 id="like-title">点赞爆发</h2><p>点按喜欢</p></div>
+        </section>
+
+        <section class="sample" id="paper-plane" aria-labelledby="send-title">
+          <div class="stage"><div class="widget">
+            <button class="pill send" type="button">
+              <span class="send-plane" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M17.5 2.5 9 11M17.5 2.5l-5 15-3.5-6.5L2.5 7.5l15-5Z"/></svg></span>
+              <span class="swap"><span>发送</span><span aria-hidden="true">已发送</span></span>
+            </button>
+            <span class="sr-only" id="send-status" aria-live="polite"></span>
+          </div></div>
+          <div class="caption"><h2 id="send-title">纸飞机发送</h2><p>点按发送</p></div>
+        </section>
+
+        <section class="sample" id="download-ring" aria-labelledby="dl-title">
+          <div class="stage"><div class="widget">
+            <button class="pill dl" type="button" data-state="idle">
+              <span class="dl-label"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v10m0 0-4-4m4 4 4-4M4 16.5h12"/></svg>下载</span>
+              <svg class="dl-ring" viewBox="0 0 32 32" aria-hidden="true"><circle class="track" cx="16" cy="16" r="13"/><circle class="bar" cx="16" cy="16" r="13"/></svg>
+              <svg class="dl-check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4.5 10.5l3.5 3.5 7.5-8"/></svg>
+            </button>
+            <span class="sr-only" id="dl-status" aria-live="polite"></span>
+          </div></div>
+          <div class="caption"><h2 id="dl-title">下载进度环</h2><p>点按下载</p></div>
+        </section>
+
+        <section class="sample" id="code-shake" aria-labelledby="code-title">
+          <div class="stage"><div class="widget">
+            <div class="code">
+              <div class="code-boxes" role="group" aria-labelledby="code-title" aria-describedby="code-hint">
+                <input inputmode="numeric" autocomplete="one-time-code" maxlength="1" aria-label="第 1 位">
+                <input inputmode="numeric" maxlength="1" aria-label="第 2 位">
+                <input inputmode="numeric" maxlength="1" aria-label="第 3 位">
+                <input inputmode="numeric" maxlength="1" aria-label="第 4 位">
+              </div>
+              <p class="code-hint" id="code-hint" aria-live="polite">输入 2468 试试</p>
+            </div>
+          </div></div>
+          <div class="caption"><h2 id="code-title">验证码</h2><p>输错会摇头</p></div>
+        </section>
+
+        <section class="sample" id="bell-toggle" aria-labelledby="bell-title">
+          <div class="stage"><div class="widget bell-wrap">
+            <button class="bell" type="button" aria-pressed="true" aria-labelledby="bell-title">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><g class="body"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15l1.5-2Z"/><path d="M12 3v2"/></g><path class="clapper" d="M10 20.5a2 2 0 0 0 4 0"/><path class="slash" d="M4 4l16 16"/></svg>
+              <span class="bell-badge" aria-hidden="true">3</span>
+            </button>
+            <p class="bell-state" aria-live="polite">通知已开启</p>
+          </div></div>
+          <div class="caption"><h2 id="bell-title">通知铃</h2><p>点按开关</p></div>
+        </section>
+      </div>
+    </main>
+    <footer class="credit">六个操作反馈均由 UI Moments 原创设计与实现，按项目 <a href="../../LICENSE">MIT 许可证</a> 发布。<a href="./index.html">更多原创控件 ↗</a></footer>
+  </div>
+
+  <script>
+    const root = document.documentElement;
+    const params = new URLSearchParams(location.search);
+    const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+    const motionEnabled = () => !reducedMotion.matches && root.dataset.galleryActive !== 'false';
+    const $ = (selector, scope = document) => scope.querySelector(selector);
+    const $$ = (selector, scope = document) => Array.from(scope.querySelectorAll(selector));
+    const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+    // 单个控件：独立页面用 #id，画廊嵌入用 ?sample=id。
+    const sections = $$('.sample');
+    function showSelectedSample() {
+      const id = location.hash.slice(1) || (root.dataset.embedded && params.get('sample'));
+      const selected = sections.find(section => section.id === id) || (root.dataset.embedded && sections[0]);
+      root.toggleAttribute('data-single', Boolean(selected));
+      for (const section of sections) section.hidden = Boolean(selected && section !== selected);
+      $('#gallery-link').hidden = Boolean(selected);
+      $('#all-controls').hidden = !selected;
+    }
+    showSelectedSample();
+    addEventListener('hashchange', showSelectedSample);
+
+    $('#theme').addEventListener('click', () => {
+      root.dataset.theme = root.dataset.theme === 'light' ? 'dark' : 'light';
+      try { localStorage.setItem('ui-moments-theme', root.dataset.theme); } catch {}
+    });
+
+    /* ---------- 复制按钮：图标描成对勾，文字向上换成「已复制」 ---------- */
+    {
+      const button = $('.copy');
+      const status = $('#copy-status');
+      let timer;
+      button.addEventListener('click', async () => {
+        try { await navigator.clipboard?.writeText(location.href.split('?')[0]); } catch {}
+        button.dataset.done = '';
+        status.textContent = '已复制链接';
+        clearTimeout(timer);
+        timer = setTimeout(() => { delete button.dataset.done; status.textContent = ''; }, 1600);
+      });
+    }
+
+    /* ---------- 点赞爆发：心形压扁回弹，光圈与火花向外散开 ---------- */
+    {
+      const button = $('.like');
+      const ring = $('.like-ring', button);
+      const sparks = $$('.like-sparks i', button);
+      const count = $('.like-count');
+      let total = 128;
+      function roll(next, up) {
+        const old = count.firstElementChild;
+        const fresh = document.createElement('span');
+        fresh.textContent = next;
+        count.replaceChildren(fresh);
+        if (!motionEnabled()) return;
+        fresh.animate([{ transform: `translateY(${up ? 100 : -100}%)`, opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 320, easing: 'cubic-bezier(.2,.9,.3,1.2)' });
+        count.append(old);
+        old.style.gridArea = '1 / 1';
+        fresh.style.gridArea = '1 / 1';
+        old.animate([{ transform: 'none', opacity: 1 }, { transform: `translateY(${up ? -100 : 100}%)`, opacity: 0 }], { duration: 260, easing: 'ease-in' }).onfinish = () => old.remove();
+      }
+      button.addEventListener('click', () => {
+        const liked = button.getAttribute('aria-pressed') !== 'true';
+        button.setAttribute('aria-pressed', String(liked));
+        total += liked ? 1 : -1;
+        roll(total, liked);
+        if (!motionEnabled()) return;
+        const heart = $('svg', button);
+        heart.animate(liked
+          ? [{ scale: '1' }, { scale: '.7' }, { scale: '1.28' }, { scale: '.95' }, { scale: '1' }]
+          : [{ scale: '1' }, { scale: '.82' }, { scale: '1' }], { duration: liked ? 520 : 240, easing: 'ease-out' });
+        if (!liked) return;
+        ring.animate([{ scale: '.4', opacity: .9 }, { scale: '1.55', opacity: 0 }], { duration: 520, easing: 'cubic-bezier(.2,.7,.3,1)' });
+        sparks.forEach((spark, index) => {
+          const angle = index / sparks.length * Math.PI * 2 + .2;
+          const distance = index % 2 ? 34 : 42;
+          spark.animate([
+            { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+            { transform: `translate(${Math.cos(angle) * distance}px, ${Math.sin(angle) * distance}px) scale(.2)`, opacity: 0 },
+          ], { duration: 560, delay: 60, easing: 'cubic-bezier(.15,.75,.3,1)' });
+        });
+      });
+    }
+
+    /* ---------- 纸飞机发送：飞机飞出，文字换成「已发送」，稍后从左侧飞回 ---------- */
+    {
+      const button = $('.send');
+      const plane = $('.send-plane', button);
+      const status = $('#send-status');
+      let busy = false;
+      button.addEventListener('click', () => {
+        if (busy) return;
+        busy = true;
+        button.dataset.done = '';
+        status.textContent = '已发送';
+        const motion = motionEnabled();
+        if (motion) plane.animate([
+          { transform: 'none', opacity: 1 },
+          { transform: 'translate(-4px, 3px) rotate(8deg)', opacity: 1, offset: .2 },
+          { transform: 'translate(70px, -46px) rotate(-14deg) scale(.5)', opacity: 0 },
+        ], { duration: 560, easing: 'cubic-bezier(.5,0,.75,0)', fill: 'forwards' });
+        setTimeout(() => {
+          delete button.dataset.done;
+          status.textContent = '';
+          if (motion) plane.animate([
+            { transform: 'translate(-60px, 18px) rotate(10deg) scale(.6)', opacity: 0 },
+            { transform: 'none', opacity: 1 },
+          ], { duration: 480, easing: 'cubic-bezier(.2,.8,.3,1.15)', fill: 'forwards' });
+          busy = false;
+        }, 1600);
+      });
+    }
+
+    /* ---------- 下载进度环：按钮收成圆环，填满后变成对勾 ---------- */
+    {
+      const button = $('.dl');
+      const bar = $('.bar', button);
+      const status = $('#dl-status');
+      const length = 81.7;
+      let frame, timer, progress = 0;
+      function reset() {
+        cancelAnimationFrame(frame);
+        clearTimeout(timer);
+        button.dataset.state = 'idle';
+        button.removeAttribute('aria-label');
+        bar.style.strokeDashoffset = length;
+      }
+      function tick() {
+        // 模拟真实下载：速度忽快忽慢，最后一段稍慢。
+        progress = Math.min(1, progress + (progress > .8 ? .006 : .004 + Math.random() * .016));
+        bar.style.strokeDashoffset = length * (1 - progress);
+        if (progress < 1) { frame = requestAnimationFrame(tick); return; }
+        button.dataset.state = 'done';
+        button.setAttribute('aria-label', '下载完成');
+        status.textContent = '下载完成';
+        timer = setTimeout(reset, 1700);
+      }
+      button.addEventListener('click', () => {
+        if (button.dataset.state === 'loading') {
+          reset();
+          status.textContent = '已取消下载';
+          return;
+        }
+        if (button.dataset.state === 'done') return;
+        progress = 0;
+        button.dataset.state = 'loading';
+        button.setAttribute('aria-label', '下载中，点按取消');
+        status.textContent = '开始下载';
+        frame = requestAnimationFrame(tick);
+      });
+    }
+
+    /* ---------- 验证码：输错左右摇头并清空，输对逐格变绿 ---------- */
+    {
+      const code = $('.code');
+      const boxes = $$('input', code);
+      const hint = $('.code-hint', code);
+      const answer = '2468';
+      let timer;
+      function check() {
+        const value = boxes.map(box => box.value).join('');
+        if (value.length < boxes.length) return;
+        clearTimeout(timer);
+        if (value === answer) {
+          code.dataset.state = 'ok';
+          hint.textContent = '验证成功';
+          if (motionEnabled()) boxes.forEach((box, index) => box.animate([{ scale: '1' }, { scale: '1.12' }, { scale: '1' }], { duration: 320, delay: index * 60, easing: 'ease-out' }));
+          timer = setTimeout(() => {
+            delete code.dataset.state;
+            boxes.forEach(box => { box.value = ''; });
+            hint.textContent = '输入 2468 试试';
+          }, 1800);
+          return;
+        }
+        code.dataset.state = 'error';
+        hint.textContent = '验证码不对，再试一次';
+        if (motionEnabled()) $('.code-boxes', code).animate([
+          { translate: '0 0' }, { translate: '-9px 0' }, { translate: '8px 0' }, { translate: '-6px 0' }, { translate: '4px 0' }, { translate: '0 0' },
+        ], { duration: 420, easing: 'ease-out' });
+        timer = setTimeout(() => {
+          delete code.dataset.state;
+          boxes.forEach(box => { box.value = ''; });
+          boxes[0].focus();
+        }, 650);
+      }
+      function fill(start, digits) {
+        digits.split('').forEach((digit, offset) => { if (boxes[start + offset]) boxes[start + offset].value = digit; });
+        boxes[Math.min(boxes.length - 1, start + digits.length)].focus();
+        check();
+      }
+      boxes.forEach((box, index) => {
+        box.addEventListener('input', () => {
+          const digits = box.value.replace(/\D/g, '');
+          box.value = '';
+          if (!digits) return;
+          if (code.dataset.state) delete code.dataset.state;
+          fill(index, digits.slice(0, boxes.length - index));
+        });
+        box.addEventListener('keydown', event => {
+          if (event.key === 'Backspace' && !box.value && index > 0) { boxes[index - 1].value = ''; boxes[index - 1].focus(); event.preventDefault(); }
+          if (event.key === 'ArrowLeft' && index > 0) boxes[index - 1].focus();
+          if (event.key === 'ArrowRight' && index < boxes.length - 1) boxes[index + 1].focus();
+        });
+        box.addEventListener('paste', event => {
+          event.preventDefault();
+          fill(index, (event.clipboardData?.getData('text') || '').replace(/\D/g, '').slice(0, boxes.length - index));
+        });
+      });
+    }
+
+    /* ---------- 通知铃：开启时铃身摇摆、角标弹出；关闭时划上一道斜线 ---------- */
+    {
+      const button = $('.bell');
+      const state = $('.bell-state');
+      button.addEventListener('click', () => {
+        const on = button.getAttribute('aria-pressed') !== 'true';
+        button.setAttribute('aria-pressed', String(on));
+        state.textContent = on ? '通知已开启' : '通知已关闭';
+        if (!on || !motionEnabled()) return;
+        const swing = [0, 18, -15, 11, -7, 3, 0].map(deg => ({ rotate: deg + 'deg' }));
+        $('.body', button).animate(swing, { duration: 760, easing: 'ease-out' });
+        $('.clapper', button).animate(swing.map(({ rotate }) => ({ rotate: (-parseFloat(rotate) * 1.4) + 'deg', translate: `${parseFloat(rotate) * .08}px 0` })), { duration: 760, delay: 40, easing: 'ease-out' });
+      });
+    }
+  </script>
+</body>
+</html>

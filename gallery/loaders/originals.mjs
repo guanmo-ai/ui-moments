@@ -1,4 +1,5 @@
 import {loadingStudies} from './studies.mjs';
+import {motifLoaders} from './motifs.mjs';
 
 const originals = [
   {
@@ -101,7 +102,7 @@ const originals = [
   },
 ];
 
-export const originalLoaders = [...originals, ...loadingStudies].map(item => ({
+export const originalLoaders = [...originals, ...motifLoaders, ...loadingStudies].map(item => ({
   ...item,
   original: true,
   css: `.${item.className} {

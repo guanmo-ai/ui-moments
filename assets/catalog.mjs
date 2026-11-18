@@ -31,13 +31,16 @@ const shapeFilters = {
 };
 
 const featured = [
-  'day-night-toggle', 'ink-switch', 'detent-dial', 'paper-fold', 'hold-confirm',
-  'odometer-stepper', 'elastic-ruler', 'leaf-tabs', 'tide-progress', 'alignment-switch',
-  'bookmark-press', 'shutter-steps', 'micron-jelly', 'signal-return', 'svg-spinner-gooey-balls-1',
-  'micron-swing', 'ring', 'micron-fade', 'bow-spring', 'svg-spinner-wifi', 'square',
+  'day-night-toggle', 'magnet-grid', 'ink-switch', 'jelly-pad', 'paper-fold',
+  'hue-orbit', 'detent-dial', 'merge-drops', 'like-burst', 'tide-ring',
+  'pull-cord', 'bloom-toggle', 'tide-progress', 'flip-coin', 'download-ring',
+  'odometer-stepper', 'ripple-pad', 'elastic-ruler', 'leaf-tabs', 'bell-toggle',
+  'hold-confirm', 'alignment-switch', 'pebble-rating', 'bookmark-press', 'paper-plane',
+  'shutter-steps', 'micron-jelly', 'signal-return', 'svg-spinner-gooey-balls-1', 'micron-swing',
+  'sand-turn', 'ring', 'micron-fade', 'bow-spring', 'svg-spinner-wifi', 'dot-field', 'square',
   'micron-squeeze', 'svg-spinner-bars-scale-middle', 'corner-lock', 'micron-shake', 'lineWobble',
-  'loading-ui-terminal', 'svg-spinner-clock', 'micron-tada', 'loading-ui-morphing-infinity', 'svg-spinner-blocks-wave',
-  'loading-ui-text-shimmer-wave',
+  'clock-hands', 'loading-ui-terminal', 'svg-spinner-clock', 'micron-tada', 'loading-ui-morphing-infinity',
+  'svg-spinner-blocks-wave', 'stack-blocks', 'loading-ui-text-shimmer-wave',
 ];
 
 export function buildCatalog(works = []) {

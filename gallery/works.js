@@ -38,7 +38,8 @@ const elasticControls = [
 }));
 
 // UI Moments 原创控件：构思、造型、动效与代码均由本项目完成，MIT 许可。
-const originalControls = [
+// 第一批（index.html）
+const originalCore = [
   {
     id: 'ink-switch',
     title: '墨滴开关',
@@ -93,10 +94,48 @@ const originalControls = [
     tags: ['进度', 'progress', '液体', 'canvas'],
     notes: ['画面离开屏幕或画廊暂停时停止绘制。', '开启“减少动态效果”时直接显示结果，不晃动。'],
   },
-].map(work => ({
+];
+
+// 第二批原创：表单控件（inputs.html）与操作反馈（actions.html）。
+const originalInputs = [
+  ['stroke-checklist', '划线清单', 'Stroke Checklist', '复选框', '勾选时对勾一笔画出，文字被一道线从左到右划掉。', ['复选框', 'checkbox', '待办']],
+  ['pebble-rating', '石子评分', 'Pebble Rating', '评分', '五颗形状各异的石子。悬停预览分数，选中后石子从左到右依次弹起。', ['评分', 'rating', '单选']],
+  ['notch-slider', '档位滑块', 'Notch Slider', '滑块', '在 XS 到 XL 五个档位间拖动，拨块拖动时变宽，档位标签跟着抬起。', ['滑块', 'range', '尺码']],
+  ['strength-meter', '密码强度', 'Strength Meter', '输入框', '四段强度条依次填满并变色；眼睛按钮切换明文时眨一下。', ['密码', '输入框', '强度']],
+  ['chip-input', '标签输入', 'Chip Input', '输入框', '回车添加标签并弹出，退格把最后一个收回；重复时输入框轻轻摇头。', ['标签', 'tags', '输入框']],
+  ['plan-picker', '方案卡片', 'Plan Picker', '单选卡片', '选中描边从旧卡片滑到新卡片，到位时轻轻压扁。', ['单选', '卡片', '定价']],
+].map(([id, title, en, type, summary, tags]) => ({id, title, en, type, summary, tags, page: 'inputs'}));
+
+const originalActions = [
+  ['copy-morph', '复制按钮', 'Copy Button', '按钮', '复制图标描成对勾，文字向上换成「已复制」，稍后复原。', ['复制', '按钮', '剪贴板']],
+  ['like-burst', '点赞爆发', 'Like Burst', '按钮', '心形压扁回弹，光圈与火花向外散开，计数上下滚动。', ['点赞', '喜欢', '计数']],
+  ['paper-plane', '纸飞机发送', 'Paper Plane Send', '按钮', '纸飞机先后缩蓄力再飞出，文字换成「已发送」，稍后从左侧飞回。', ['发送', '按钮', '纸飞机']],
+  ['download-ring', '下载进度环', 'Download Ring', '按钮', '按钮收成圆环显示进度，填满后变成对勾；下载中再点可以取消。', ['下载', '进度', '按钮']],
+  ['code-shake', '验证码', 'Code Shake', '输入框', '四格验证码，自动跳格、支持粘贴；输错左右摇头并清空，输对逐格变绿。', ['验证码', 'OTP', '输入框']],
+  ['bell-toggle', '通知铃', 'Bell Toggle', '开关', '开启时铃身摇摆、角标弹出；关闭时铃上划过一道斜线。', ['通知', '开关', '铃铛']],
+].map(([id, title, en, type, summary, tags]) => ({id, title, en, type, summary, tags, page: 'actions'}));
+
+// 第三批原创：没有文字的图形交互（visual.html）。
+const originalVisuals = [
+  ['magnet-grid', '磁吸点阵', 'Magnet Grid', '指针反馈', '四十个圆点被指针吸过去，越近越大越亮，离开后弹回原位。', ['点阵', '指针', '磁吸']],
+  ['jelly-pad', '果冻方块', 'Jelly Cube', '拖动', '拖动时方块沿速度方向拉长，松手后按弹簧晃回中心。', ['果冻', '拖动', '弹簧']],
+  ['hue-orbit', '色轮', 'Hue Orbit', '选色器', '绕着色环拖动选色，选中的色点放大，中心色块跟着变色并鼓一下。', ['颜色', '选色', '圆环']],
+  ['merge-drops', '融合水滴', 'Merge Drops', '拖动', '把小水滴拖向大水滴，两者融成一体；松手后拉丝分开并弹回原位。', ['水滴', 'gooey', '融合']],
+  ['pull-cord', '拉绳灯', 'Pull Cord Lamp', '开关', '把灯绳往下拉，松手弹回并切换灯光，灯罩下投出一束暖光。', ['开关', '灯', '拉绳']],
+  ['flip-coin', '抛硬币', 'Flip Coin', '按钮', '硬币抛起旋转几圈，落地停在太阳面或月亮面，影子随高度缩放。', ['硬币', '翻转', '随机']],
+  ['ripple-pad', '涟漪画板', 'Ripple Pad', '指针反馈', '点按落下三圈涟漪，按住越久水滴越大、涟漪越远。', ['涟漪', '长按', '水波']],
+  ['bloom-toggle', '花朵开关', 'Bloom Toggle', '开关', '六片花瓣依次张开，花心亮起；再点一次收拢成花苞。', ['开关', '花', '花瓣']],
+].map(([id, title, en, type, summary, tags]) => ({id, title, en, type, summary, tags, page: 'visual'}));
+
+const originalControls = [
+  ...originalCore.map(work => ({...work, page: 'index'})),
+  ...originalVisuals,
+  ...originalInputs,
+  ...originalActions,
+].map(({page, ...work}) => ({
   ...work,
   tags: [...work.tags, '原创控件'],
-  demo: 'gallery/originals/index.html#' + work.id,
+  demo: `gallery/originals/${page}.html#${work.id}`,
   source: 'gallery/originals',
   live: true,
   original: true,
