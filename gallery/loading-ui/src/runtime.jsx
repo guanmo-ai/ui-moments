@@ -32,24 +32,32 @@ class LoadingUIPreview extends HTMLElement {
     const style=document.createElement('style');style.textContent=css;
     this.mount=document.createElement('div');this.mount.className='canvas';
     this.shadowRoot.replaceChildren(style,this.mount);
+    this.applyOptions();
     this.render();
     if(matchMedia('(prefers-reduced-motion:reduce)').matches)this.setPlaying(false);
   }
   disconnectedCallback(){this.reactRoot?.unmount();this.reactRoot=null;}
-  attributeChangedCallback(){if(this.mount){this.render();if(!this.active)this.freeze();}}
-  render(){
-    const Demo=demos[this.constructor.slug];
+  attributeChangedCallback(name){
+    if(!this.mount)return;
+    this.applyOptions();
+    if(!this.active&&name!=='size'){this.render();this.freeze();}
+  }
+  applyOptions(){
     const size=Math.min(160,Math.max(16,Number(this.getAttribute('size'))||96));
     const color=this.getAttribute('color')||'#17171a';
     const surface=this.getAttribute('surface')||'#fafafa';
     this.style.width=`${size*1.5}px`;this.style.height=`${size}px`;
-    this.mount.style.cssText=`color:${color};--background:${surface};--mask-color:${surface};--muted:color-mix(in srgb,${color} 35%,transparent);`;
+    this.mount.style.cssText=`color:${color};--background:${surface};--mask-color:${surface};--muted:color-mix(in srgb,${color} 35%,transparent);--demo-scale:${size/96};`;
+  }
+  render(){
+    const Demo=demos[this.constructor.slug];
     if(!this.reactRoot){this.mount.replaceChildren();this.reactRoot=createRoot(this.mount);}
-    flushSync(()=>this.reactRoot.render(<div className="demo" data-slug={this.constructor.slug} style={{transform:`scale(${size/96})`}}><Demo/></div>));
+    flushSync(()=>this.reactRoot.render(<div className="demo" data-slug={this.constructor.slug}><Demo/></div>));
   }
   freeze(){
     if(!this.reactRoot||!this.mount.firstElementChild)return;
     const frozen=snapshot(this.mount.firstElementChild);
+    frozen.style.removeProperty('transform');
     this.reactRoot.unmount();this.reactRoot=null;this.mount.replaceChildren(frozen);
   }
   setPlaying(active){

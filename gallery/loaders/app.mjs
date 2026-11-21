@@ -1,4 +1,4 @@
-import {setupSite,foreground,background} from '../../assets/site.mjs';
+import {setupSite,foreground,background,loadPreviewModule} from '../../assets/site.mjs';
 import {onLanguageChange,translate as t} from '../../assets/locale.mjs';
 import {loaders,groups,previewProps} from './catalog.mjs';
 import {escapeHtml as esc,htmlExample} from './snippets.mjs';
@@ -8,10 +8,10 @@ const $=selector=>document.querySelector(selector);
 const root=document.documentElement,grid=$('#grid'),detail=$('#detail');
 const reduced=matchMedia('(prefers-reduced-motion:reduce)');
 let playing=!reduced.matches,group='All';
-const visible=new Set();
+const visible=new Set(),mounted=new Set();
 const cards=new Map();
-const definitions=new Map();
 setupSite();
+let themeColor=foreground();
 
 let licenseRequest;
 function getLicense(){
@@ -25,18 +25,16 @@ function getLicense(){
   return licenseRequest;
 }
 
-function register(item){
-  if(!definitions.has(item.key)){
-    definitions.set(item.key,import(`./vendor/ldrs/dist/elements/${item.key}.js`).then(({default:definition})=>{
-      if(!customElements.get(item.tag))definition.register(item.tag);
-    }));
-  }
-  return definitions.get(item.key);
+async function register(item){
+  if(customElements.get(item.tag))return;
+  const url=new URL(`./vendor/ldrs/dist/elements/${item.key}.js`,import.meta.url);
+  const {default:definition}=await loadPreviewModule(url);
+  if(!customElements.get(item.tag))definition.register(item.tag);
 }
 
 const isPlaying=()=>playing&&!document.hidden;
 const editor=createLoaderEditor({isPlaying});
-const valuesFor=item=>previewProps(item,foreground(),root.dataset.theme);
+const valuesFor=item=>previewProps(item,themeColor,root.dataset.theme);
 function syncCard(card){
   setPreviewPlaying(card.querySelector('.sample > *'),isPlaying()&&!detail.open&&!card.hidden&&visible.has(card));
 }
@@ -46,11 +44,14 @@ async function mountCard(card){
   const item=cards.get(card);
   try{
     await register(item);
-    if(visible.has(card)&&!sample.firstElementChild){
+    if(visible.has(card)&&!card.hidden&&!sample.firstElementChild){
+      delete sample.dataset.error;
       sample.replaceChildren(createLoaderPreview(item,valuesFor(item)));
+      mounted.add(card);
       syncCard(card);
     }
   }catch{
+    if(!visible.has(card)||card.hidden||sample.firstElementChild)return;
     sample.dataset.error='';
     sample.textContent=t('Preview unavailable');
   }
@@ -60,7 +61,7 @@ function localizeMotion(){
   $('#motion').setAttribute('aria-pressed',String(!playing));
 }
 function syncMotion(){
-  for(const card of cards.keys())syncCard(card);
+  for(const card of mounted)syncCard(card);
   editor.syncMotion();
   localizeMotion();
 }
@@ -92,18 +93,23 @@ const observer=new IntersectionObserver(entries=>{
     if(isIntersecting){
       visible.add(target);
       void mountCard(target);
-    }else visible.delete(target);
-    syncCard(target);
+    }else{
+      visible.delete(target);
+      if(mounted.delete(target))target.querySelector('.sample').replaceChildren();
+    }
   }
 });
 for(const card of grid.children)observer.observe(card);
 
 function filter(){
   const query=$('#search').value.trim().toLocaleLowerCase();let count=0;
-  for(const [index,card] of [...grid.children].entries()){
-    const item=loaders[index];
-    card.hidden=(group!=='All'&&item.group!==group)||![item.key,item.name,item.description,item.group,t(item.group,undefined,'zh-CN')].join(' ').toLocaleLowerCase().includes(query);
-    if(!card.hidden)count++;
+  for(const [card,item] of cards){
+    const hidden=(group!=='All'&&item.group!==group)||![item.key,item.name,item.description,item.group,t(item.group,undefined,'zh-CN')].join(' ').toLocaleLowerCase().includes(query);
+    if(card.hidden!==hidden){
+      card.hidden=hidden;
+      if(hidden&&mounted.delete(card))card.querySelector('.sample').replaceChildren();
+    }
+    if(!hidden)count++;
   }
   $('#count').textContent=`${count} / 44`;$('#empty').hidden=count!==0;syncMotion();
 }
@@ -123,6 +129,8 @@ async function useLoader(item,button,copy=false){
   try{
     const [,license]=await Promise.all([register(item),getLicense()]);
     if(attempt!==opening||detail.open)return;
+    const card=button.closest('.loader-card');
+    if(visible.has(card)&&card.querySelector('.sample').hasAttribute('data-error'))void mountCard(card);
     if(copy){
       // Build the exact upstream markup before reading its shadow root.
       const values=valuesFor(item);
@@ -148,9 +156,10 @@ grid.addEventListener('click',event=>{
   if(card&&button)void useLoader(cards.get(card),button,button.classList.contains('card-copy'));
 });
 root.addEventListener('ui-moments:theme',()=>{
-  for(const [card,item] of cards){
-    const sample=card.querySelector('.sample');
-    if(sample.firstElementChild)sample.replaceChildren(createLoaderPreview(item,valuesFor(item)));
+  themeColor=foreground();
+  for(const card of mounted){
+    const item=cards.get(card);
+    card.querySelector('.sample').replaceChildren(createLoaderPreview(item,valuesFor(item)));
   }
   syncMotion();
 });

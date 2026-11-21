@@ -1,4 +1,5 @@
-import {setupSite,setupGalleryFavorites,showLoadingAccent,foreground,embedUrl} from './site.mjs';
+import '../gallery/works.js';
+import {setupSite,setupGalleryFavorites,showLoadingAccent,foreground,embedUrl,loadPreviewModule} from './site.mjs';
 import {onLanguageChange,translate as t} from './locale.mjs';
 import {buildCatalog,categories,getCategoryFilters,matches} from './catalog.mjs';
 import {previewProps} from '../gallery/loaders/catalog.mjs';
@@ -38,11 +39,13 @@ let playing=!reduced.matches,category='all',shape='all';
 let component=null,componentTrigger=null,opening=null;
 let themeColor=foreground();
 const cards=new Map(),mounted=new Set(),providers={};
-const pendingFrames=new Set();
+const pendingPreviews=new Set(),idleFrames=new Set();
 const concurrentFrameLimit=5;
-let loadingFrames=0;
+const idleFrameLimit=6;
+let loadingFrames=0,previewFrame=0,scrollTimer=0;
+let lastScrollY=scrollY,lastScrollTime=performance.now();
 const favorites=setupGalleryFavorites(filter);
-const resourceLoads=new Map(),importFailures=new Map();
+const resourceLoads=new Map();
 const loadingRuntimePath='gallery/loading-ui/dist/runtime.js';
 const svgSourcePath='gallery/svg-spinners/dist/sources.json';
 
@@ -64,17 +67,6 @@ function fetchText(path){
   });
 }
 
-function loadModule(path){
-  return loadOnce(`module:${path}`,async()=>{
-    const url=new URL(path,import.meta.url);
-    const failures=importFailures.get(path)||0;
-    // 浏览器会记住失败的模块 URL，重试时使用新的模块地址。
-    if(failures)url.searchParams.set('retry',failures);
-    try{return await import(url.href);}
-    catch(error){importFailures.set(path,failures+1);throw error;}
-  });
-}
-
 function loadSvgSources(){
   return loadOnce('svg-sources',async()=>{
     const response=await fetch(svgSourcePath);
@@ -86,14 +78,14 @@ function loadSvgSources(){
 async function preparePreview(loader){
   if(loader.original)return;
   if(loader.provider==='loading-ui'){
-    await loadModule(`../${loadingRuntimePath}`);
+    await loadPreviewModule(new URL(`../${loadingRuntimePath}`,import.meta.url));
     if(!customElements.get(loader.tag))throw new Error(`Missing animation: ${loader.key}`);
   }else if(loader.provider==='svg-spinners'){
     const sources=await loadSvgSources();
     if(!sources[loader.slug])throw new Error(`Missing animation: ${loader.key}`);
     providers['svg-spinners']??=createSvgSpinnerIntegration({sources});
   }else if(!customElements.get(loader.tag)){
-    const {default:definition}=await loadModule(`../gallery/loaders/vendor/ldrs/dist/elements/${loader.key}.js`);
+    const {default:definition}=await loadPreviewModule(new URL(`../gallery/loaders/vendor/ldrs/dist/elements/${loader.key}.js`,import.meta.url));
     if(!customElements.get(loader.tag))definition.register(loader.tag);
   }
 }
@@ -136,7 +128,9 @@ function effect(loader){
   return preview;
 }
 
-grid.innerHTML=items.map(item=>{
+const sections=[];
+const sectionSize=64;
+const cardMarkup=items.map(item=>{
   const caption=item.shape||item.type;
   const titleId=`work-title-${item.id}`,actionId=`work-action-${item.id}`;
   return `<article class="ui-item" data-ui="${esc(item.id)}" data-category="${esc(item.category)}"${item.previewSize?` data-preview-size="${esc(item.previewSize)}"`:''}>
@@ -149,14 +143,22 @@ grid.innerHTML=items.map(item=>{
       <div><h2 lang="en" id="${titleId}">${esc(item.title)}</h2><p>${esc(t(caption))}</p></div>
       <button type="button" class="ui-expand" data-detail aria-labelledby="${actionId} ${titleId}" aria-haspopup="dialog">
         <span class="ui-detail-label" id="${actionId}">${t('Details')}</span>
-        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M11 3h6v6m0-6-6 6m-2 8H3v-6m0 6 6-6"/></svg>
+        <span class="ui-expand-icon" aria-hidden="true"></span>
       </button>
     </div></article>`;
-}).join('');
+});
+for(let start=0;start<cardMarkup.length;start+=sectionSize){
+  const section=cardMarkup.slice(start,start+sectionSize);
+  sections.push(`<div class="ui-grid-section" style="--section-size:${section.length}">${section.join('')}</div>`);
+}
+grid.innerHTML=sections.join('');
+const sectionElements=[...grid.children];
+const sectionResults=new Uint16Array(sectionElements.length);
+const elements=grid.querySelectorAll('.ui-item');
 for(const [index,item] of items.entries()){
-  const element=grid.children[index];
+  const element=elements[index];
   cards.set(item.id,{
-    item,element,stage:element.firstElementChild,detail:element.querySelector('[data-detail]'),
+    item,element,section:Math.floor(index/sectionSize),stage:element.firstElementChild,detail:element.querySelector('[data-detail]'),
     near:false,visible:false,paused:false,
   });
 }
@@ -201,7 +203,7 @@ function sendEmbed(frame,active){
 }
 
 function syncCard(card,{reload=false}={}){
-  const run=canAnimate()&&!modalOpen()&&!card.element.hidden&&card.visible&&!card.paused;
+  const run=canAnimate()&&!scrollTimer&&!modalOpen()&&!card.element.hidden&&card.visible&&!card.paused;
   if(card.frame){
     const state=`${run}:${root.dataset.theme}`;
     if(reload||card.motion!==state){
@@ -218,39 +220,70 @@ function syncMotion(){
   for(const card of mounted)syncCard(card);
   if(componentDialog.open)sendEmbed(componentFrame,canAnimate());
   editor.syncMotion();
+  schedulePreviews();
 }
 
 function mountFrame(card){
   const frame=document.createElement('iframe');
   frame.title=t('{name} interactive preview',{name:card.item.title});
   const url=embedUrl(card.item.demo,root.dataset.theme);
+  url.searchParams.set('paused','1');
   if(card.item.fitPreview)url.searchParams.set('preview','card');
   frame.src=url.href;
   frame.allow='fullscreen; clipboard-write';
   frame.addEventListener('load',()=>{
     frame.dataset.loaded='';
+    const previewDocument=frame.contentDocument;
+    const interactionEvents=['pointerdown','keydown','input'];
+    for(const type of interactionEvents){
+      previewDocument?.addEventListener(type,rememberInteraction,true);
+    }
+    function rememberInteraction(event){
+      if(!event.isTrusted)return;
+      card.interacted=true;
+      idleFrames.delete(card);
+      for(const type of interactionEvents)previewDocument.removeEventListener(type,rememberInteraction,true);
+    }
     syncCard(card,{reload:true});
   });
   loadingFrames++;
+  card.releaseSlot=releaseSlot;
   const timeout=setTimeout(releaseSlot,2500);
   frame.addEventListener('load',releaseSlot,{once:true});
   function releaseSlot(){
     clearTimeout(timeout);
     frame.removeEventListener('load',releaseSlot);
+    card.releaseSlot=null;
     loadingFrames--;
-    mountPendingFrames();
+    schedulePreviews();
   }
   card.frame=frame;
   card.stage.append(frame);
   mounted.add(card);
 }
 
-function mountPendingFrames(){
-  for(const card of pendingFrames){
-    if(loadingFrames>=concurrentFrameLimit)return;
-    pendingFrames.delete(card);
-    if(nearScreen(card)&&!card.frame)mountFrame(card);
-  }
+function schedulePreviews(){
+  if(previewFrame||scrollTimer||document.hidden||modalOpen()||!pendingPreviews.size)return;
+  previewFrame=requestAnimationFrame(()=>{
+    previewFrame=0;
+    if(scrollTimer||document.hidden||modalOpen())return;
+    let frames=Math.min(2,concurrentFrameLimit-loadingFrames),loaders=6;
+    const queue=[...pendingPreviews].sort((a,b)=>Number(b.visible)-Number(a.visible));
+    for(const card of queue){
+      if(!nearScreen(card)){
+        pendingPreviews.delete(card);
+      }else if(card.item.loader&&loaders>0){
+        pendingPreviews.delete(card);
+        loaders--;
+        void mountPreview(card);
+      }else if(!card.item.loader&&frames>0){
+        pendingPreviews.delete(card);
+        frames--;
+        mountFrame(card);
+      }
+    }
+    if(loadingFrames<concurrentFrameLimit||loaders===0)schedulePreviews();
+  });
 }
 
 function nearScreen(card){
@@ -290,18 +323,33 @@ async function mountPreview(card){
 
 function updateCard(card){
   if(nearScreen(card)){
-    if(card.item.loader)void mountPreview(card);
-    else if(card.item.category!=='feedback'&&!card.frame)pendingFrames.add(card);
-  }else if(card.item.fitPreview&&card.frame){
-    card.frame.remove();
-    card.frame=null;
-    mounted.delete(card);
-  }else if(card.preview){
-    card.preview.remove();
-    card.preview=null;
-    mounted.delete(card);
+    idleFrames.delete(card);
+    if(card.item.loader){
+      if(!card.preview&&!card.loading&&!card.failed)pendingPreviews.add(card);
+    }else if(card.item.category!=='feedback'&&!card.frame)pendingPreviews.add(card);
+  }else{
+    pendingPreviews.delete(card);
+    if(card.frame&&!card.interacted){
+      idleFrames.add(card);
+      // Keep a few untouched previews for short scroll reversals.
+      if(idleFrames.size>idleFrameLimit){
+        const oldest=idleFrames.values().next().value;
+        idleFrames.delete(oldest);
+        if(document.activeElement===oldest.frame){
+          oldest.interacted=true;
+        }else{
+          oldest.frame.remove();
+          oldest.frame=null;
+          oldest.releaseSlot?.();
+          mounted.delete(oldest);
+        }
+      }
+    }else if(card.preview){
+      card.preview.remove();
+      card.preview=null;
+      mounted.delete(card);
+    }
   }
-  if(!nearScreen(card))pendingFrames.delete(card);
   syncCard(card);
 }
 
@@ -312,7 +360,7 @@ const nearObserver=new IntersectionObserver(entries=>{
     card.near=entry.isIntersecting;
     updateCard(card);
   }
-  mountPendingFrames();
+  schedulePreviews();
 },{rootMargin:'140px 0px'});
 const visibleObserver=new IntersectionObserver(entries=>{
   for(const entry of entries){
@@ -346,7 +394,8 @@ function filter(){
   for(const button of shapeButtons.children)setPressed(button,button.dataset.shape===shape);
   const query=search.value,motion=motionFilter.value;
   motionFilter.toggleAttribute('data-filtered',motion!=='all');
-  let count=0;
+  let count=0,hasStandardCards=false;
+  sectionResults.fill(0);
   for(const card of cards.values()){
     const hidden=!matches(card.item,{category,shape,motion,query})||(favorites.only&&!favorites.has(card.item.id));
     if(card.element.hidden!==hidden){
@@ -356,7 +405,22 @@ function filter(){
         updateCard(card);
       }
     }
-    if(!hidden)count++;
+    if(!hidden){
+      count++;
+      sectionResults[card.section]++;
+      if(!card.item.previewSize)hasStandardCards=true;
+    }
+  }
+  grid.toggleAttribute('data-wide-only',count>0&&!hasStandardCards);
+  const sectioned=hasStandardCards&&count>=sectionSize*4;
+  grid.toggleAttribute('data-sectioned',sectioned);
+  for(const [index,section] of sectionElements.entries()){
+    const visibleCards=sectionResults[index];
+    section.hidden=visibleCards===0;
+    if(sectioned){
+      const size=String(visibleCards);
+      if(section.style.getPropertyValue('--section-size')!==size)section.style.setProperty('--section-size',size);
+    }
   }
   resultCount=count;
   empty.hidden=count!==0;
@@ -399,6 +463,21 @@ function setPlaying(value){
 motionButton.addEventListener('click',()=>setPlaying(!playing));
 reduced.addEventListener('change',event=>setPlaying(!event.matches));
 document.addEventListener('visibilitychange',syncMotion);
+addEventListener('scroll',()=>{
+  const now=performance.now(),y=scrollY;
+  const elapsed=Math.max(8,Math.min(32,now-lastScrollTime));
+  const fast=Math.abs(y-lastScrollY)/elapsed>.8;
+  lastScrollY=y;
+  lastScrollTime=now;
+  if(!fast)return;
+  const wasScrolling=Boolean(scrollTimer);
+  clearTimeout(scrollTimer);
+  scrollTimer=setTimeout(()=>{
+    scrollTimer=0;
+    syncMotion();
+  },95);
+  if(!wasScrolling)syncMotion();
+},{passive:true});
 root.addEventListener('ui-moments:theme',()=>{
   themeColor=foreground();
   for(const card of mounted){

@@ -4,18 +4,20 @@ const source='https://github.com/turbostarter/loading-ui';
 const escapedScript=text=>text.replace(/<\/script/gi,'<\\/script');
 
 export function createLoadingUIIntegration({runtime,license,notices,sources}){
+  const script=escapedScript(runtime);
+  const attribution=notices.trim();
   function html(item,props,background='#151517'){
     return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(item.name)} · UI Moments</title>
 <style>body{margin:0;min-height:100svh;display:grid;place-items:center;background:${esc(background)}}</style></head><body>
 <${item.tag} size="${Number(props.size)}" color="${esc(props.color)}" surface="${esc(background)}" role="status" aria-label="Loading"></${item.tag}>
-<script>${escapedScript(runtime)}</script>
+<script>${script}</script>
 <!--
 Original work: Loading UI · Bartosz Zagrodzki
 ${source}
 Standalone page, theming, and sizing by UI Moments. Animations use the upstream implementation.
 
-${notices.trim()}
+${attribution}
 --></body></html>\n`;
   }
   function react(item,props,background='#ffffff'){

@@ -6,6 +6,27 @@ const moon='<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-wi
 
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
 const allowMotion=()=>!reducedMotion.matches&&document.getElementById('motion')?.getAttribute('aria-pressed')!=='true';
+const previewModules = new Map();
+
+export function loadPreviewModule(url) {
+  const key = url.href;
+  let entry = previewModules.get(key);
+  if (!entry) {
+    entry = {attempts: 0};
+    previewModules.set(key, entry);
+  }
+  if (!entry.request) {
+    // The browser remembers module-load failures for each URL.
+    const requestUrl = new URL(key);
+    if (entry.attempts) requestUrl.searchParams.set('retry', entry.attempts);
+    entry.request = import(requestUrl.href).catch(error => {
+      entry.attempts++;
+      entry.request = null;
+      throw error;
+    });
+  }
+  return entry.request;
+}
 
 function setupCategoryMarker(categories){
   const marker=document.createElement('span');

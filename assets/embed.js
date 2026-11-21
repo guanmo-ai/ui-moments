@@ -4,6 +4,7 @@
   if(params.get('embed')!=='ui')return;
   const root=document.documentElement;root.dataset.embedded='true';
   root.dataset.theme=params.get('theme')==='light'?'light':'dark';
+  if(params.get('paused')==='1')root.dataset.galleryActive='false';
   const hasStyle=params.has('style');
   if(hasStyle)root.dataset.uiStyle=params.get('style');
   addEventListener('message',event=>{

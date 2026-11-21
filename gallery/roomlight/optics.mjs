@@ -96,12 +96,10 @@ function compile(gl, kind, source) {
   return shader;
 }
 
-export async function createOptics(canvas) {
+export async function createOptics(canvas, photo) {
   const gl = canvas.getContext('webgl', {alpha: false, antialias: false});
   if (!gl) return null;
 
-  const photo = new Image();
-  photo.src = new URL('./coast.webp', import.meta.url).href;
   await photo.decode();
 
   const program = gl.createProgram();
@@ -128,14 +126,18 @@ export async function createOptics(canvas) {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, photo);
   const uniform = Object.fromEntries(
     ['size', 'imageSize', 'pointer', 'light', 'brightness', 'active', 'hover', 'hoverAmount', 'bounds[0]']
       .map(name => [name, gl.getUniformLocation(program, name)]),
   );
-  gl.uniform2f(uniform.imageSize, photo.naturalWidth, photo.naturalHeight);
+  function setPhoto() {
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, photo);
+    gl.uniform2f(uniform.imageSize, photo.naturalWidth, photo.naturalHeight);
+  }
+  setPhoto();
 
   return {
+    setPhoto,
     resize(room, cards) {
       const frame = room.getBoundingClientRect();
       const scale = Math.min(1.5, window.devicePixelRatio, 1800 / Math.max(frame.width, frame.height));

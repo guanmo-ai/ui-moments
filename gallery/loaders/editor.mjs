@@ -5,6 +5,8 @@ import {escapeHtml as esc,htmlExample,reactExample} from './snippets.mjs';
 import {loaderPrompt,mountPrompt} from '../../assets/prompt.mjs';
 import {originalMarkup} from './originals.mjs';
 
+const previewSurface=()=>getComputedStyle(document.documentElement).getPropertyValue('--c-surface').trim()||background();
+
 export function createLoaderPreview(item,values,providers={}){
   const customPreview=providers[item.provider]?.preview;
   if(customPreview){
@@ -15,7 +17,7 @@ export function createLoaderPreview(item,values,providers={}){
   const element=document.createElement(item.original?'span':item.tag);
   if(item.original)element.attachShadow({mode:'open'}).innerHTML=originalMarkup(item,values);
   else for(const [name,value] of Object.entries(values))element.setAttribute(name,String(value));
-  if(item.provider==='loading-ui')element.setAttribute('surface',getComputedStyle(document.documentElement).getPropertyValue('--c-surface').trim()||background());
+  if(item.provider==='loading-ui')element.setAttribute('surface',previewSurface());
   element.setAttribute('aria-hidden','true');
   return element;
 }
@@ -29,6 +31,7 @@ export function createLoaderEditor({license,providers={},isPlaying=()=>true,rest
 const $=selector=>document.querySelector(selector);
 const root=document.documentElement,detail=$('#detail'),toast=$('#toast');
 let selected=null,props={},format='html',trigger=null,toastTimer,itemLicense;
+let previewFrame=0,exportTimer=0;
 const provider=()=>providers[selected?.provider];
 const selectedLicense=()=>provider()?.license||itemLicense;
 const defaults=()=>previewProps(selected,foreground(),root.dataset.theme);
@@ -48,6 +51,7 @@ function controls(){
   }).join('');
 }
 function currentCode(){
+  flushPreview();
   if(provider())return format==='react'?provider().react(selected,props,background()):provider().html(selected,props,background());
   return format==='react'?reactExample(selected,props,selectedLicense()):htmlExample(selected,props,$('#selected-preview').firstElementChild.shadowRoot.innerHTML,selectedLicense(),background());
 }
@@ -64,9 +68,35 @@ function paintCode(){
   $('#code-panel').setAttribute('aria-labelledby','tab-'+format);
   for(const tab of document.querySelectorAll('[data-format]')){const active=tab.dataset.format===format;tab.setAttribute('aria-selected',String(active));tab.tabIndex=active?0:-1;}
 }
+function paintPreview(){
+  const stage=$('#selected-preview');
+  const current=stage.firstElementChild;
+  if(selected.provider==='loading-ui'&&current?.localName===selected.tag){
+    for(const [name,value] of Object.entries({...props,surface:previewSurface()})){
+      if(current.getAttribute(name)!==String(value))current.setAttribute(name,value);
+    }
+  }else{
+    stage.replaceChildren(createLoaderPreview(selected,props,providers));
+  }
+  requestAnimationFrame(syncMotion);
+}
+function flushPreview(){
+  if(!previewFrame)return;
+  cancelAnimationFrame(previewFrame);
+  previewFrame=0;
+  paintPreview();
+}
+function updateExports(){
+  clearTimeout(exportTimer);
+  exportTimer=0;
+  paintCode();
+  refreshPrompt();
+}
 function paintSelected(){
-  $('#selected-preview').replaceChildren(createLoaderPreview(selected,props,providers));
-  paintCode();refreshPrompt();requestAnimationFrame(syncMotion);
+  cancelAnimationFrame(previewFrame);
+  previewFrame=0;
+  paintPreview();
+  updateExports();
 }
 const credit=detail.querySelector('.code-credit');
 function localizeDetail(){
@@ -102,6 +132,9 @@ $('#close').addEventListener('click',closeDetail);
 detail.addEventListener('cancel',clearDetailHash);
 detail.addEventListener('click',event=>{if(event.target===detail){const r=detail.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)closeDetail();}});
 detail.addEventListener('close',()=>{
+  cancelAnimationFrame(previewFrame);
+  clearTimeout(exportTimer);
+  previewFrame=exportTimer=0;
   $('#selected-preview').replaceChildren();document.body.style.overflow='';
   clearDetailHash();clearFeedback();restoreFocus(trigger);
 });
@@ -109,13 +142,18 @@ $('#controls').addEventListener('input',event=>{
   const input=event.target,key=input.dataset.prop;if(!key)return;
   props[key]=key==='color'?input.value:Number(input.value);
   const output=input.parentElement.querySelector('output');if(output)output.textContent=props[key]+ranges[key].suffix;
-  // 上游部分组件更改属性时会重建SVG；创建新实例可保持44款的预览与导出一致。
-  paintSelected();
+  if(!previewFrame)previewFrame=requestAnimationFrame(()=>{
+    previewFrame=0;
+    paintPreview();
+  });
+  clearTimeout(exportTimer);
+  exportTimer=setTimeout(updateExports,120);
 });
+$('#controls').addEventListener('change',event=>{if(event.target.dataset.prop)updateExports();});
 $('#reset').addEventListener('click',()=>{props=defaults();controls();paintSelected();});
 for(const tab of document.querySelectorAll('[data-format]')){
-  tab.addEventListener('click',()=>{format=tab.dataset.format;paintCode();});
-  tab.addEventListener('keydown',event=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(event.key)){event.preventDefault();format=event.key==='Home'?'html':event.key==='End'?'react':format==='html'?'react':'html';paintCode();$('#tab-'+format).focus();}});
+  tab.addEventListener('click',()=>{format=tab.dataset.format;updateExports();});
+  tab.addEventListener('keydown',event=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(event.key)){event.preventDefault();format=event.key==='Home'?'html':event.key==='End'?'react':format==='html'?'react':'html';updateExports();$('#tab-'+format).focus();}});
 }
 function notify(message){
   clearTimeout(toastTimer);(document.querySelector('dialog[open]')||document.body).append(toast);toast.textContent=message;toast.hidden=false;toastTimer=setTimeout(()=>{toast.hidden=true;},3200);
@@ -131,7 +169,10 @@ async function copy(text){
 async function copyWithFeedback(text,{success='Copied with attribution and license',failure='Select and copy the code manually'}={}){
   const ok=await copy(text);notify(t(ok?success:failure));return ok;
 }
-const refreshPrompt=mountPrompt(detail,()=>provider()?provider().prompt(selected,props,background()):loaderPrompt(selected,props,$('#selected-preview').firstElementChild.shadowRoot.innerHTML,selectedLicense(),background()),copyWithFeedback);
+const refreshPrompt=mountPrompt(detail,()=>{
+  flushPreview();
+  return provider()?provider().prompt(selected,props,background()):loaderPrompt(selected,props,$('#selected-preview').firstElementChild.shadowRoot.innerHTML,selectedLicense(),background());
+},copyWithFeedback);
 $('#copy').addEventListener('click',()=>copyWithFeedback(currentCode()));
 $('#download').addEventListener('click',()=>{
   const url=URL.createObjectURL(new Blob([currentCode()],{type:format==='html'?'text/html;charset=utf-8':'text/plain;charset=utf-8'}));

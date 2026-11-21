@@ -1,3 +1,4 @@
+import '../gallery/works.js';
 import {embedUrl, foreground, setupSite} from './site.mjs';
 import {onLanguageChange, translate as t} from './locale.mjs';
 import {originalLoaders, originalMarkup} from '../gallery/loaders/originals.mjs';
@@ -58,13 +59,13 @@ for (const style of styles) {
 }
 
 const previews = new Map();
-let selection;
+let selection, foldPaused = false;
 
 function syncEmbed(frame) {
   frame.contentWindow?.postMessage({
     type: 'ui-moments:embed',
     theme: root.dataset.theme,
-    active: !frame.hidden,
+    active: !frame.hidden && !document.hidden,
     style: selection.style.id,
   }, location.origin);
 }
@@ -90,14 +91,20 @@ function mountPreview(work) {
 
 function syncMotion() {
   motion.hidden = selection.work.id !== fold.key || reducedMotion.matches;
-  motion.textContent = t(previews.get(fold.key)?.hasAttribute('data-paused') ? 'Play motion' : 'Pause motion');
+  previews.get(fold.key)?.toggleAttribute('data-paused', foldPaused || reducedMotion.matches || document.hidden || motion.hidden);
+  motion.textContent = t(foldPaused ? 'Play motion' : 'Pause motion');
 }
 
 motion.addEventListener('click', () => {
-  previews.get(fold.key).toggleAttribute('data-paused');
+  foldPaused = !foldPaused;
   syncMotion();
 });
 reducedMotion.addEventListener('change', syncMotion);
+document.addEventListener('visibilitychange', () => {
+  const preview = previews.get(selection.work.id);
+  if (preview instanceof HTMLIFrameElement) syncEmbed(preview);
+  syncMotion();
+});
 
 function localizeSelection() {
   const {work, style} = selection;

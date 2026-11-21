@@ -36,11 +36,13 @@
     "package:site": "node tools/package-site.mjs",
     "test": "npm run test:ldrs && npm run test:site && npm run test:loading-ui && npm --prefix gallery/date-picker test",
     "test:browser": "node --test tools/browser.test.mjs",
+    "test:performance": "node --test tools/performance.test.mjs",
     "test:ldrs": "node --test tools/ldrs.test.mjs",
     "test:site": "node --test tools/site.test.mjs",
     "test:loading-ui": "node --test gallery/loading-ui/tools/integration.test.mjs"
   },
   "devDependencies": {
+    "esbuild": "0.25.12",
     "playwright": "1.63.0"
   }
 }

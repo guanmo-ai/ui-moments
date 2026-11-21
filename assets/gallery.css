@@ -184,8 +184,9 @@
 .ui-grid {
   --card-gap: clamp(12px, 1.3vw, 20px);
   --masonry-row: 4px;
+  --columns: 5;
   display: grid;
-  grid-template-columns: repeat(var(--columns, 5), minmax(0, 1fr));
+  grid-template-columns: repeat(var(--columns), minmax(0, 1fr));
   align-items: start;
   gap: var(--card-gap);
   padding-top: 20px;
@@ -194,10 +195,22 @@
   grid-auto-rows: var(--masonry-row);
   row-gap: 0;
 }
+.ui-grid-section { display: contents; }
+.ui-grid[data-sectioned] { display: block; }
+.ui-grid[data-sectioned] > .ui-grid-section {
+  display: grid;
+  grid-template-columns: repeat(var(--columns), minmax(0, 1fr));
+  grid-auto-rows: var(--masonry-row);
+  align-items: start;
+  column-gap: var(--card-gap);
+  content-visibility: auto;
+  contain-intrinsic-block-size: auto calc(216px * var(--section-size) / var(--columns));
+}
 .ui-grid[data-columns="4"] { --columns: 4; }
 .ui-grid[data-columns="6"] { --columns: 6; }
 .ui-item {
   min-width: 0;
+  contain: layout paint;
   display: flex;
   flex-direction: column;
   border: 1px solid var(--c-line);
@@ -206,7 +219,7 @@
   background: var(--c-bg-2);
   transition: border-color var(--d-fast);
 }
-.ui-grid[data-masonry] > .ui-item { grid-row-end: span var(--card-rows, 52); }
+.ui-grid[data-masonry] .ui-item { grid-row-end: span var(--card-rows, 52); }
 .ui-item[data-preview-size] { grid-column: span 2; }
 .ui-item:focus-within, .ui-item:hover { border-color: var(--c-line-2); box-shadow: 0 14px 34px -18px rgb(0 0 0 / .55); }
 :root[data-theme="light"] .ui-item:is(:hover, :focus-within) { box-shadow: 0 14px 30px -18px rgb(34 38 81 / .32); }
@@ -330,11 +343,16 @@ button.ui-playback:hover { background-color: var(--gallery-hover); }
 .ui-expand:focus-visible { outline: none; }
 .ui-expand:focus-visible::after { outline: 2px solid var(--gallery-accent); outline-offset: -3px; }
 .ui-caption:hover .ui-expand, .ui-expand:focus-visible { color: var(--gallery-accent); background: transparent; }
-.ui-expand svg { width: 13px; height: 13px; }
+.ui-expand-icon {
+  width: 13px;
+  height: 13px;
+  background: currentColor;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='black' stroke-width='1.4'%3E%3Cpath d='M11 3h6v6m0-6-6 6m-2 8H3v-6m0 6 6-6'/%3E%3C/svg%3E") center / contain no-repeat;
+}
 .ui-detail-loading { display: none; }
 .ui-expand[data-detail-state="loading"] { cursor: wait; }
 .ui-expand[data-detail-state="loading"] .ui-detail-loading { display: grid; place-items: center; }
-.ui-expand[data-detail-state="loading"] > svg, .ui-expand:not([data-detail-state="loading"]) .ui-detail-loading { display: none; }
+.ui-expand[data-detail-state="loading"] > .ui-expand-icon, .ui-expand:not([data-detail-state="loading"]) .ui-detail-loading { display: none; }
 
 .gallery-page .empty { font-size: 14px; padding: 58px 20px; }
 .gallery-page dialog { box-shadow: 0 22px 80px rgb(0 0 0 / .24); }
@@ -365,7 +383,7 @@ button.ui-playback:hover { background-color: var(--gallery-hover); }
 
 @media (max-width: 1080px) {
   .gallery-density { display: none; }
-  .ui-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .ui-grid[data-columns] { --columns: 3; }
 }
 @media (max-width: 760px) {
   .gallery-toolbar { position: relative; top: auto; flex-wrap: wrap; gap: 0; padding-bottom: 10px; }
@@ -373,7 +391,7 @@ button.ui-playback:hover { background-color: var(--gallery-hover); }
   #categories button { min-height: 46px; }
   .tool-actions { width: 100%; margin-top: 6px; }
   .work-search { flex: 1; }
-  .ui-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ui-grid[data-columns] { --columns: 2; }
 }
 @media (max-width: 560px) {
   :root { --nav-h: 52px; }
@@ -400,9 +418,9 @@ button.ui-playback:hover { background-color: var(--gallery-hover); }
 }
 
 /* Let a filter with only large previews use wider columns. */
-.ui-grid:not(:has(> .ui-item:not([hidden], [data-preview-size]))) {
+.ui-grid[data-wide-only] {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
 }
-.ui-grid:not(:has(> .ui-item:not([hidden], [data-preview-size]))) > .ui-item[data-preview-size] {
+.ui-grid[data-wide-only] .ui-item[data-preview-size] {
   grid-column: auto;
 }

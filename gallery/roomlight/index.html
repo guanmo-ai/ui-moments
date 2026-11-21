@@ -10,7 +10,11 @@
 </head>
 <body>
 <main class="room" aria-labelledby="title">
-  <canvas id="optics" aria-hidden="true"></canvas>
+  <picture class="room-photo">
+    <source media="(max-width: 640px) and (max-height: 500px)" srcset="./coast-card.webp">
+    <img id="coast" src="./coast.webp" alt="" width="1536" height="1024" decoding="async">
+  </picture>
+  <canvas id="optics" aria-hidden="true" hidden></canvas>
   <header class="top">
     <a href="../../" aria-label="UI Moments gallery">UI Moments</a>
     <button id="demo" class="demo" type="button" aria-pressed="false"><span aria-hidden="true"></span> Auto preview</button>

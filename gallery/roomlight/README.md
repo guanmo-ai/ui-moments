@@ -6,6 +6,8 @@
 
 从仓库根目录运行 `python3 -m http.server 5173`，打开 `/gallery/roomlight/`。共享资源为 `assets/embed.js` 和 `assets/fonts/Geist-latin-wght.woff2`。代码采用仓库的 MIT 许可证，Geist 采用 [SIL OFL](../../assets/fonts/OFL-Geist.txt)。
 
-[海岸背景](coast.webp)用内置 ImageGen 生成。以下为生成提示词。
+[海岸背景](coast.webp)用内置 ImageGen 生成。紧凑预览使用同一背景的 [768 像素版本](coast-card.webp)。卡片进入活动状态后才加载光学渲染，CSS 背景和 WebGL 共用浏览器选中的图片。
+
+生成提示词如下。
 
 > Use case: photorealistic-natural. Asset type: landscape background for a clear glass lighting-control interface. A quiet rugged coast viewed low from the edge of the sea, with a small wave sliding between broad slate rocks toward the camera. Open water to the horizon, a pearl-grey and dusty peach morning sky, low soft coastal haze. The far horizon is just above the middle, with the source of light well left of center behind a thin cloud. On the right half from mid-frame into the foreground, gently layered dark slate rocks and a few curved lace-thin surf lines give an optical lens visible details to bend. The lower-left foreground is quieter dark wet sand and shallow ripples for white overlaid text. Plenty of readable midtones that can be dimmed or relit; cool blue-grey ocean, charcoal stone, muted peach and pale silver, no green cast. Wide landscape 3:2, natural premium location photography with a real sense of depth, clean smooth tonal gradients, restrained color, fine sharp water texture, no grain or simulated film effects. No people, buildings, graphics, text, logo, or watermark.

@@ -1,5 +1,3 @@
-import { createOptics } from './optics.mjs';
-
 const presets = [
   { name: 'Daybreak',  icon: '☀', tint: '#ffe2bc', light: [1.12, 1.00, .84], kelvin: 4800, level: 76, description: 'Soft morning light over the water.' },
   { name: 'Reading',   icon: '◐', tint: '#ffbc82', light: [1.25, .79, .43], kelvin: 3000, level: 64, description: 'A warm glow along the shoreline.' },
@@ -15,6 +13,7 @@ const range = $('#level');
 const reading = $('#reading');
 const demo = $('#demo');
 const canvas = $('#optics');
+const photo = $('#coast');
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const levels = presets.map(preset => preset.level);
 const cards = presets.map(({name, icon, tint}, index) => {
@@ -42,7 +41,7 @@ let pointer = [0, 0];
 let pointerTarget = pointer;
 let gesture;
 let previewTimer = 0;
-let optics;
+let optics, opticsStarted = false;
 let frame = 0;
 let last = 0;
 let velocity = 0;
@@ -77,6 +76,10 @@ function draw(time) {
   if (Math.abs(hoverTarget - hoverAmount) < .005) hoverAmount = hoverTarget;
   pointer = pointer.map((value, index) => value + (pointerTarget[index] - value) * follow);
   optics.draw({light, brightness: Math.max(0, brightness), active, hover, hoverAmount, pointer});
+  if (canvas.hidden) {
+    canvas.hidden = false;
+    root.dataset.optics = 'true';
+  }
   if (Math.abs(target - brightness) + Math.abs(velocity) > .001 ||
       hoverTarget !== hoverAmount ||
       (hoverTarget && Math.hypot(pointer[0] - pointerTarget[0], pointer[1] - pointerTarget[1]) > .25) ||
@@ -197,6 +200,7 @@ reduceMotion.addEventListener('change', requestDraw);
 
 function updateVisibility() {
   if (!isVisible() && previewTimer) setPreview(false);
+  void startOptics();
   requestDraw();
 }
 document.addEventListener('visibilitychange', updateVisibility);
@@ -214,17 +218,25 @@ canvas.addEventListener('webglcontextlost', () => {
   canvas.hidden = true;
 });
 
-try {
-  optics = await createOptics(canvas);
-  if (optics) {
-    root.dataset.optics = 'true';
+photo.addEventListener('load', () => {
+  optics?.setPhoto();
+  requestDraw();
+});
+
+async function startOptics() {
+  if (opticsStarted || !isVisible()) return;
+  opticsStarted = true;
+  try {
+    const {createOptics} = await import('./optics.mjs');
+    optics = await createOptics(canvas, photo);
+    if (!optics) return;
     const observer = new ResizeObserver(resize);
     observer.observe(room);
     observer.observe(group);
     document.fonts.ready.then(resize);
     resize();
+  } catch (error) {
+    console.warn('Using CSS room lighting.', error);
   }
-} catch (error) {
-  console.warn('Using CSS room lighting.', error);
 }
-if (!optics) canvas.hidden = true;
+updateVisibility();

@@ -153,6 +153,39 @@ test('发布包子路径下可搜索、操作滑尺、下载 HTML 并复制提�
   assert.deepEqual(errors, []);
 });
 
+test('滚动画廊会释放远处的闲置预览并保留已操作控件状态', { timeout: 30_000 }, async t => {
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true });
+  t.after(() => page.close());
+  await page.goto(site);
+  const inkCard = page.locator('[data-ui="ink-switch"]');
+  const ink = inkCard.frameLocator('iframe').getByRole('switch', { name: 'Ink Switch' });
+  await ink.tap();
+  assert.equal(await ink.getAttribute('aria-checked'), 'true');
+  await page.locator('#work-search').focus();
+
+  const controls = page.locator('.ui-item[data-category="input"]');
+  for (const index of [12, 24, 36, 48, 64, 192, 448]) {
+    const card = controls.nth(index);
+    await card.scrollIntoViewIfNeeded();
+    await card.locator('iframe[data-loaded]').waitFor({ state: 'visible' });
+  }
+  const offscreenFrames = await page.locator('.ui-stage iframe').evaluateAll(frames => frames.filter(frame => {
+    const bounds = frame.closest('.ui-item').getBoundingClientRect();
+    return bounds.bottom < -140 || bounds.top > innerHeight + 140;
+  }).length);
+  assert.ok(offscreenFrames <= 7, `远离视口的预览数量：${offscreenFrames}`);
+
+  await inkCard.scrollIntoViewIfNeeded();
+  assert.equal(await ink.getAttribute('aria-checked'), 'true');
+  const search = page.locator('#work-search');
+  await search.fill('Astryx');
+  await page.locator('#ui-grid[data-sectioned]').waitFor();
+  assert.equal(await page.locator('.ui-item:visible').count(), astryxWorks.length);
+  await search.fill('Elastic Slider');
+  await page.locator('#ui-grid:not([data-sectioned])').waitFor();
+  assert.equal(await page.locator('.ui-item:visible').count(), 1);
+});
+
 test('站点可双向切换语言，已操作的组件和独立演示保持英文', { timeout: 30_000 }, async t => {
   const page = await browser.newPage({ viewport: { width: 320, height: 800 }, hasTouch: true, reducedMotion: 'reduce' });
   t.after(() => page.close());
@@ -574,6 +607,69 @@ test('动效资源失败时其余画廊可浏览，失败卡片可重试', { tim
   await card.locator('.ui-animation').waitFor();
   await page.locator('#work-search').fill('Paper Fold');
   await page.locator('[data-ui="paper-fold"] .ui-animation').waitFor();
+});
+
+test('动效库可重试模块加载，离屏后释放预览', { timeout: 20_000 }, async t => {
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  t.after(() => page.close());
+  await page.route('**/gallery/loaders/vendor/ldrs/dist/elements/ring.js', route => route.fulfill({status: 404}), {times: 1});
+  await page.goto(new URL('gallery/loaders/', site).href);
+  const ring = page.locator('[data-key="ring"]');
+  await ring.scrollIntoViewIfNeeded();
+  await ring.locator('.sample[data-error]').waitFor({state: 'visible'});
+  await ring.getByRole('button', {name: 'Ring preview and code'}).click();
+  await page.locator('#detail[open]').getByRole('heading', {name: 'Ring'}).waitFor();
+  await page.locator('#close').click();
+  await ring.locator('.sample > *').waitFor();
+  const last = page.locator('.loader-card').last();
+  await last.scrollIntoViewIfNeeded();
+  await last.locator('.sample > *').waitFor();
+  await ring.locator('.sample > *').waitFor({state: 'detached'});
+});
+
+test('连续调参保留 Loading UI 预览，提交参数后更新导出代码', { timeout: 20_000 }, async t => {
+  const page = await browser.newPage({viewport: {width: 390, height: 844}});
+  t.after(() => page.close());
+  await page.goto(new URL('#loading-ui-ring', site).href);
+  await page.locator('#detail[open] #prop-size').waitFor();
+  const result = await page.evaluate(async () => {
+    const stage = document.querySelector('#selected-preview');
+    const preview = stage.firstElementChild;
+    const demo = preview.shadowRoot.querySelector('.demo');
+    const code = document.querySelector('#code');
+    const input = document.querySelector('#prop-size');
+    const before = code.value;
+    for (let size = 72; size <= 104; size++) {
+      input.value = size;
+      input.dispatchEvent(new Event('input', {bubbles: true}));
+    }
+    const codeWaiting = code.value === before;
+    input.dispatchEvent(new Event('change', {bubbles: true}));
+    return {
+      codeWaiting,
+      samePreview: stage.firstElementChild === preview && preview.shadowRoot.querySelector('.demo') === demo,
+      size: preview.getAttribute('size'),
+      exported: code.value.includes('<um-loading-ui-ring size="104"'),
+    };
+  });
+  assert.deepEqual(result, {codeWaiting: true, samePreview: true, size: '104', exported: true});
+});
+
+test('紧凑 Roomlight 使用小图，激活后再加载光学渲染', { timeout: 20_000 }, async t => {
+  const page = await browser.newPage({viewport: {width: 390, height: 400}});
+  t.after(() => page.close());
+  const requests = [];
+  page.on('request', request => requests.push(new URL(request.url()).pathname));
+  await page.goto(new URL('gallery/roomlight/?embed=ui&paused=1', site).href);
+  await page.locator('#coast').evaluate(photo => photo.decode());
+  assert.ok(requests.some(path => path.endsWith('/coast-card.webp')));
+  assert.ok(!requests.some(path => /\/(coast\.webp|optics\.mjs)$/.test(path)));
+  await Promise.all([
+    page.waitForResponse(response => response.url().endsWith('/optics.mjs') && response.ok()),
+    page.evaluate(() => postMessage({type: 'ui-moments:embed', active: true, theme: 'dark'}, location.origin)),
+  ]);
+  await page.getByRole('button', {name: 'Reading'}).click();
+  assert.equal(await page.getByRole('button', {name: 'Reading'}).getAttribute('aria-pressed'), 'true');
 });
 
 test('原创控件支持键盘操作，嵌入时只显示所选控件', { timeout: 20_000 }, async t => {
