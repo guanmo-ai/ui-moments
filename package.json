@@ -42,7 +42,7 @@
     "test:loading-ui": "node --test gallery/loading-ui/tools/integration.test.mjs"
   },
   "devDependencies": {
-    "esbuild": "0.25.12",
-    "playwright": "1.63.0"
+    "esbuild": "0.28.2",
+    "playwright": "1.65.1"
   }
 }
