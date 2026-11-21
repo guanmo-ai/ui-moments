@@ -38,7 +38,7 @@ jobs:
       - run: npm run test:performance
       - run: npx playwright install --with-deps --only-shell chromium
       - run: npm run test:browser
-      - uses: actions/upload-pages-artifact@v4
+      - uses: actions/upload-pages-artifact@v5
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         with:
           path: _site
