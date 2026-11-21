@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prism Tuner · UI Moments</title>
+<script src="../../assets/embed.js"></script>
+<link rel="stylesheet" href="./prism.css">
+<script type="module" src="./prism.mjs"></script>
+</head>
+<body>
+<main class="page" aria-labelledby="title">
+  <header class="top"><a href="../../" aria-label="UI Moments gallery">UI Moments</a></header>
+  <div class="intro">
+    <h1 id="title">Prism Tuner</h1>
+    <p id="instruction">Drag the lens to sweep through visible light.</p>
+  </div>
+  <section class="instrument" aria-label="Light spectrum">
+    <div class="readouts">
+      <span>Wavelength</span>
+      <output for="wavelength" id="reading"><span id="number">435</span> <span>nm</span></output>
+    </div>
+    <div class="optical-bench">
+      <canvas id="spectrum" aria-hidden="true"></canvas>
+      <input id="wavelength" type="range" min="410" max="660" value="435" aria-label="Wavelength" aria-valuetext="435 nanometers" aria-describedby="instruction">
+    </div>
+    <div class="controls" role="group" aria-label="Wavelength presets">
+      <button type="button" data-wavelength="435" style="--filter:#ae95ff" aria-pressed="true">Violet</button>
+      <button type="button" data-wavelength="480" style="--filter:#80baff" aria-pressed="false">Blue</button>
+      <button type="button" data-wavelength="584" style="--filter:#ffca7a" aria-pressed="false">Amber</button>
+      <button type="button" data-wavelength="630" style="--filter:#ff8371" aria-pressed="false">Red</button>
+    </div>
+  </section>
+</main>
+</body>
+</html>

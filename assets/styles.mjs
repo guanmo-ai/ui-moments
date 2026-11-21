@@ -1,4 +1,5 @@
 import {embedUrl, foreground, setupSite} from './site.mjs';
+import {onLanguageChange, translate as t} from './locale.mjs';
 import {originalLoaders, originalMarkup} from '../gallery/loaders/originals.mjs';
 
 setupSite();
@@ -22,10 +23,10 @@ const works = [
 works.push({id: fold.key, title: fold.name, summary: fold.description});
 
 const styles = [
-  {id: 'original', title: '原版', summary: '组件在界面图鉴中的原始外观，跟随站点的深浅主题。'},
-  {id: 'memphis', title: '孟菲斯', summary: '糖果色、错位几何和硬投影。', source: '004-memphis'},
-  {id: 'bauhaus', title: '包豪斯', summary: '未漂白纸上，以红方、蓝圆、黄三角和粗线组织界面。', source: '001-bauhaus'},
-  {id: 'pixel', title: '像素风', summary: '以点阵、阶梯轮廓和有限色板做成街机界面。'},
+  {id: 'original', title: 'Original', summary: 'The gallery appearance follows the active light or dark theme.'},
+  {id: 'memphis', title: 'Memphis', summary: 'Candy colors, offset shapes, and hard shadows.', source: '004-memphis'},
+  {id: 'bauhaus', title: 'Bauhaus', summary: 'Red squares, blue circles, yellow triangles, and thick lines on unbleached paper.', source: '001-bauhaus'},
+  {id: 'pixel', title: 'Pixel', summary: 'Pixel grids, stepped outlines, and a limited arcade palette.'},
 ];
 
 function makeOption(name, item) {
@@ -37,7 +38,8 @@ function makeOption(name, item) {
   radio.value = item.id;
   const text = document.createElement('span');
   text.className = 'option-name';
-  text.textContent = item.title;
+  text.textContent = name === 'style' ? t(item.title) : item.title;
+  if (name === 'component') text.lang = 'en';
   label.append(radio, text);
   return label;
 }
@@ -88,13 +90,22 @@ function mountPreview(work) {
 
 function syncMotion() {
   motion.hidden = selection.work.id !== fold.key || reducedMotion.matches;
+  motion.textContent = t(previews.get(fold.key)?.hasAttribute('data-paused') ? 'Play motion' : 'Pause motion');
 }
 
 motion.addEventListener('click', () => {
-  const paused = previews.get(fold.key).toggleAttribute('data-paused');
-  motion.textContent = paused ? '播放动效' : '暂停动效';
+  previews.get(fold.key).toggleAttribute('data-paused');
+  syncMotion();
 });
 reducedMotion.addEventListener('change', syncMotion);
+
+function localizeSelection() {
+  const {work, style} = selection;
+  styleDescription.textContent = t(style.summary);
+  const preview = previews.get(work.id);
+  if (preview instanceof HTMLIFrameElement) preview.title = `${work.title} · ${t(style.title)}`;
+  syncMotion();
+}
 
 function showSelection(work, style) {
   selection = {work, style};
@@ -103,7 +114,6 @@ function showSelection(work, style) {
   title.textContent = work.title;
   description.textContent = work.summary;
   catalogLink.href = `index.html#${work.id}`;
-  styleDescription.textContent = style.summary;
   styleSource.hidden = !style.source;
   if (style.source) styleSource.href = `https://github.com/guanmo-ai/design-style/tree/main/styles/${style.source}`;
   stage.dataset.uiStyle = style.id;
@@ -112,12 +122,16 @@ function showSelection(work, style) {
   for (const preview of previews.values()) {
     preview.hidden = preview !== activePreview;
     if (preview instanceof HTMLIFrameElement) {
-      if (!preview.hidden) preview.title = `${work.title} · ${style.title}`;
       syncEmbed(preview);
     }
   }
-  syncMotion();
+  localizeSelection();
 }
+
+onLanguageChange(() => {
+  for (const style of styles) styleOptions.querySelector(`[data-ui-style="${style.id}"] .option-name`).textContent = t(style.title);
+  localizeSelection();
+});
 
 function readLocation() {
   const id = location.hash.slice(1);

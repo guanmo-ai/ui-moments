@@ -4,5 +4,8 @@ _wrapped.html
 .DS_Store
 _site/
 /gallery/date-picker/dist/
+/gallery/astryx/dist/
+/gallery/astryx/experimental/dist/
+/gallery/fluent-ui/dist/
 /gallery/loading-ui/dist/
 /gallery/loading-ui/src/demos.generated.jsx

@@ -12,9 +12,9 @@ const styles = `
 
 export function createSvgSpinnerIntegration({license, sources}) {
   const markup = item => `<style>${styles}</style>${sources[item.slug]}`;
-  const credit = item => `原作：${item.origin.name} · ${item.origin.author}
+  const credit = item => `Original work: ${item.origin.name} · ${item.origin.author}
 ${item.origin.repository}/tree/abfa05c49acf005b8b1e0ef8eb25a67a7057eb20
-UI Moments：主题、尺寸与独立代码导出。
+Theming, sizing, and standalone export by UI Moments.
 
 ${license.trim()}`;
 
@@ -29,7 +29,7 @@ ${license.trim()}`;
 
   function html(item, props, background) {
     return `<!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -37,7 +37,7 @@ ${license.trim()}`;
 <style>body{margin:0;min-height:100svh;display:grid;place-items:center;background:${esc(background)}}</style>
 </head>
 <body>
-<div role="status" aria-label="正在加载" style="color:${esc(props.color)};--size:${Number(props.size)}px">
+<div role="status" aria-label="Loading" style="color:${esc(props.color)};--size:${Number(props.size)}px">
   <template shadowrootmode="open">
 ${markup(item)}
   </template>
@@ -69,7 +69,7 @@ export default function LoadingIndicator({
     shadow.innerHTML = markup;
   }, []);
 
-  return <div ref={host} role="status" aria-label="正在加载"
+  return <div ref={host} role="status" aria-label="Loading"
     style={{color, '--size': size + 'px'} as CSSProperties} />;
 }
 
@@ -80,14 +80,14 @@ ${credit(item)}
   }
 
   function prompt(item, props, background) {
-    return `请在当前项目接入「${item.name}」加载指示器。
+    return `Integrate the ${item.name} loader in the current project.
 
-原作：${item.origin.name} · ${item.origin.author} · MIT
-预览：https://guanmo-ai.github.io/ui-moments/#${item.key}
-效果：${item.description}
-当前参数：${props.size}px，${props.color}。
+Original work: ${item.origin.name} · ${item.origin.author} · MIT
+Preview: https://guanmo-ai.github.io/ui-moments/#${item.key}
+Effect: ${item.description}
+Current settings: ${props.size}px, ${props.color}.
 
-保留 SVG 的原始动效、版权声明和完整许可证。HTML 项目可直接使用下方示例；React 项目可在预览中选择 React 代码。验证实际渲染、尺寸、颜色和减少动态效果设置。
+Preserve the original SVG animation, copyright notice, and full license. Use the HTML example below or select React code in the preview. Verify rendering, sizing, color, and reduced motion.
 
 \`\`\`html
 ${html(item, props, background).trim()}
@@ -96,7 +96,7 @@ ${html(item, props, background).trim()}
 
   return {
     license, preview, html, react, prompt,
-    htmlHelp: '保存为 .html 文件即可独立打开，无需联网。',
-    reactHelp: '保存为 .tsx，直接在 React 项目中导入。',
+    htmlHelp: 'Save as an .html file and open it offline in a browser.',
+    reactHelp: 'Save as .tsx and import into a React project.',
   };
 }

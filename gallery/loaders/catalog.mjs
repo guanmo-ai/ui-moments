@@ -1,10 +1,10 @@
-// LDRS 1.1.9 原始默认参数；只增加分类与中文说明。
+// LDRS 1.1.9 原始默认参数；额外维护分类和说明。
 export const loaders=[
   {
     "key": "ring",
     "name": "Ring",
-    "group": "环形",
-    "description": "圆弧沿圆环旋转，长度随节奏伸缩",
+    "group": "Rings",
+    "description": "An arc sweeps around the ring, growing and shrinking as it turns.",
     "tag": "l-ring",
     "react": "Ring",
     "defaults": {
@@ -18,8 +18,8 @@ export const loaders=[
   {
     "key": "ring2",
     "name": "Ring 2",
-    "group": "环形",
-    "description": "短弧绕着淡色轨道持续旋转",
+    "group": "Rings",
+    "description": "A short arc spins along a muted track.",
     "tag": "l-ring2",
     "react": "Ring2",
     "defaults": {
@@ -34,8 +34,8 @@ export const loaders=[
   {
     "key": "tailspin",
     "name": "Tailspin",
-    "group": "环形",
-    "description": "带拖尾的圆环，轻巧地连续旋转",
+    "group": "Rings",
+    "description": "A ring spins with a fading tail.",
     "tag": "l-tailspin",
     "react": "Tailspin",
     "defaults": {
@@ -48,8 +48,8 @@ export const loaders=[
   {
     "key": "lineSpinner",
     "name": "Line Spinner",
-    "group": "环形",
-    "description": "短线沿圆周依次明暗交替",
+    "group": "Rings",
+    "description": "Short ticks light up in sequence around a circle.",
     "tag": "l-line-spinner",
     "react": "LineSpinner",
     "defaults": {
@@ -62,8 +62,8 @@ export const loaders=[
   {
     "key": "squircle",
     "name": "Squircle",
-    "group": "几何",
-    "description": "圆角方形轨道上的流动线条",
+    "group": "Geometry",
+    "description": "A line flows around a rounded square.",
     "tag": "l-squircle",
     "react": "Squircle",
     "defaults": {
@@ -78,8 +78,8 @@ export const loaders=[
   {
     "key": "square",
     "name": "Square",
-    "group": "几何",
-    "description": "沿正方形边缘行进的短线",
+    "group": "Geometry",
+    "description": "A short line travels around the edges of a square.",
     "tag": "l-square",
     "react": "Square",
     "defaults": {
@@ -94,8 +94,8 @@ export const loaders=[
   {
     "key": "reuleaux",
     "name": "Reuleaux",
-    "group": "几何",
-    "description": "弧形三角轨道上的连续运动",
+    "group": "Geometry",
+    "description": "A line traces a rounded triangular path.",
     "tag": "l-reuleaux",
     "react": "Reuleaux",
     "defaults": {
@@ -110,8 +110,8 @@ export const loaders=[
   {
     "key": "tailChase",
     "name": "Tail Chase",
-    "group": "圆点",
-    "description": "三颗圆点互相追逐，轮流加速",
+    "group": "Dots",
+    "description": "Three dots chase one another at changing speeds.",
     "tag": "l-tail-chase",
     "react": "TailChase",
     "defaults": {
@@ -123,8 +123,8 @@ export const loaders=[
   {
     "key": "dotSpinner",
     "name": "Dot Spinner",
-    "group": "圆点",
-    "description": "圆点组成旋转中的光环",
+    "group": "Dots",
+    "description": "Dots form a spinning halo.",
     "tag": "l-dot-spinner",
     "react": "DotSpinner",
     "defaults": {
@@ -136,8 +136,8 @@ export const loaders=[
   {
     "key": "spiral",
     "name": "Spiral",
-    "group": "圆点",
-    "description": "不同大小的圆点沿螺旋流动",
+    "group": "Dots",
+    "description": "Dots of different sizes flow along a spiral.",
     "tag": "l-spiral",
     "react": "Spiral",
     "defaults": {
@@ -149,8 +149,8 @@ export const loaders=[
   {
     "key": "bouncy",
     "name": "Bouncy",
-    "group": "圆点",
-    "description": "三颗圆点轮流弹跳、拉伸",
+    "group": "Dots",
+    "description": "Three dots take turns bouncing and stretching.",
     "tag": "l-bouncy",
     "react": "Bouncy",
     "defaults": {
@@ -162,8 +162,8 @@ export const loaders=[
   {
     "key": "treadmill",
     "name": "Treadmill",
-    "group": "圆点",
-    "description": "圆点像跑步机一样滚动交替",
+    "group": "Dots",
+    "description": "Dots scroll past one another like a treadmill.",
     "tag": "l-treadmill",
     "react": "Treadmill",
     "defaults": {
@@ -175,8 +175,8 @@ export const loaders=[
   {
     "key": "bouncyArc",
     "name": "Bouncy Arc",
-    "group": "圆点",
-    "description": "圆点沿弧线弹起又落下",
+    "group": "Dots",
+    "description": "Dots rise and fall along an arc.",
     "tag": "l-bouncy-arc",
     "react": "BouncyArc",
     "defaults": {
@@ -188,8 +188,8 @@ export const loaders=[
   {
     "key": "waveform",
     "name": "Waveform",
-    "group": "线条",
-    "description": "一组竖线像声波一样起伏",
+    "group": "Lines",
+    "description": "Vertical lines rise and fall like a waveform.",
     "tag": "l-waveform",
     "react": "Waveform",
     "defaults": {
@@ -202,8 +202,8 @@ export const loaders=[
   {
     "key": "hatch",
     "name": "Hatch",
-    "group": "线条",
-    "description": "三条线在横向与竖向之间翻转",
+    "group": "Lines",
+    "description": "Three lines flip between horizontal and vertical.",
     "tag": "l-hatch",
     "react": "Hatch",
     "defaults": {
@@ -216,8 +216,8 @@ export const loaders=[
   {
     "key": "hourglass",
     "name": "Hourglass",
-    "group": "几何",
-    "description": "两部分轮流收缩，像翻转的沙漏",
+    "group": "Geometry",
+    "description": "Two shapes take turns shrinking like a turning hourglass.",
     "tag": "l-hourglass",
     "react": "Hourglass",
     "defaults": {
@@ -230,8 +230,8 @@ export const loaders=[
   {
     "key": "zoomies",
     "name": "Zoomies",
-    "group": "线条",
-    "description": "细线上快速往返的小光点",
+    "group": "Lines",
+    "description": "A point of light darts back and forth along a line.",
     "tag": "l-zoomies",
     "react": "Zoomies",
     "defaults": {
@@ -245,8 +245,8 @@ export const loaders=[
   {
     "key": "lineWobble",
     "name": "Line Wobble",
-    "group": "线条",
-    "description": "线段在轨道上伸展、收拢",
+    "group": "Lines",
+    "description": "A segment extends and contracts along a track.",
     "tag": "l-line-wobble",
     "react": "LineWobble",
     "defaults": {
@@ -260,8 +260,8 @@ export const loaders=[
   {
     "key": "infinity",
     "name": "Infinity",
-    "group": "环形",
-    "description": "沿无限符号不断流动的细线",
+    "group": "Rings",
+    "description": "A fine line traces an infinity symbol.",
     "tag": "l-infinity",
     "react": "Infinity",
     "defaults": {
@@ -276,8 +276,8 @@ export const loaders=[
   {
     "key": "trefoil",
     "name": "Trefoil",
-    "group": "环形",
-    "description": "三叶曲线上的流动轨迹",
+    "group": "Rings",
+    "description": "A line flows around a three-lobed path.",
     "tag": "l-trefoil",
     "react": "Trefoil",
     "defaults": {
@@ -292,8 +292,8 @@ export const loaders=[
   {
     "key": "cardio",
     "name": "Cardio",
-    "group": "线条",
-    "description": "像心电图一样跃动的折线",
+    "group": "Lines",
+    "description": "A zigzag pulses like a heartbeat.",
     "tag": "l-cardio",
     "react": "Cardio",
     "defaults": {
@@ -307,8 +307,8 @@ export const loaders=[
   {
     "key": "helix",
     "name": "Helix",
-    "group": "圆点",
-    "description": "圆点交错升降，组成双螺旋",
+    "group": "Dots",
+    "description": "Dots rise and fall in a double helix.",
     "tag": "l-helix",
     "react": "Helix",
     "defaults": {
@@ -320,8 +320,8 @@ export const loaders=[
   {
     "key": "grid",
     "name": "Grid",
-    "group": "圆点",
-    "description": "点阵由中心向外有序起伏",
+    "group": "Dots",
+    "description": "A grid of dots ripples outward from the center.",
     "tag": "l-grid",
     "react": "Grid",
     "defaults": {
@@ -333,8 +333,8 @@ export const loaders=[
   {
     "key": "quantum",
     "name": "Quantum",
-    "group": "圆点",
-    "description": "圆点交错移动，汇聚又散开",
+    "group": "Dots",
+    "description": "Dots pass one another, gather, and scatter.",
     "tag": "l-quantum",
     "react": "Quantum",
     "defaults": {
@@ -346,8 +346,8 @@ export const loaders=[
   {
     "key": "wobble",
     "name": "Wobble",
-    "group": "圆点",
-    "description": "圆点摆动、聚合，往复变化",
+    "group": "Dots",
+    "description": "Dots sway, converge, and repeat.",
     "tag": "l-wobble",
     "react": "Wobble",
     "defaults": {
@@ -359,8 +359,8 @@ export const loaders=[
   {
     "key": "orbit",
     "name": "Orbit",
-    "group": "圆点",
-    "description": "圆点沿轨道相互环绕",
+    "group": "Dots",
+    "description": "Dots orbit one another along a track.",
     "tag": "l-orbit",
     "react": "Orbit",
     "defaults": {
@@ -372,8 +372,8 @@ export const loaders=[
   {
     "key": "chaoticOrbit",
     "name": "Chaotic Orbit",
-    "group": "圆点",
-    "description": "不同节奏的圆点沿轨道穿梭",
+    "group": "Dots",
+    "description": "Dots race around a track at different speeds.",
     "tag": "l-chaotic-orbit",
     "react": "ChaoticOrbit",
     "defaults": {
@@ -385,8 +385,8 @@ export const loaders=[
   {
     "key": "superballs",
     "name": "Superballs",
-    "group": "圆点",
-    "description": "两颗圆球靠近、远离、相互交换",
+    "group": "Dots",
+    "description": "Two dots move apart, come together, and swap places.",
     "tag": "l-superballs",
     "react": "Superballs",
     "defaults": {
@@ -398,8 +398,8 @@ export const loaders=[
   {
     "key": "trio",
     "name": "Trio",
-    "group": "圆点",
-    "description": "三颗圆点围绕共同中心运动",
+    "group": "Dots",
+    "description": "Three dots circle a shared center.",
     "tag": "l-trio",
     "react": "Trio",
     "defaults": {
@@ -411,8 +411,8 @@ export const loaders=[
   {
     "key": "momentum",
     "name": "Momentum",
-    "group": "圆点",
-    "description": "圆点以错开的节奏传递动量",
+    "group": "Dots",
+    "description": "Dots pass momentum in a staggered rhythm.",
     "tag": "l-momentum",
     "react": "Momentum",
     "defaults": {
@@ -424,8 +424,8 @@ export const loaders=[
   {
     "key": "dotWave",
     "name": "Dot Wave",
-    "group": "圆点",
-    "description": "圆点沿水平方向依次起伏",
+    "group": "Dots",
+    "description": "Dots rise and fall in a horizontal wave.",
     "tag": "l-dot-wave",
     "react": "DotWave",
     "defaults": {
@@ -437,8 +437,8 @@ export const loaders=[
   {
     "key": "leapfrog",
     "name": "Leapfrog",
-    "group": "圆点",
-    "description": "圆点交替跃过彼此",
+    "group": "Dots",
+    "description": "Dots take turns leaping over one another.",
     "tag": "l-leapfrog",
     "react": "Leapfrog",
     "defaults": {
@@ -450,8 +450,8 @@ export const loaders=[
   {
     "key": "newtonsCradle",
     "name": "Newton's Cradle",
-    "group": "圆点",
-    "description": "两端圆球摆动，像牛顿摆",
+    "group": "Dots",
+    "description": "The outer balls swing like a Newton's cradle.",
     "tag": "l-newtons-cradle",
     "react": "NewtonsCradle",
     "defaults": {
@@ -463,8 +463,8 @@ export const loaders=[
   {
     "key": "dotStream",
     "name": "Dot Stream",
-    "group": "圆点",
-    "description": "圆点沿直线连续流过",
+    "group": "Dots",
+    "description": "Dots flow steadily along a straight line.",
     "tag": "l-dot-stream",
     "react": "DotStream",
     "defaults": {
@@ -476,8 +476,8 @@ export const loaders=[
   {
     "key": "dotPulse",
     "name": "Dot Pulse",
-    "group": "圆点",
-    "description": "三颗圆点依次明暗、放大",
+    "group": "Dots",
+    "description": "Three dots brighten and grow in sequence.",
     "tag": "l-dot-pulse",
     "react": "DotPulse",
     "defaults": {
@@ -489,8 +489,8 @@ export const loaders=[
   {
     "key": "metronome",
     "name": "Metronome",
-    "group": "圆点",
-    "description": "圆点有规律地摆动交替",
+    "group": "Dots",
+    "description": "Dots sway back and forth in a steady rhythm.",
     "tag": "l-metronome",
     "react": "Metronome",
     "defaults": {
@@ -502,8 +502,8 @@ export const loaders=[
   {
     "key": "jelly",
     "name": "Jelly",
-    "group": "几何",
-    "description": "柔软的形体像果冻一样呼吸",
+    "group": "Geometry",
+    "description": "A soft shape expands and contracts like jelly.",
     "tag": "l-jelly",
     "react": "Jelly",
     "defaults": {
@@ -515,8 +515,8 @@ export const loaders=[
   {
     "key": "jellyTriangle",
     "name": "Jelly Triangle",
-    "group": "几何",
-    "description": "三颗圆点拉出柔软的三角形",
+    "group": "Geometry",
+    "description": "Three dots stretch into a soft-edged triangle.",
     "tag": "l-jelly-triangle",
     "react": "JellyTriangle",
     "defaults": {
@@ -528,8 +528,8 @@ export const loaders=[
   {
     "key": "mirage",
     "name": "Mirage",
-    "group": "几何",
-    "description": "形体在拉伸、融合之间来回变化",
+    "group": "Geometry",
+    "description": "Soft shapes repeatedly stretch and merge.",
     "tag": "l-mirage",
     "react": "Mirage",
     "defaults": {
@@ -541,8 +541,8 @@ export const loaders=[
   {
     "key": "ping",
     "name": "Ping",
-    "group": "环形",
-    "description": "从中心扩散的一圈波纹",
+    "group": "Rings",
+    "description": "A ripple spreads outward from the center.",
     "tag": "l-ping",
     "react": "Ping",
     "defaults": {
@@ -554,8 +554,8 @@ export const loaders=[
   {
     "key": "pulsar",
     "name": "Pulsar",
-    "group": "环形",
-    "description": "从中心向外放大的脉冲",
+    "group": "Rings",
+    "description": "A pulse expands from the center.",
     "tag": "l-pulsar",
     "react": "Pulsar",
     "defaults": {
@@ -567,8 +567,8 @@ export const loaders=[
   {
     "key": "ripples",
     "name": "Ripples",
-    "group": "环形",
-    "description": "多圈波纹交错向外扩散",
+    "group": "Rings",
+    "description": "Several ripples spread outward at staggered intervals.",
     "tag": "l-ripples",
     "react": "Ripples",
     "defaults": {
@@ -580,8 +580,8 @@ export const loaders=[
   {
     "key": "miyagi",
     "name": "Miyagi",
-    "group": "线条",
-    "description": "多条细线依次展开又聚拢",
+    "group": "Lines",
+    "description": "Thin lines fan out and draw together in sequence.",
     "tag": "l-miyagi",
     "react": "Miyagi",
     "defaults": {
@@ -594,8 +594,8 @@ export const loaders=[
   {
     "key": "pinwheel",
     "name": "Pinwheel",
-    "group": "线条",
-    "description": "细线组成一枚轻巧的旋转风车",
+    "group": "Lines",
+    "description": "A pinwheel made of thin lines turns continuously.",
     "tag": "l-pinwheel",
     "react": "Pinwheel",
     "defaults": {

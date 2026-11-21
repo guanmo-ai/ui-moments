@@ -2,6 +2,18 @@
 
 本页保存上游许可证原文与接入细节。所有来源（含字体、依赖与灵感参考）的总览见 [CREDITS.md](CREDITS.md)。
 
+## Astryx
+
+- 作者为 Meta Platforms, Inc.，上游为 [meta/astryx](https://github.com/meta/astryx)。
+- 稳定版 `0.7.16` 提供 165 个主示例和 559 个变体。预发布版 `0.7.17-canary.g72f2d7c` 提供 26 个图表示例和 29 个实验组件示例。UI Moments 提供嵌入、主题和本地数据与素材。
+- [Astryx MIT 许可原文](gallery/astryx/vendor/astryx/LICENSE)与 [StyleX MIT 许可原文](gallery/astryx/vendor/stylex/LICENSE)原样保存在仓库。稳定版与 canary 分别附带实际打包的依赖许可，路径为 `gallery/astryx/dist/THIRD_PARTY_LICENSES.txt` 和 `gallery/astryx/experimental/dist/THIRD_PARTY_LICENSES.txt`。具体包版本和许可证出处见 [接入说明](gallery/astryx/README.md)。
+
+## Fluent UI React 9.75.2
+
+- Microsoft Corporation 的 [Fluent UI React](https://github.com/microsoft/fluentui/tree/4846275a92419b2dd0440a432df755dcdcd427c3) 提供 51 个表单、导航和反馈示例所用的原版组件。
+- UI Moments 新增演示内容、图鉴嵌入和浅深主题适配。演示使用系统字体及 MIT 依赖包内的图标。
+- [Microsoft MIT 许可证原文](gallery/fluent-ui/vendor/LICENSE)随源码保留。发布包的 `gallery/fluent-ui/dist/THIRD_PARTY_LICENSES.md` 包含实际打包依赖的完整许可。
+
 ## LDRS 1.1.9
 
 - 原作者：Griffin Johnston / UI Ball

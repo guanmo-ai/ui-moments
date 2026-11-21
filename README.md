@@ -4,7 +4,7 @@
 
 # UI Moments · 界面图鉴
 
-**开源的 UI 交互与动效图鉴。** 232 个可以直接上手的实时示例：点按、拖动、调参，再把 HTML 或 React 代码带走。
+**开源的 UI 交互与动效图鉴。** 1065 个可以直接上手的实时示例：点按、拖动、调参，再把 HTML 或 React 代码带走。
 
 [![Check and deploy](https://github.com/guanmo-ai/ui-moments/actions/workflows/pages.yml/badge.svg)](https://github.com/guanmo-ai/ui-moments/actions/workflows/pages.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-434eaa.svg)](LICENSE)
@@ -27,17 +27,17 @@
 - **先上手，再看代码。** 每张卡片的上半部分就是真实组件，可以直接点按、拖动或暂停；下半部分打开详情、参数和代码。
 - **导出即可用。** 加载动效可调尺寸、颜色和节奏，一键复制独立 HTML 或 React 示例，许可证随代码一起带走。
 - **复刻提示词。** 每个组件都能复制一段带当前参数、源码链接和许可要求的提示词，交给 AI 编程助手即可复现。
-- **来源清清楚楚。** 卡片标注「原创」「开源集成」或「参考后实现」，上游代码原样保存并固定版本，详见 [CREDITS.md](CREDITS.md)。
+- **来源清清楚楚。** 组件详情和仓库记录实现来源。上游代码固定版本，保留原始许可证，详见 [CREDITS.md](CREDITS.md)。
 - **对所有人友好。** 键盘可达、深浅主题、尊重「减少动态效果」，离屏动画自动暂停。
 
 ## 收录内容
 
 | 分类 | 数量 | 包含 |
 | --- | ---: | --- |
-| 交互控件 | 52 | 原创控件、Motion 微交互、弹性滑尺、对齐拨片、夹页键（全部单色） |
+| 交互控件 | 883 | 原创与参考实现控件、Fluent UI React 和 Astryx 开源组件 |
 | 点击反馈 | 12 | Micron.js 的回弹、摆动、闪动效果 |
 | 加载动效 | 164 | 27 款原创、44 款 LDRS、47 款 Loading UI、46 款 SVG Spinners |
-| 多彩 | 4 | 色彩鲜艳的作品单独成组、排在最后：昼夜开关、色轮、拉绳灯、抛硬币 |
+| 多彩 | 6 | 昼夜开关、色轮、拉绳灯、抛硬币、Prism Tuner、Roomlight |
 
 ### 原创控件
 
@@ -72,7 +72,7 @@ cd ui-moments && npm run setup
 npm run dev
 ```
 
-打开 <http://127.0.0.1:5173>。`setup` 按锁文件安装依赖；`dev` 先构建 Loading UI 运行时和 SVG 资源，再启动静态服务。网站本身没有框架，改完刷新即可。
+打开 <http://127.0.0.1:5173>。`setup` 按锁文件安装依赖；`dev` 先构建组件运行时和 SVG 资源，再启动静态服务。网站本身没有框架，改完刷新即可。
 
 ## 项目结构
 
@@ -92,6 +92,7 @@ ui-moments/
 │   ├── loaders/            # LDRS 集成、原创加载动效（originals / motifs）与编辑器
 │   ├── loading-ui/         # Loading UI 集成与构建脚本
 │   ├── svg-spinners/       # SVG Spinners 集成
+│   ├── astryx/             # Astryx 组件接入
 │   ├── micron/             # Micron.js 点击反馈
 │   └── light-scenes/       # 光照场景实验（独立页面）
 ├── tools/                  # 测试、打包、逐帧录制

@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { cpSync, lstatSync, mkdirSync, rmSync } from 'node:fs';
+import { cpSync, lstatSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -12,7 +12,11 @@ const siteFiles = tracked.filter(path => rootFiles.has(path) || (
   !path.startsWith('gallery/date-picker/') &&
   !path.split('/').some(part => part.startsWith('.'))
 ));
+const astryxAssets = ['gallery/astryx/dist', 'gallery/astryx/experimental/dist'].flatMap(directory =>
+  JSON.parse(readFileSync(join(root, directory, 'assets.json'), 'utf8')).map(file => join(directory, file)));
 const generated = [
+  ...astryxAssets,
+  'gallery/fluent-ui/dist',
   'gallery/loading-ui/dist',
   'gallery/svg-spinners/dist',
 ];

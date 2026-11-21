@@ -2,10 +2,12 @@ import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent } from
 import { asDate, dateKey, fromDate, monthCells, moveDays, moveMonth, sameDate, sameMonth, type CalendarDate } from "../lib/calendar";
 import s from "./DatePicker.module.css";
 
-const weekdays = ["一", "二", "三", "四", "五", "六", "日"];
+const weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const shortViewport = "(max-height: 222px)";
 const weekdayIndex = (date: CalendarDate) => (asDate(date).getDay() + 6) % 7;
-const readableDate = (date: CalendarDate) => asDate(date).toLocaleDateString("zh-CN", { dateStyle: "full" });
+const fullDate = new Intl.DateTimeFormat("en", { dateStyle: "full" });
+const monthLabel = new Intl.DateTimeFormat("en", { month: "long", year: "numeric" });
+const readableDate = (date: CalendarDate) => fullDate.format(asDate(date));
 
 export function DatePicker() {
   const [today, setToday] = useState(() => fromDate(new Date()));
@@ -72,19 +74,19 @@ export function DatePicker() {
 
   return (
     <div className={s.viewport} data-theme={theme} data-ui-style={uiStyle}>
-      <section className={s.calendar} data-compact={compact} aria-label="日期选择器" ref={calendar}>
+      <section className={s.calendar} data-compact={compact} aria-label="Date picker" ref={calendar}>
         <header className={s.header}>
-          <strong aria-live="polite">{cursor.year} 年 {cursor.month + 1} 月</strong>
+          <strong aria-live="polite">{monthLabel.format(asDate(cursor))}</strong>
           <div className={s.nav}>
-            <button type="button" onClick={() => browse(-1)} aria-label={compact ? "上一周" : "上个月"}>
+            <button type="button" onClick={() => browse(-1)} aria-label={compact ? "Previous week" : "Previous month"}>
               <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3 5 8l5 5" /></svg>
             </button>
-            <button type="button" onClick={() => browse(1)} aria-label={compact ? "下一周" : "下个月"}>
+            <button type="button" onClick={() => browse(1)} aria-label={compact ? "Next week" : "Next month"}>
               <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m6 3 5 5-5 5" /></svg>
             </button>
           </div>
         </header>
-        <div className={s.grid} role="group" aria-label={compact ? "本周日期" : "本月日期"}>
+        <div className={s.grid} role="group" aria-label={compact ? "Dates this week" : "Dates this month"}>
           {weekdays.map(day => <span key={day} className={s.weekday} aria-hidden="true">{day}</span>)}
           {dates.map(date => {
             const key = dateKey(date);
@@ -99,8 +101,8 @@ export function DatePicker() {
           })}
         </div>
         <footer className={s.footer}>
-          <time dateTime={dateKey(selected)} aria-live="polite" aria-label={`已选 ${readableDate(selected)}`}>{dateKey(selected)}</time>
-          <button type="button" onClick={returnToToday} aria-label="回到今天">今天</button>
+          <time dateTime={dateKey(selected)} aria-live="polite" aria-label={`Selected ${readableDate(selected)}`}>{dateKey(selected)}</time>
+          <button type="button" onClick={returnToToday} aria-label="Go to today">Today</button>
         </footer>
       </section>
     </div>

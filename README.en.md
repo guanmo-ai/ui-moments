@@ -4,7 +4,7 @@
 
 # UI Moments
 
-**An open-source gallery of UI interactions and motion.** 232 live examples you can poke, drag and tune — then take the HTML or React code with you.
+**An open-source gallery of UI interactions and motion.** 1065 live examples you can poke, drag and tune — then take the HTML or React code with you.
 
 [![Check and deploy](https://github.com/guanmo-ai/ui-moments/actions/workflows/pages.yml/badge.svg)](https://github.com/guanmo-ai/ui-moments/actions/workflows/pages.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-434eaa.svg)](LICENSE)
@@ -28,17 +28,17 @@
 - **Try first, read later.** The top half of every card *is* the component. The bottom half opens details, parameters and code.
 - **Exports that just work.** Tune size, color and tempo of any loader, then copy a self-contained HTML page or a React example. The license travels with the code.
 - **Recreation prompts.** Copy a prompt that carries the current parameters, source links and license terms for your AI coding assistant.
-- **Honest provenance.** Every card is labeled *Original*, *Open-source integration* or *Inspired re-implementation*. Upstream code is vendored byte-for-byte at a pinned version. See [CREDITS.md](CREDITS.md).
+- **Honest provenance.** Component details and the repository record the implementation source. Upstream code is pinned to a fixed version and retains its original license. See [CREDITS.md](CREDITS.md).
 - **Accessible by default.** Keyboard support, light/dark themes, `prefers-reduced-motion`, and off-screen animations pause automatically.
 
 ## What's inside
 
 | Category | Count | Includes |
 | --- | ---: | --- |
-| Controls | 52 | Original controls, Motion micro-transitions, Elastic Slider, Alignment Switch, Bookmark Button (all monochrome) |
+| Controls | 883 | Original and inspired controls, plus open-source components from Fluent UI React and Astryx |
 | Tap feedback | 12 | Micron.js bounce, wobble and blink effects |
 | Loaders | 164 | 27 originals, 44 LDRS, 47 Loading UI, 46 SVG Spinners |
-| Color | 4 | Colorful pieces kept in their own tab, at the end: Day/Night Toggle, Hue Orbit, Pull Cord Lamp, Flip Coin |
+| Color | 6 | Day/Night Toggle, Hue Orbit, Pull Cord Lamp, Flip Coin, Prism Tuner, Roomlight |
 
 ### Original controls
 

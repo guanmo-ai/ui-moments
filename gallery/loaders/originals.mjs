@@ -4,9 +4,9 @@ import {motifLoaders} from './motifs.mjs';
 const originals = [
   {
     key: 'paper-fold',
-    name: '折页',
-    group: '几何',
-    description: '一摞纸沿斜脊依次掀起，再轻轻落回原处',
+    name: 'Paper Fold',
+    group: 'Geometry',
+    description: 'Sheets lift one by one along a diagonal fold, then settle back into place.',
     defaults: {size: 86, color: '#a44333', speed: 2.4},
     darkColor: '#d2d2d7',
     className: 'um-paper-fold',
@@ -49,9 +49,9 @@ const originals = [
   },
   {
     key: 'signal-return',
-    name: '回信',
-    group: '线条',
-    description: '信号沿折线抵达右端，再从下方轨道折回',
+    name: 'Signal Return',
+    group: 'Lines',
+    description: 'A signal follows the zigzag to the far end and returns along the lower track.',
     defaults: {size: 108, color: '#64488c', speed: 2.65},
     darkColor: '#e8e8ed',
     className: 'um-signal-return',

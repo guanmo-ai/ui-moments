@@ -25,8 +25,8 @@
     "node": "^22.12.0 || >=24"
   },
   "scripts": {
-    "setup": "npm ci && npm ci --prefix gallery/date-picker && npm ci --ignore-scripts --prefix gallery/loading-ui",
-    "build": "npm --prefix gallery/date-picker run build && npm --prefix gallery/loading-ui run build && node gallery/svg-spinners/build.mjs",
+    "setup": "npm ci && npm ci --prefix gallery/date-picker && npm ci --ignore-scripts --prefix gallery/loading-ui && npm ci --ignore-scripts --prefix gallery/fluent-ui && npm ci --ignore-scripts --prefix gallery/astryx && npm ci --ignore-scripts --prefix gallery/astryx/experimental",
+    "build": "npm --prefix gallery/date-picker run build && npm --prefix gallery/loading-ui run build && npm --prefix gallery/fluent-ui run build && npm --prefix gallery/astryx run build && node gallery/svg-spinners/build.mjs",
     "lint": "npm --prefix gallery/date-picker run lint",
     "predev": "npm run build",
     "dev": "python3 -m http.server 5173 --bind 127.0.0.1",

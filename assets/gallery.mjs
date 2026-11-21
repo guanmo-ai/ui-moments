@@ -1,4 +1,5 @@
 import {setupSite,setupGalleryFavorites,showLoadingAccent,foreground,embedUrl} from './site.mjs';
+import {onLanguageChange,translate as t} from './locale.mjs';
 import {buildCatalog,categories,getCategoryFilters,matches} from './catalog.mjs';
 import {previewProps} from '../gallery/loaders/catalog.mjs';
 import {escapeHtml as esc} from '../gallery/loaders/snippets.mjs';
@@ -15,9 +16,11 @@ const loaderDialog=$('#detail'),componentDialog=$('#component-detail'),component
 const categoryButtons=$('#categories'),shapeButtons=$('#shapes');
 const motionButton=$('#motion'),empty=$('#empty');
 const items=buildCatalog(window.WORKS||[]);
+const motionFilter=$('#preview-motion');
 const reduced=matchMedia('(prefers-reduced-motion:reduce)');
 const search=$('#work-search');
-search.value=new URLSearchParams(location.search).get('q')||'';
+const params=new URLSearchParams(location.search);
+search.value=params.get('q')||'';
 const density=$('#gallery-density'),columnChoices=[...density.querySelectorAll('input')];
 const densityKey='ui-moments-gallery-columns';
 try{
@@ -35,6 +38,9 @@ let playing=!reduced.matches,category='all',shape='all';
 let component=null,componentTrigger=null,opening=null;
 let themeColor=foreground();
 const cards=new Map(),mounted=new Set(),providers={};
+const pendingFrames=new Set();
+const concurrentFrameLimit=5;
+let loadingFrames=0;
 const favorites=setupGalleryFavorites(filter);
 const resourceLoads=new Map(),importFailures=new Map();
 const loadingRuntimePath='gallery/loading-ui/dist/runtime.js';
@@ -53,7 +59,7 @@ function loadOnce(key,load){
 function fetchText(path){
   return loadOnce(path,async()=>{
     const response=await fetch(path);
-    if(!response.ok)throw new Error(`资源载入失败：${path}`);
+    if(!response.ok)throw new Error(`Could not load resource: ${path}`);
     return response.text();
   });
 }
@@ -72,7 +78,7 @@ function loadModule(path){
 function loadSvgSources(){
   return loadOnce('svg-sources',async()=>{
     const response=await fetch(svgSourcePath);
-    if(!response.ok)throw new Error(`资源载入失败：${svgSourcePath}`);
+    if(!response.ok)throw new Error(`Could not load resource: ${svgSourcePath}`);
     return response.json();
   });
 }
@@ -81,10 +87,10 @@ async function preparePreview(loader){
   if(loader.original)return;
   if(loader.provider==='loading-ui'){
     await loadModule(`../${loadingRuntimePath}`);
-    if(!customElements.get(loader.tag))throw new Error(`缺少动效：${loader.key}`);
+    if(!customElements.get(loader.tag))throw new Error(`Missing animation: ${loader.key}`);
   }else if(loader.provider==='svg-spinners'){
     const sources=await loadSvgSources();
-    if(!sources[loader.slug])throw new Error(`缺少动效：${loader.key}`);
+    if(!sources[loader.slug])throw new Error(`Missing animation: ${loader.key}`);
     providers['svg-spinners']??=createSvgSpinnerIntegration({sources});
   }else if(!customElements.get(loader.tag)){
     const {default:definition}=await loadModule(`../gallery/loaders/vendor/ldrs/dist/elements/${loader.key}.js`);
@@ -130,46 +136,56 @@ function effect(loader){
   return preview;
 }
 
-const cardFragment=document.createDocumentFragment();
-for(const item of items){
-  const element=document.createElement('article');
-  element.className='ui-item';
-  element.dataset.ui=item.id;
-  element.dataset.category=item.category;
-  if(item.loader)element.dataset.kind=item.loader.original?'original':'loader';
-  else if(item.original)element.dataset.kind='original-control';
-  let meta=item.type;
-  if(item.loader)meta=item.loader.original?'原创':`${item.loader.origin?.name||'LDRS'} 开源`;
-  else if(item.credit?.licensePath===micronLicensePath)meta='Micron.js 开源';
-  else if(item.credit)meta=`参考后实现 · ${item.type}`;
-  else if(item.original)meta=`原创 · ${item.type}`;
-  const caption=item.shape?`${meta} · ${item.shape}`:meta;
+grid.innerHTML=items.map(item=>{
+  const caption=item.shape||item.type;
   const titleId=`work-title-${item.id}`,actionId=`work-action-${item.id}`;
-  element.innerHTML=`
+  return `<article class="ui-item" data-ui="${esc(item.id)}" data-category="${esc(item.category)}"${item.previewSize?` data-preview-size="${esc(item.previewSize)}"`:''}>
     ${item.loader
-      ? `<button type="button" class="ui-stage ui-playback" aria-pressed="false" aria-label="暂停 ${esc(item.title)} 预览"></button>`
-      : '<div class="ui-stage"></div>'}
+      ? `<button type="button" class="ui-stage ui-playback" aria-pressed="false" aria-label="${esc(t('Pause {name} preview',{name:item.title}))}"></button>`
+      : item.category==='feedback'
+        ? `<div class="ui-stage"><button lang="en" type="button" class="ui-micron mjs-ease-in-out" aria-label="Try ${esc(item.title)}">Try it</button></div>`
+        : '<div class="ui-stage"></div>'}
     <div class="ui-caption">
-      <div><h2 id="${titleId}">${esc(item.title)}</h2><p>${esc(caption)}</p></div>
+      <div><h2 lang="en" id="${titleId}">${esc(item.title)}</h2><p>${esc(t(caption))}</p></div>
       <button type="button" class="ui-expand" data-detail aria-labelledby="${actionId} ${titleId}" aria-haspopup="dialog">
-        <span class="ui-detail-label" id="${actionId}">详情</span>
+        <span class="ui-detail-label" id="${actionId}">${t('Details')}</span>
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M11 3h6v6m0-6-6 6m-2 8H3v-6m0 6 6-6"/></svg>
       </button>
-    </div>`;
+    </div></article>`;
+}).join('');
+for(const [index,item] of items.entries()){
+  const element=grid.children[index];
   cards.set(item.id,{
     item,element,stage:element.firstElementChild,detail:element.querySelector('[data-detail]'),
     near:false,visible:false,paused:false,
   });
-  cardFragment.append(element);
 }
-grid.append(cardFragment);
 
-const stats={total:items.length,original:items.filter(item=>item.original||item.loader?.original).length};
-for(const element of document.querySelectorAll('[data-stat]'))element.textContent=stats[element.dataset.stat];
+// Leave space for the card's own height plus the gutter.
+const cardSizes=new ResizeObserver(entries=>{
+  const style=getComputedStyle(grid);
+  const gap=parseFloat(style.columnGap),rowHeight=parseFloat(style.getPropertyValue('--masonry-row'));
+  for(const {target,borderBoxSize} of entries){
+    const {blockSize}=borderBoxSize[0];
+    if(!blockSize)continue;
+    const rows=String(Math.ceil((blockSize+gap)/rowHeight));
+    if(target.style.getPropertyValue('--card-rows')!==rows)target.style.setProperty('--card-rows',rows);
+  }
+});
+grid.dataset.masonry='';
+
+const intro=$('#gallery-intro');
+intro.querySelector('[data-stat="total"]').textContent=items.length;
+function localizeIntro(){
+  const [before,after]=t('Explore {count} live UI examples.').split('{count}');
+  intro.firstChild.textContent=before;
+  intro.lastChild.textContent=after;
+}
+localizeIntro();
 
 categoryButtons.innerHTML=categories.map(({id,name})=>{
   const count=id==='all'?items.length:items.filter(item=>item.category===id).length;
-  return `<button type="button" data-category="${id}">${esc(name)}<span class="category-count">${count}</span></button>`;
+  return `<button type="button" data-category="${id}"><span class="category-label">${esc(t(name))}</span><span class="category-count">${count}</span></button>`;
 }).join('');
 
 function modalOpen(){
@@ -205,18 +221,36 @@ function syncMotion(){
 }
 
 function mountFrame(card){
-  if(card.frame)return;
   const frame=document.createElement('iframe');
-  frame.title=`${card.item.title}：直接操作`;
-  frame.src=embedUrl(card.item.demo,root.dataset.theme).href;
+  frame.title=t('{name} interactive preview',{name:card.item.title});
+  const url=embedUrl(card.item.demo,root.dataset.theme);
+  if(card.item.fitPreview)url.searchParams.set('preview','card');
+  frame.src=url.href;
   frame.allow='fullscreen; clipboard-write';
   frame.addEventListener('load',()=>{
     frame.dataset.loaded='';
     syncCard(card,{reload:true});
   });
+  loadingFrames++;
+  const timeout=setTimeout(releaseSlot,2500);
+  frame.addEventListener('load',releaseSlot,{once:true});
+  function releaseSlot(){
+    clearTimeout(timeout);
+    frame.removeEventListener('load',releaseSlot);
+    loadingFrames--;
+    mountPendingFrames();
+  }
   card.frame=frame;
   card.stage.append(frame);
   mounted.add(card);
+}
+
+function mountPendingFrames(){
+  for(const card of pendingFrames){
+    if(loadingFrames>=concurrentFrameLimit)return;
+    pendingFrames.delete(card);
+    if(nearScreen(card)&&!card.frame)mountFrame(card);
+  }
 }
 
 function nearScreen(card){
@@ -242,11 +276,11 @@ async function mountPreview(card){
     if(!nearScreen(card))return;
     const message=document.createElement('span');
     message.className='ui-preview-error';
-    message.textContent='预览载入失败，点按重试';
+    message.textContent=t('Preview failed. Click to retry.');
     card.failed=true;
     card.stage.dataset.previewState='error';
     card.stage.removeAttribute('aria-pressed');
-    card.stage.setAttribute('aria-label',`重试 ${card.item.title} 预览`);
+    card.stage.setAttribute('aria-label',t('Retry {name} preview',{name:card.item.title}));
     card.stage.disabled=false;
     card.stage.replaceChildren(message);
   }finally{
@@ -257,22 +291,28 @@ async function mountPreview(card){
 function updateCard(card){
   if(nearScreen(card)){
     if(card.item.loader)void mountPreview(card);
-    else mountFrame(card);
+    else if(card.item.category!=='feedback'&&!card.frame)pendingFrames.add(card);
+  }else if(card.item.fitPreview&&card.frame){
+    card.frame.remove();
+    card.frame=null;
+    mounted.delete(card);
   }else if(card.preview){
     card.preview.remove();
     card.preview=null;
     mounted.delete(card);
   }
+  if(!nearScreen(card))pendingFrames.delete(card);
   syncCard(card);
 }
 
-// 近屏挂载与实际在屏播放分开。循环动效离开缓冲区后释放 DOM，交互控件保留本次操作状态。
+// 近屏挂载与实际在屏播放分开。循环动效和批量示例离开缓冲区后释放预览。
 const nearObserver=new IntersectionObserver(entries=>{
   for(const entry of entries){
     const card=cards.get(entry.target.dataset.ui);
     card.near=entry.isIntersecting;
     updateCard(card);
   }
+  mountPendingFrames();
 },{rootMargin:'140px 0px'});
 const visibleObserver=new IntersectionObserver(entries=>{
   for(const entry of entries){
@@ -290,17 +330,25 @@ function setPressed(button,pressed){
 function renderShapes(){
   const options=getCategoryFilters(items,category);
   $('#shape-row').hidden=options.length===0;
-  $('[data-shape-label]').textContent=category==='feedback'?'效果':'形态';
-  shapeButtons.innerHTML=options.map(({id,name})=>`<button type="button" data-shape="${esc(id)}">${esc(name)}</button>`).join('');
+  $('[data-shape-label]').textContent=t(category==='feedback'?'Effect':'Shape');
+  shapeButtons.innerHTML=options.map(({id,name})=>`<button type="button" data-shape="${esc(id)}" aria-pressed="${id===shape}">${esc(t(name))}</button>`).join('');
+}
+
+let resultCount=0;
+function localizeResults(){
+  $('#ui-count').textContent=t('{count} components',{count:resultCount});
+  if(resultCount===0)empty.textContent=t(favorites.only&&!search.value.trim()&&category==='all'&&motionFilter.value==='all'
+    ?'No favorites yet.':'No components match these filters.');
 }
 
 function filter(){
   for(const button of categoryButtons.querySelectorAll('[data-category]'))setPressed(button,button.dataset.category===category);
   for(const button of shapeButtons.children)setPressed(button,button.dataset.shape===shape);
-  const query=search.value;
+  const query=search.value,motion=motionFilter.value;
+  motionFilter.toggleAttribute('data-filtered',motion!=='all');
   let count=0;
   for(const card of cards.values()){
-    const hidden=!matches(card.item,{category,shape,query})||(favorites.only&&!favorites.has(card.item.id));
+    const hidden=!matches(card.item,{category,shape,motion,query})||(favorites.only&&!favorites.has(card.item.id));
     if(card.element.hidden!==hidden){
       card.element.hidden=hidden;
       if(hidden){
@@ -310,9 +358,9 @@ function filter(){
     }
     if(!hidden)count++;
   }
-  $('#ui-count').textContent=`${count} 个组件`;
+  resultCount=count;
   empty.hidden=count!==0;
-  if(count===0)empty.textContent=favorites.only&&!query.trim()&&category==='all'?'还没有收藏的组件。':'当前筛选没有匹配的组件。';
+  localizeResults();
 }
 
 function selectCategory(next){
@@ -335,10 +383,11 @@ shapeButtons.addEventListener('click',event=>{
   filter();
 });
 search.addEventListener('input',filter);
+motionFilter.addEventListener('change',filter);
 
 function setPlaying(value){
   playing=value;
-  motionButton.textContent=playing?'暂停动效':'播放动效';
+  motionButton.textContent=t(playing?'Pause motion':'Play motion');
   setPressed(motionButton,!playing);
   grid.toggleAttribute('data-motion-paused',!playing);
   for(const card of cards.values()){
@@ -365,32 +414,51 @@ componentFrame.addEventListener('load',()=>{
 loaderDialog.addEventListener('close',syncMotion);
 
 const refreshComponentPrompt=mountPrompt(componentDialog,()=>componentPrompt(component),editor.copy);
+const componentCopy=$('#component-copy');
+function localizeComponent(){
+  const {category,title,shape,type,credit}=component;
+  const categoryName=categories.find(item=>item.id===category).name;
+  $('#component-kind').textContent=`${t(categoryName)} / ${t(category==='feedback'?shape:type)}`;
+  componentFrame.title=t('{name} enlarged preview',{name:title});
+  componentCopy.textContent=t(componentCopy.hasAttribute('data-error')?'Retry loading':'Copy HTML');
+  if(credit){
+    $('#component-credit [data-credit-label]').textContent=t('Source');
+    const license=$('#component-credit [data-license]');
+    if(license)license.textContent=t('MIT license');
+  }
+}
+
 function openComponent(item,button){
   component=item;
   componentTrigger=button;
   $('#component-title').textContent=item.title;
-  const categoryName=categories.find(cat=>cat.id===item.category).name;
-  $('#component-kind').textContent=item.category==='feedback'?`${categoryName} / ${item.shape}`:`${categoryName} / ${item.type}`;
   $('#component-description').textContent=item.summary;
   delete componentFrame.dataset.loaded;
   componentFrame.src=embedUrl(item.demo,root.dataset.theme).href;
-  componentFrame.title=`${item.title}放大体验`;
   $('#component-source').href='https://github.com/guanmo-ai/ui-moments/tree/main/'+item.source;
   $('#component-open').href=item.demo;
-  $('#component-copy').hidden=item.demo.includes('/dist/');
-  $('#component-copy').textContent='复制 HTML';
+  componentCopy.hidden=Boolean(item.multiFile)||item.demo.includes('/dist/');
+  componentCopy.removeAttribute('data-error');
   const credit=item.credit;
-  $('#component-credit').innerHTML=credit?`来源：<a href="${esc(credit.url)}" target="_blank" rel="noopener">${esc(credit.name)} ↗</a> · ${esc(credit.note||'参考交互想法，由 UI Moments 实现。')}`:'UI Moments 原创实现 · MIT';
+  const creditElement=$('#component-credit');
+  creditElement.hidden=!credit;
+  creditElement.innerHTML=credit?`<span data-credit-label></span>: <span lang="en"><a href="${esc(credit.url)}" target="_blank" rel="noopener">${esc(credit.name)} ↗</a> · ${esc(credit.note||'Interaction reference, implemented by UI Moments.')}</span>`:'';
   if(credit?.licensePath){
     const link=document.createElement('a');
     link.href=credit.licensePath;
-    link.textContent='MIT 许可证';
-    $('#component-credit').append(' ',link);
+    link.dataset.license='';
+    creditElement.append(' ',link);
   }
+  localizeComponent();
   refreshComponentPrompt();
   componentDialog.showModal();
   document.body.style.overflow='hidden';
   history.replaceState(null,'','#'+item.id);
+}
+
+function localizeDetailButton(button){
+  const state=button.dataset.detailState;
+  button.querySelector('.ui-detail-label').textContent=t(state==='loading'?'Loading details':state==='error'?'Retry details':'Details');
 }
 
 function setDetailState(card,state){
@@ -403,12 +471,11 @@ function setDetailState(card,state){
     showLoadingAccent(accent);
     label.before(accent);
     button.setAttribute('aria-busy','true');
-    label.textContent='载入中';
   }else{
     button.removeAttribute('aria-busy');
-    label.textContent=state==='error'?'重试详情':'详情';
   }
   button.dataset.detailState=state;
+  localizeDetailButton(button);
 }
 
 function cancelOpening(){
@@ -440,7 +507,7 @@ async function openDetails(card){
   }catch{
     if(opening===attempt){
       setDetailState(card,'error');
-      editor.notify(`${item.title} 详情载入失败，可重试。`);
+      editor.notify(t('{name} details could not load. Try again.',{name:item.title}));
     }
   }finally{
     if(opening===attempt)opening=null;
@@ -451,14 +518,20 @@ grid.addEventListener('click',event=>{
   const element=event.target.closest('[data-ui]');
   if(!element)return;
   const card=cards.get(element.dataset.ui);
-  if(event.target.closest('.ui-caption')){
+  const micron=event.target.closest('.ui-micron');
+  if(micron){
+    if(!playing||reduced.matches)return;
+    const animation=micron.getAnimations().find(animation=>animation.animationName===`action-${card.item.en}`);
+    if(animation)animation.currentTime=0;
+    else micron.classList.add(`mjs-${card.item.en}`);
+  }else if(event.target.closest('.ui-caption')){
     void openDetails(card);
   }else if(event.target.closest('.ui-playback')){
     if(card.failed){
       card.failed=false;
       delete card.stage.dataset.previewState;
       card.stage.replaceChildren();
-      card.stage.setAttribute('aria-label',`暂停 ${card.item.title} 预览`);
+      card.stage.setAttribute('aria-label',t('Pause {name} preview',{name:card.item.title}));
       card.stage.disabled=!playing;
       setPressed(card.stage,card.paused);
       void mountPreview(card);
@@ -469,6 +542,14 @@ grid.addEventListener('click',event=>{
     syncCard(card);
   }
 });
+function resetMicron(event){
+  const button=event.target;
+  if(button.matches('.ui-micron')&&event.animationName.startsWith('action-')){
+    button.classList.remove(`mjs-${event.animationName.slice('action-'.length)}`);
+  }
+}
+grid.addEventListener('animationend',resetMicron);
+grid.addEventListener('animationcancel',resetMicron);
 
 function clearComponentHash(){
   if(location.hash==='#'+component?.id)history.replaceState(null,'',location.pathname+location.search);
@@ -488,9 +569,11 @@ componentDialog.addEventListener('close',()=>{
   syncMotion();
 });
 
-$('#component-copy').addEventListener('click',async()=>{
-  const button=$('#component-copy');
+componentCopy.addEventListener('click',async()=>{
+  const button=componentCopy;
   const item=component;
+  button.removeAttribute('data-error');
+  button.textContent=t('Copy HTML');
   button.disabled=true;
   try{
     if(item.credit?.licensePath===micronLicensePath){
@@ -507,12 +590,15 @@ $('#component-copy').addEventListener('click',async()=>{
     let code=page.replace('<script src="../../assets/embed.js"></script>','');
     if(url.hash)code=code.replace('<head>',`<head>\n<script>history.replaceState(null,'',${JSON.stringify(url.hash)})</script>`);
     const origin=item.credit
-      ?`参考：${item.credit.name} ${item.credit.url}\n${item.credit.note||'参考交互想法，由 UI Moments 实现。'}`
-      :'UI Moments 原创设计与实现。';
+      ?`Reference: ${item.credit.name} ${item.credit.url}\n${item.credit.note||'Interaction reference, implemented by UI Moments.'}`
+      :'Original design and implementation by UI Moments.';
     code+=`\n<!-- UI Moments\n${origin}\n${license.trim()}\n-->\n`;
     await editor.copy(code);
   }catch{
-    if(component===item)button.textContent='载入失败，重试';
+    if(component===item){
+      button.dataset.error='';
+      button.textContent=t('Retry loading');
+    }
   }finally{
     button.disabled=false;
   }
@@ -534,10 +620,30 @@ function fromHash(){
 }
 addEventListener('hashchange',fromHash);
 
+onLanguageChange(()=>{
+  localizeIntro();
+  for(const {id,name} of categories)categoryButtons.querySelector(`[data-category="${id}"] .category-label`).textContent=t(name);
+  renderShapes();
+  localizeResults();
+  motionButton.textContent=t(playing?'Pause motion':'Play motion');
+  for(const card of cards.values()){
+    const {item}=card;
+    card.element.querySelector('.ui-caption p').textContent=t(item.shape||item.type);
+    localizeDetailButton(card.detail);
+    if(item.loader){
+      card.stage.setAttribute('aria-label',t(card.failed?'Retry {name} preview':'Pause {name} preview',{name:item.title}));
+      if(card.failed)card.stage.firstElementChild.textContent=t('Preview failed. Click to retry.');
+    }
+    if(card.frame)card.frame.title=t('{name} interactive preview',{name:item.title});
+  }
+  if(componentDialog.open)localizeComponent();
+});
+
 renderShapes();
 filter();
 setPlaying(playing);
 for(const card of cards.values()){
+  cardSizes.observe(card.element,{box:'border-box'});
   nearObserver.observe(card.element);
   visibleObserver.observe(card.element);
 }

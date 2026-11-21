@@ -8,14 +8,21 @@ import {originalMarkup} from '../gallery/loaders/originals.mjs';
 import {htmlExample,reactExample} from '../gallery/loaders/snippets.mjs';
 import {formatMicronDownload} from '../gallery/micron/catalog.mjs';
 import {createSvgSpinnerIntegration} from '../gallery/svg-spinners/integration.mjs';
+import {officialShowcases} from '../gallery/astryx/showcases.mjs';
+import {officialVariants} from '../gallery/astryx/variants.mjs';
+import {canary, canaryStories} from '../gallery/astryx/experimental/stories.mjs';
+import {astryxWorks} from '../gallery/astryx/catalog.mjs';
+import {fluentWorks} from '../gallery/fluent-ui/catalog.mjs';
 const root=new URL('../',import.meta.url);
 const read=path=>readFile(new URL(path,root),'utf8');
 
 test('主站与加载动效页统一品牌，原作只在来源与许可处署名',async()=>{
-  for(const path of ['index.html','gallery/loaders/index.html']){
+  for(const path of ['index.html','styles.html','gallery/loaders/index.html']){
     const html=await read(path);
-    assert.match(html.match(/<title>(.*?)<\/title>/s)[1],/UI Moments/);
-    assert.doesNotMatch(html.match(/<title>(.*?)<\/title>/s)[1],/LDRS/i);
+    assert.match(html,/<html lang="en"/);
+    assert.doesNotMatch(html,/\p{Script=Han}/u,path);
+    assert.match(html.match(/<title\b[^>]*>(.*?)<\/title>/s)[1],/UI Moments/);
+    assert.doesNotMatch(html.match(/<title\b[^>]*>(.*?)<\/title>/s)[1],/LDRS/i);
     assert.doesNotMatch(html.match(/<header.*?<\/header>/s)[0],/LDRS/i);
     assert.doesNotMatch(html.match(/<section class="(?:intro|(?:wrap )?hero)".*?<\/section>/s)[0],/LDRS/i);
     assert.doesNotMatch(html,/fonts\.googleapis\.com|fonts\.gstatic\.com/);
@@ -33,26 +40,28 @@ test('新入口和旧链接兼容，画廊指向可用的代码与展示资源',
   assert.equal(items.filter(item=>item.loader?.provider==='loading-ui').length,47);
   assert.equal(items.filter(item=>item.loader?.provider==='svg-spinners').length,46);
   assert.equal(items.filter(item=>item.loader?.original).length,27);
-  assert.equal(items.filter(item=>item.type==='点击反馈').length,12);
-  assert.equal(items.length,176+context.window.WORKS.filter(item=>!['ldrs','loaders'].includes(item.id)).length);
+  assert.equal(items.filter(item=>item.category==='feedback').length,12);
+  const localCount=context.window.WORKS.filter(item=>!['ldrs','loaders'].includes(item.id)).length;
+  assert.equal(items.length,164+12+astryxWorks.length+fluentWorks.length+localCount);
   assert.equal(new Set(items.map(item=>item.id)).size,items.length);
   assert.ok(!items.some(item=>['ldrs','loaders'].includes(item.id)));
-  const controls=items.filter(item=>!item.loader&&item.type!=='点击反馈');
+  const controls=items.filter(item=>!item.loader&&!item.library&&item.category!=='feedback');
   const referenced=controls.filter(item=>!item.original).map(item=>item.id);
   assert.deepEqual(referenced.filter(id=>!items.find(item=>item.id===id).credit?.url.includes('Amicro')&&items.find(item=>item.id===id).demo?.startsWith('gallery/originals/')!==true).sort(),[
-    'alignment-switch','bookmark-press','day-night-toggle','elastic-ruler',
+    'alignment-switch','bookmark-press','day-night-toggle','elastic-ruler','quiet-hours','roomlight',
   ]);
-  assert.equal(referenced.length,19);
-  assert.equal(controls.filter(item=>item.original).length,37);
+  assert.equal(referenced.length,21);
+  assert.equal(controls.filter(item=>item.original).length,38);
   assert.deepEqual(controls.slice(0,4).map(item=>item.id),['magnet-grid','stretch-toggle','card-fan','ink-switch']);
   const vivid=items.filter(item=>item.category==='color').map(item=>item.id);
-  assert.deepEqual(vivid.sort(),['day-night-toggle','flip-coin','hue-orbit','pull-cord']);
+  assert.deepEqual(vivid.sort(),['day-night-toggle','flip-coin','hue-orbit','prism-tuner','pull-cord','roomlight']);
   assert.ok(items.slice(-vivid.length).every(item=>item.category==='color'),'多彩作品排在最后');
   for(const item of items){
     assert.ok(categories.some(category=>category.id===item.category),item.id);
-    if(!item.loader)await access(new URL(item.demo.split('#')[0],root));
+    assert.doesNotMatch(JSON.stringify([item.title,item.type,item.shape,item.summary,item.notes,item.credit?.note]),/\p{Script=Han}/u,item.id);
+    if(!item.loader)await access(new URL(item.demo,root));
   }
-  const studies=items.filter(item=>matches(item,{category:'loading',query:'加载微动效'}));
+  const studies=items.filter(item=>matches(item,{category:'loading',query:'Loading studies'}));
   assert.equal(studies.length,9);
   assert.ok(studies.every(item=>item.loader.original&&item.loader.reference.endsWith('2122045748623609935')));
   const redirect=await read('gallery/ldrs/index.html');
@@ -63,18 +72,23 @@ test('新入口和旧链接兼容，画廊指向可用的代码与展示资源',
 test('原创控件不带外部来源，独立页面包含每个控件与无障碍角色',async()=>{
   const context={window:{}};vm.runInNewContext(await read('gallery/works.js'),context);
   const originals=context.window.WORKS.filter(work=>work.original);
-  assert.equal(originals.length,37);
+  assert.equal(originals.length,38);
   const pages=new Map();
   for(const work of originals){
     assert.equal(work.credit,undefined,work.id);
+    const prompt=componentPrompt(work);
+    assert.match(prompt,/Source: UI Moments/);
+    assert.doesNotMatch(prompt,/Inspiration:/);
+    if(work.multiFile){
+      assert.match(await read(work.demo),/<input[^>]*type="range"/);
+      assert.ok(prompt.includes(`tree/main/${work.source}`));
+      continue;
+    }
     const [path,id]=work.demo.split('#');
     assert.match(path,/^gallery\/originals\/(index|visual|motion|gestures|elastic|color|inputs|actions)\.html$/);
     assert.equal(id,work.id);
     if(!pages.has(path))pages.set(path,await read(path));
     assert.match(pages.get(path),new RegExp(`<section class="sample" id="${work.id}"`),work.id);
-    const prompt=componentPrompt(work);
-    assert.match(prompt,/实现来源：UI Moments/);
-    assert.doesNotMatch(prompt,/原始参考/);
   }
   assert.equal(pages.size,7);
   const elastic=context.window.WORKS.filter(work=>work.demo?.startsWith('gallery/originals/elastic.html#'));
@@ -95,24 +109,64 @@ test('原创控件不带外部来源，独立页面包含每个控件与无障�
 });
 
 test('用途分类与形态筛选独立',()=>{
-  const items=buildCatalog([{id:'day-night-toggle',title:'开关'}]);
-  assert.equal(items.filter(item=>matches(item,{category:'input'})).length,1);
+  const items=buildCatalog([{id:'day-night-toggle',title:'Toggle'}]);
+  assert.equal(items.filter(item=>!item.library&&matches(item,{category:'input'})).length,1);
   assert.equal(items.filter(item=>matches(item,{category:'feedback'})).length,12);
   assert.equal(items.filter(item=>matches(item,{category:'loading'})).length,164);
   assert.equal(items.filter(item=>matches(item,{query:'Waveform'})).length,1);
-  assert.equal(items.filter(item=>matches(item,{category:'loading',shape:'环形'})).length,39);
-  assert.equal(items.filter(item=>matches(item,{category:'feedback',shape:'环形'})).length,0);
-  assert.equal(items.filter(item=>matches(item,{category:'input',shape:'环形'})).length,0);
+  assert.equal(items.filter(item=>matches(item,{category:'loading',shape:'Rings'})).length,39);
+  assert.equal(items.filter(item=>matches(item,{category:'feedback',shape:'Rings'})).length,0);
+  assert.equal(items.filter(item=>matches(item,{category:'input',shape:'Rings'})).length,0);
   assert.deepEqual(getCategoryFilters(items,'feedback').map(({id,count})=>[id,count]),[
-    ['all',12],['回弹',5],['摆动',4],['闪动',3],
+    ['all',12],['Bounce',5],['Swing',4],['Flash',3],
   ]);
   const [all,...shapeFilters]=getCategoryFilters(items,'loading');
   assert.equal(all.count,shapeFilters.reduce((total,{count})=>total+count,0));
 });
 
+test('Astryx 随普通交互控件收录，打包资源附有实际依赖许可',async()=>{
+  const works=buildCatalog().filter(item=>matches(item,{category:'input',query:'Astryx'}));
+  assert.deepEqual(works.map(item=>item.id),[
+    'astryx-date-range','astryx-bottom-sheet','astryx-command-palette',
+    ...officialShowcases.map(([id])=>`astryx-${id}`),
+    ...officialVariants.map(([id])=>`astryx-${id}`),
+    ...canaryStories.map(([id])=>`astryx-${id}`),
+  ]);
+  const license=await read(works[0].credit.licensePath);
+  const notices=await read('gallery/astryx/dist/THIRD_PARTY_LICENSES.txt');
+  assert.match(license,/Copyright \(c\) 2026 Meta Platforms, Inc\./);
+  assert.ok(notices.includes(license.trim()));
+  assert.ok(notices.includes((await read('gallery/astryx/vendor/stylex/LICENSE')).trim()));
+  assert.match(notices,/react-dom@19\.3\.1/);
+  assert.match(notices,/lucide-react@/);
+  assert.match(notices,/@astryxdesign\/cli@0\.7\.16/);
+  assert.match(notices,/@heroicons\/react@2\.2\.0/);
+  const experimentalNotices=await read('gallery/astryx/experimental/dist/THIRD_PARTY_LICENSES.txt');
+  for(const name of ['charts','lab','vega'])assert.ok(experimentalNotices.includes(`@astryxdesign/${name}@${canary}`));
+  assert.match(experimentalNotices,/^vega-lite@/m);
+});
+
+test('Fluent UI 组件可按名称搜索，发布包保留上游许可',async()=>{
+  const items=buildCatalog();
+  const options={query:'Fluent UI',category:'input'};
+  const selected=items.filter(item=>matches(item,options));
+  assert.deepEqual(new Set(selected.map(item=>item.id)),new Set(fluentWorks.map(item=>item.id)));
+  assert.ok(selected.every(item=>item.library?.id==='fluent-ui'));
+  assert.equal(selected.filter(item=>matches(item,{category:'input',query:'Toast'})).length,1);
+  assert.equal(items.filter(item=>matches(item,{...options,category:'loading'})).length,0);
+  const license=await read(selected[0].credit.licensePath);
+  assert.match(license,/Copyright \(c\) Microsoft Corporation/);
+  const runtimeLicenses=await read('gallery/fluent-ui/dist/THIRD_PARTY_LICENSES.md');
+  for(const {credit} of selected){
+    const packageName=credit.url.split('/').at(-1);
+    assert.ok(runtimeLicenses.includes(`## @fluentui/${packageName} -`),packageName);
+  }
+  assert.match(componentPrompt(selected[0]),/Fluent UI · Microsoft/);
+});
+
 test('Micron 的每个按钮复用上游关键帧，独立 HTML 包含源码与完整许可',async()=>{
   const page=await read('gallery/micron/index.html');
-  const micronItems=buildCatalog().filter(item=>item.type==='点击反馈');
+  const micronItems=buildCatalog().filter(item=>item.category==='feedback');
   const css=await read(micronItems[0].sourceFiles[0]);
   const license=await read(micronItems[0].credit.licensePath);
   assert.match(license,/Copyright \(c\) 2018 Webkul/);
@@ -163,7 +217,7 @@ test('原创加载动效跨预览、HTML、React 和提示词复用同一份动�
     assert.ok(react.includes(JSON.stringify(loader.css)));
     assert.ok(react.includes(JSON.stringify(props,null,2)));
     for(const output of [html,react,prompt]){
-      assert.match(output,/UI Moments 原创/);
+      assert.match(output,/Original by UI Moments/);
       assert.match(output,/prefers-reduced-motion/);
       assert.doesNotMatch(output,/ldrs|Griffin Johnston/i);
       assert.ok(output.includes(license.trim()));
@@ -184,6 +238,6 @@ test('复制提示词带上当前加载参数和许可，并指向对应的交�
   const ruler=buildCatalog(context.window.WORKS).find(item=>item.id==='elastic-ruler');
   const component=componentPrompt(ruler);
   assert.match(component,/blob\/main\/gallery\/elastic-controls\/index\.html/);
-  assert.match(component,/使用 #elastic-ruler 场景/);
-  assert.match(component,/键盘方向键/);
+  assert.match(component,/Use the #elastic-ruler demo/);
+  assert.match(component,/arrow keys/);
 });

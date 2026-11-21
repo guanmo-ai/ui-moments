@@ -1,13 +1,13 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>只有光</title>
+<title>Only Light</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Martian+Mono:wght@300..500&family=Noto+Sans+SC:wght@200..700&family=Noto+Serif+SC:wght@600;700&family=Roboto+Flex:opsz,wdth,wght,GRAD@8..144,25..151,100..1000,-200..150&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Martian+Mono:wght@300..500&family=Roboto+Flex:opsz,wdth,wght,GRAD@8..144,25..151,100..1000,-200..150&display=swap">
 <script src="../../assets/embed.js"></script>
 <style>
 /* Layout: full-screen stage, one scene at a time; floating pill HUD on top, caption at the bottom. All colours below are fallbacks; the light engine rewrites them per region every frame. */
@@ -19,8 +19,8 @@
   --shadow: 0 8px 22px rgba(40, 32, 24, .10), 0 1px 1.5px rgba(40, 32, 24, .09);
   --glow-shadow: 0 0 0 transparent; --halo: rgba(255, 248, 236, .6);
   --hlx: 50%; --hly: 14%; --grad: 0; --w-body: 400;
-  --f-body: "Roboto Flex", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
-  --f-display: "Noto Serif SC", "Songti SC", serif;
+  --f-body: "Roboto Flex", system-ui, sans-serif;
+  --f-display: Georgia, serif;
   --f-mono: "Martian Mono", "SFMono-Regular", Menlo, Consolas, monospace;
 }
 @media (prefers-color-scheme: dark) {
@@ -314,108 +314,108 @@ html[data-embedded] .rocker{width:20px;height:34px;border-radius:5px}
 
 <div id="stage">
   <!-- 01 -->
-  <section class="scene" id="s-dimmer" aria-label="调光旋钮">
+  <section class="scene" id="s-dimmer" aria-label="Dimmer">
     <div class="inner dim">
       <div class="dim-left" data-region="ground">
-        <div class="dial" id="dial" role="slider" tabindex="0" aria-label="光强" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100">
+        <div class="dial" id="dial" role="slider" tabindex="0" aria-label="Light level" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100">
           <div class="dial-body"></div>
           <div class="dial-face" style="inset: 16%"><div class="dial-rot"><i class="dial-mark"></i></div></div>
           <svg viewBox="0 0 400 400" aria-hidden="true"><g id="dial-svg"></g></svg>
         </div>
         <div class="dial-read"><span class="num" id="dial-num">100</span><small>%</small></div>
-        <p class="dial-sub">客厅 · 主灯</p>
+        <p class="dial-sub">Living room · Main light</p>
       </div>
       <div class="dash">
         <article class="card" data-region="paper">
-          <div class="lab">照度<em>桌面</em></div>
+          <div class="lab">Illuminance<em>Desk</em></div>
           <div class="val num" id="c-lux">800<small>lux</small></div>
           <svg class="spark" viewBox="0 0 200 44" preserveAspectRatio="none" id="c-spark"></svg>
         </article>
         <article class="card" data-region="paper">
-          <div class="lab">功率<em>今日 0.84 kWh</em></div>
+          <div class="lab">Power<em>0.84 kWh today</em></div>
           <div class="val num" id="c-pow">60<small>W</small></div>
           <div class="bars" id="c-bars"></div>
         </article>
         <article class="card" data-region="paper">
-          <div class="lab">场景<em>按光强自动选择</em></div>
-          <div class="modes" id="c-modes"><span>阅读</span><span>傍晚</span><span>观影</span><span>晚安</span></div>
-          <div class="lab" style="margin-top:auto">下一次<em>19:30 自动调暗</em></div>
+          <div class="lab">Scene<em>Automatic by light level</em></div>
+          <div class="modes" id="c-modes"><span>Reading</span><span>Evening</span><span>Cinema</span><span>Night</span></div>
+          <div class="lab" style="margin-top:auto">Next<em>Dim at 19:30</em></div>
         </article>
         <article class="card rooms" data-region="paper">
-          <div class="lab">房间<em>4 盏灯</em></div>
-          <div class="room"><i class="dot on" id="rm-dot"></i><div><b>客厅 · 主灯</b><small>跟随旋钮</small></div><div class="bar"><i id="rm-bar" style="width:100%"></i></div><span class="pct" id="rm-pct">100%</span></div>
-          <div class="room"><i class="dot on"></i><div><b>书房 · 台灯</b><small>2,700 K</small></div><div class="bar"><i style="width:70%"></i></div><span class="pct">70%</span></div>
-          <div class="room"><i class="dot on"></i><div><b>卧室 · 夜灯</b><small>2,200 K</small></div><div class="bar"><i style="width:12%"></i></div><span class="pct">12%</span></div>
-          <div class="room"><i class="dot"></i><div><b>走廊 · 感应灯</b><small>无人</small></div><div class="bar"><i style="width:0"></i></div><span class="pct">关</span></div>
+          <div class="lab">Rooms<em>4 lights</em></div>
+          <div class="room"><i class="dot on" id="rm-dot"></i><div><b>Living room · Main light</b><small>Follows the dial</small></div><div class="bar"><i id="rm-bar" style="width:100%"></i></div><span class="pct" id="rm-pct">100%</span></div>
+          <div class="room"><i class="dot on"></i><div><b>Study · Desk lamp</b><small>2,700 K</small></div><div class="bar"><i style="width:70%"></i></div><span class="pct">70%</span></div>
+          <div class="room"><i class="dot on"></i><div><b>Bedroom · Night light</b><small>2,200 K</small></div><div class="bar"><i style="width:12%"></i></div><span class="pct">12%</span></div>
+          <div class="room"><i class="dot"></i><div><b>Hallway · Motion light</b><small>Unoccupied</small></div><div class="bar"><i style="width:0"></i></div><span class="pct">Off</span></div>
         </article>
         <article class="card" data-region="paper">
-          <div class="lab">正文对比度<em>每帧求解</em></div>
+          <div class="lab">Text contrast<em>Updated every frame</em></div>
           <div class="val num" id="c-con">14.0<small>: 1</small></div>
-          <span class="grade" id="c-grade">AAA · 字重 400</span>
+          <span class="grade" id="c-grade">AAA · Weight 400</span>
         </article>
       </div>
     </div>
   </section>
 
   <!-- 02 -->
-  <section class="scene" id="s-horizon" aria-label="海平线">
+  <section class="scene" id="s-horizon" aria-label="Horizon">
     <div class="inner hz">
       <div class="hz-pill" id="hz-pill" data-region="paper"><canvas id="hz-cv"></canvas></div>
-      <div class="hz-time" data-region="ground"><span class="num" id="hz-clock">12:00</span><span class="hz-phase" id="hz-phase">白天</span></div>
+      <div class="hz-time" data-region="ground"><span class="num" id="hz-clock">12:00</span><span class="hz-phase" id="hz-phase">Daylight</span></div>
       <div class="chips">
-        <div class="chip" data-region="paper"><span>日出</span><b>06:12</b></div>
-        <div class="chip" data-region="paper"><span>日落</span><b>18:18</b></div>
-        <div class="chip" data-region="paper"><span>太阳高度</span><b id="hz-el">62°</b></div>
-        <div class="chip" data-region="paper"><span>色温</span><b id="hz-k">6,000 K</b></div>
-        <div class="chip" data-region="paper"><span>照度</span><b id="hz-lux">100,000</b></div>
+        <div class="chip" data-region="paper"><span>Sunrise</span><b>06:12</b></div>
+        <div class="chip" data-region="paper"><span>Sunset</span><b>18:18</b></div>
+        <div class="chip" data-region="paper"><span>Sun elevation</span><b id="hz-el">62°</b></div>
+        <div class="chip" data-region="paper"><span>Color temperature</span><b id="hz-k">6,000 K</b></div>
+        <div class="chip" data-region="paper"><span>Illuminance</span><b id="hz-lux">100,000</b></div>
       </div>
     </div>
   </section>
 
   <!-- 03 -->
-  <section class="scene" id="s-garden" aria-label="浦肯野花园">
+  <section class="scene" id="s-garden" aria-label="Purkinje Garden">
     <div class="inner gd">
       <div class="gd-panel" data-region="paper"><canvas id="gd-cv"></canvas></div>
       <div class="fader" data-region="paper">
-        <span>光强</span>
-        <div class="fader-track" id="fader"><div class="fader-fill" id="fader-fill"></div><div class="fader-cap" id="fader-cap" role="slider" tabindex="0" aria-label="光强" aria-valuemin="0" aria-valuemax="100"><i></i></div></div>
+        <span>Light level</span>
+        <div class="fader-track" id="fader"><div class="fader-fill" id="fader-fill"></div><div class="fader-cap" id="fader-cap" role="slider" tabindex="0" aria-label="Light level" aria-valuemin="0" aria-valuemax="100"><i></i></div></div>
         <span class="num" id="fader-num">100</span>
       </div>
       <div class="legend" data-region="paper">
-        <div><i id="lg0"></i>虞美人<code id="lgv0">L .60</code></div>
-        <div><i id="lg1"></i>万寿菊<code id="lgv1">L .75</code></div>
-        <div><i id="lg2"></i>矢车菊<code id="lgv2">L .58</code></div>
-        <div><i id="lg3"></i>雏菊<code id="lgv3">L .96</code></div>
-        <div class="emit"><i></i>萤火虫<code>发光体</code></div>
+        <div><i id="lg0"></i>Poppy<code id="lgv0">L .60</code></div>
+        <div><i id="lg1"></i>Marigold<code id="lgv1">L .75</code></div>
+        <div><i id="lg2"></i>Cornflower<code id="lgv2">L .58</code></div>
+        <div><i id="lg3"></i>Daisy<code id="lgv3">L .96</code></div>
+        <div class="emit"><i></i>Firefly<code>Emissive</code></div>
       </div>
     </div>
   </section>
 
   <!-- 04 -->
-  <section class="scene" id="s-neon" aria-label="霓虹">
+  <section class="scene" id="s-neon" aria-label="Neon">
     <canvas id="nn-cv"></canvas>
     <div class="nn-ui">
-      <div class="photocell" data-region="paper"><i id="pc-dot"></i><div><b>光敏开关</b><span id="pc-read">环境光 ≈ 100,000 lux · 阈值 50 lux</span></div></div>
-      <button class="plate" id="plate" type="button" data-region="paper" aria-label="天黑 / 天亮"><span class="rocker" id="rocker"></span></button>
+      <div class="photocell" data-region="paper"><i id="pc-dot"></i><div><b>Light sensor</b><span id="pc-read">Ambient light ≈ 100,000 lux · Threshold 50 lux</span></div></div>
+      <button class="plate" id="plate" type="button" data-region="paper" aria-label="Toggle daylight"><span class="rocker" id="rocker"></span></button>
     </div>
   </section>
 
   <!-- 05 -->
-  <section class="scene" id="s-lamp" aria-label="色温">
+  <section class="scene" id="s-lamp" aria-label="Color temperature">
     <div id="cone"></div>
     <div class="inner lp">
       <div class="lamp" data-region="ground"><i class="cord"></i><div class="shade"></div><div class="bulb" id="bulb"></div></div>
       <article class="card article" data-region="paper" id="lp-article">
-        <p class="kicker">夜读 · 光学 · 4 分钟</p>
-        <h2>为什么黄昏时，红花先暗下去</h2>
-        <p class="body">光线变弱时，眼睛从视锥细胞逐渐转向视杆细胞。暗视觉的敏感峰值在 507 nm 附近的蓝绿光，对红光几乎没有反应。所以在同一片暮色里，红色的花先变成深灰，蓝色的花还能看清。</p>
-        <p class="body">拖动下面的色温，纸张会跟着变暖，但正文的颜色每一帧都会重新求解，保证对比度不掉下去。</p>
-        <div class="foot"><span class="badge" id="lp-badge">正文对比度 14.0 : 1 · AAA</span><small id="lp-w">字重 400 · GRAD 0</small></div>
+        <p class="kicker">Night reading · Optics · 4 min</p>
+        <h2>Why red flowers fade first at dusk</h2>
+        <p class="body">As light fades, vision shifts from cones toward rods. Night vision is most sensitive to blue-green light near 507 nm and much less sensitive to red. At dusk, red flowers look dark while blue flowers are still visible.</p>
+        <p class="body">Drag the color temperature slider to warm the paper. The text color is recalculated each frame to maintain contrast.</p>
+        <div class="foot"><span class="badge" id="lp-badge">Text contrast 14.0 : 1 · AAA</span><small id="lp-w">Weight 400 · GRAD 0</small></div>
       </article>
       <div class="card kel" data-region="paper">
-        <div class="kel-read"><span class="num" id="k-num">6,500<small style="font-size:.36em;margin-left:4px">K</small></span><span><i id="k-sw"></i><em style="font-style:normal" id="k-name">阴天</em></span></div>
+        <div class="kel-read"><span class="num" id="k-num">6,500<small style="font-size:.36em;margin-left:4px">K</small></span><span><i id="k-sw"></i><em style="font-style:normal" id="k-name">Overcast</em></span></div>
         <div>
-          <div class="ktrack" id="ktrack" role="slider" tabindex="0" aria-label="色温" aria-valuemin="1900" aria-valuemax="10000"><div class="kthumb" id="kthumb"></div></div>
+          <div class="ktrack" id="ktrack" role="slider" tabindex="0" aria-label="Color temperature" aria-valuemin="1900" aria-valuemax="10000"><div class="kthumb" id="kthumb"></div></div>
           <div class="kmarks" id="kmarks"></div>
         </div>
       </div>
@@ -423,12 +423,12 @@ html[data-embedded] .rocker{width:20px;height:34px;border-radius:5px}
   </section>
 </div>
 
-<nav id="hud" data-region="paper" aria-label="场景">
-  <button class="arrow" id="prev" type="button" aria-label="上一个场景">‹</button>
-  <span class="hud-title" id="hud-title"><b>01</b>调光旋钮</span>
-  <button class="arrow" id="next" type="button" aria-label="下一个场景">›</button>
-  <button class="hud-toggle" id="hud-toggle" type="button">切换</button>
-  <span class="keys"><kbd>空格</kbd>切换<i class="sep"></i><kbd>←</kbd><kbd>→</kbd>场景<i class="sep"></i><kbd>H</kbd>隐藏<i class="sep"></i><kbd>F</kbd>全屏</span>
+<nav id="hud" data-region="paper" aria-label="Scene">
+  <button class="arrow" id="prev" type="button" aria-label="Previous scene">‹</button>
+  <span class="hud-title" id="hud-title"><b>01</b>Dimmer</span>
+  <button class="arrow" id="next" type="button" aria-label="Next scene">›</button>
+  <button class="hud-toggle" id="hud-toggle" type="button">Toggle</button>
+  <span class="keys"><kbd>Space</kbd>Toggle<i class="sep"></i><kbd>←</kbd><kbd>→</kbd>Scene<i class="sep"></i><kbd>H</kbd>Hide<i class="sep"></i><kbd>F</kbd>Fullscreen</span>
 </nav>
 <footer id="caption"><p id="cap-text"></p><p id="cap-read" class="mono"></p></footer>
 
@@ -563,11 +563,11 @@ html[data-embedded] .rocker{width:20px;height:34px;border-radius:5px}
     const p = clamp((h - RISE) / (SET - RISE));
     return { e, L, K, lx: e > 0 ? -Math.cos(Math.PI * p) : 0, el: Math.max(0, e) };
   }
-  const phase = (e) => (e < -0.12 ? '夜晚' : e < -0.01 ? '蓝调时刻' : e < 0.14 ? '金色时刻' : '白天');
+  const phase = (e) => (e < -0.12 ? 'Night' : e < -0.01 ? 'Blue hour' : e < 0.14 ? 'Golden hour' : 'Daylight');
   const fmtH = (h) => { const m = Math.round((((h % 24) + 24) % 24) * 60) % 1440; return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
   const nf = new Intl.NumberFormat('en-US');
   const fmtK = (K) => nf.format(Math.round(K / 50) * 50) + ' K';
-  const kName = (K) => (K < 2300 ? '烛光' : K < 3300 ? '白炽灯' : K < 4600 ? '暖白' : K < 6000 ? '日光' : K < 7500 ? '阴天' : '蓝调天光');
+  const kName = (K) => (K < 2300 ? 'Candlelight' : K < 3300 ? 'Incandescent' : K < 4600 ? 'Warm white' : K < 6000 ? 'Daylight' : K < 7500 ? 'Overcast' : 'Blue skylight');
 
   /* ================= clock, light state, regions ================= */
   let now = 0;
@@ -669,7 +669,7 @@ html[data-embedded] .rocker{width:20px;height:34px;border-radius:5px}
   }
 
   /* =================================================================
-     01 · 调光旋钮
+     01 · Dimmer
      ================================================================= */
   const S1 = (() => {
     const el = $('#s-dimmer'), dial = $('#dial'), g = $('#dial-svg');
@@ -704,8 +704,8 @@ html[data-embedded] .rocker{width:20px;height:34px;border-radius:5px}
     let cardCon = null;
 
     return {
-      id: 'dimmer', name: '调光旋钮', el,
-      desc: '旋钮只写入光强。光从旋钮出发，按距离依次照到每张卡片。',
+      id: 'dimmer', name: 'Dimmer', el,
+      desc: 'The dial changes the light level. Light falls across each card based on its distance from the source.',
       enter(first) { setLight({ L: first && !REC && systemDark() ? 0.05 : 1, K: 6000, lx: -0.2, el: 0.75 }, null); cardCon = regionMap.get(el.querySelectorAll('.card')[4]); },
       toggle(origin) { tweenLight({ L: light.L > 0.5 ? 0.05 : 1 }, 1700, origin || dial); },
       frame() {
@@ -720,13 +720,13 @@ html[data-embedded] .rocker{width:20px;height:34px;border-radius:5px}
         const m = L > 0.7 ? 0 : L > 0.3 ? 1 : L > 0.08 ? 2 : 3;
         modes.forEach((n, i) => n.classList.toggle('on', i === m));
         $('#rm-bar').style.width = (L * 100).toFixed(1) + '%';
-        $('#rm-pct').textContent = L < 0.005 ? '关' : Math.round(L * 100) + '%';
+        $('#rm-pct').textContent = L < 0.005 ? 'Off' : Math.round(L * 100) + '%';
         $('#rm-dot').classList.toggle('on', L >= 0.005);
         cardCon = cardCon || regionMap.get(el.querySelectorAll('.card')[4]);
         if (cardCon && cardCon.T) {
           const c = cardCon.T.contrast;
           $('#c-con').firstChild.nodeValue = c.toFixed(1);
-          $('#c-grade').textContent = `${c >= 7 ? 'AAA' : c >= 4.5 ? 'AA' : '不足'} · ${cardCon.T.darkInk ? '字重 400' : '字重 370 · GRAD −50'}`;
+          $('#c-grade').textContent = `${c >= 7 ? 'AAA' : c >= 4.5 ? 'AA' : 'Low'} · ${cardCon.T.darkInk ? 'Weight 400' : 'Weight 370 · GRAD −50'}`;
         }
       },
       readout() { return `L ${light.L.toFixed(2)} · ${fmtK(light.K)} · ≈ ${nf.format(Math.round(3 + 797 * Math.pow(light.L, 1.6)))} lux`; },
@@ -740,7 +740,7 @@ html[data-embedded] .rocker{width:20px;height:34px;border-radius:5px}
   })();
 
   /* =================================================================
-     02 · 海平线
+     02 · Horizon
      ================================================================= */
   const S2 = (() => {
     const el = $('#s-horizon'), pill = $('#hz-pill'), cv = $('#hz-cv');
@@ -762,7 +762,7 @@ html[data-embedded] .rocker{width:20px;height:34px;border-radius:5px}
       tw = null;
       startDrag(e, { move(ev) { const b = pill.getBoundingClientRect(); setTime(clamp((ev.clientX - b.left) / b.width) * 23.99, [ev.clientX, ev.clientY]); } });
     });
-    pill.tabIndex = 0; pill.setAttribute('role', 'slider'); pill.setAttribute('aria-label', '一天中的时刻');
+    pill.tabIndex = 0; pill.setAttribute('role', 'slider'); pill.setAttribute('aria-label', 'Time of day');
     pill.addEventListener('keydown', (e) => {
       const st = { ArrowRight: 0.25, ArrowUp: 0.25, ArrowLeft: -0.25, ArrowDown: -0.25, PageUp: 1, PageDown: -1 }[e.key];
       if (st == null) return; e.preventDefault(); e.stopPropagation(); tw = null; setTime((hzT + st + 24) % 24, pill);
@@ -902,8 +902,8 @@ html[data-embedded] .rocker{width:20px;height:34px;border-radius:5px}
     }
 
     return {
-      id: 'horizon', name: '海平线', el,
-      desc: '拖动时间。光强、色温和光的方向都由太阳高度算出来。',
+      id: 'horizon', name: 'Horizon', el,
+      desc: 'Drag to change the time of day. The sun elevation determines the level, temperature, and direction of the light.',
       enter() { tw = null; setTime(12, null); },
       toggle(origin) {
         const s = sunAt(hzT), to = s.e > 0 ? (hzT <= 21.5 ? 21.5 : hzT + 0.1) : (hzT < 7 ? 7 : 31);
@@ -918,15 +918,15 @@ html[data-embedded] .rocker{width:20px;height:34px;border-radius:5px}
         $('#hz-el').textContent = Math.round(s.e * 62) + '°';
         $('#hz-k').textContent = fmtK(s.K);
         $('#hz-lux').textContent = nf.format(Math.round(Math.pow(10, 5 * s.L)));
-        pill.setAttribute('aria-valuetext', fmtH(hzT) + '，' + phase(s.e));
+        pill.setAttribute('aria-valuetext', fmtH(hzT) + ', ' + phase(s.e));
       },
-      readout() { const s = sunAt(hzT); return `${fmtH(hzT)} · 太阳高度 ${Math.round(s.e * 62)}° · ${fmtK(s.K)} · L ${s.L.toFixed(2)}`; },
+      readout() { const s = sunAt(hzT); return `${fmtH(hzT)} · Sun elevation ${Math.round(s.e * 62)}° · ${fmtK(s.K)} · L ${s.L.toFixed(2)}`; },
       xAt(h) { const b = pill.getBoundingClientRect(); return [b.left + h / 24 * b.width, b.top + b.height * 0.5]; },
     };
   })();
 
   /* =================================================================
-     03 · 浦肯野花园
+     03 · Purkinje Garden
      ================================================================= */
   const S3 = (() => {
     const el = $('#s-garden'), cv = $('#gd-cv'), track = $('#fader'), cap = $('#fader-cap'), panel = el.querySelector('.gd-panel');
@@ -1014,8 +1014,8 @@ html[data-embedded] .rocker{width:20px;height:34px;border-radius:5px}
       }
     }
     return {
-      id: 'garden', name: '浦肯野花园', el,
-      desc: '光变暗时，红色的花最先消失，蓝色的还看得见。萤火虫是发光体，不受影响。',
+      id: 'garden', name: 'Purkinje Garden', el,
+      desc: 'As light fades, red flowers disappear first while blue ones remain visible. Fireflies emit their own light.',
       enter() { setLight({ L: 1, K: 6000, lx: -0.2, el: 0.75 }, null); },
       toggle(origin) { tweenLight({ L: light.L > 0.5 ? 0.06 : 1 }, 2600, origin || cap); },
       frame(t) {
@@ -1028,21 +1028,21 @@ html[data-embedded] .rocker{width:20px;height:34px;border-radius:5px}
         $('#fader-num').textContent = Math.round(v * 100);
         TYPES.forEach((T, i) => { const c = purk(...T.petal, L); $('#lg' + i).style.background = css(c); $('#lgv' + i).textContent = 'L ' + c.L.toFixed(2).replace(/^0/, ''); });
       },
-      readout() { const r0 = purk(...TYPES[0].petal, light.L), b0 = purk(...TYPES[2].petal, light.L); return `L ${light.L.toFixed(2)} · 虞美人 ${r0.L.toFixed(2)} · 矢车菊 ${b0.L.toFixed(2)}`; },
+      readout() { const r0 = purk(...TYPES[0].petal, light.L), b0 = purk(...TYPES[2].petal, light.L); return `L ${light.L.toFixed(2)} · Poppy ${r0.L.toFixed(2)} · Cornflower ${b0.L.toFixed(2)}`; },
       capPoint() { return center(cap); },
       trackPoint(v) { const b = track.getBoundingClientRect(); return [b.left + b.width / 2, b.top + (1 - v) * b.height]; },
     };
   })();
 
   /* =================================================================
-     04 · 霓虹
+     04 · Neon
      ================================================================= */
   const S4 = (() => {
     const el = $('#s-neon'), cv = $('#nn-cv'), plate = $('#plate'), rocker = $('#rocker');
     let tex = null, texKey = '';
     const signs = [
       { kind: 'moon', col: lch(0.84, 0.15, 78), core: lch(0.97, 0.05, 90), delay: 0 },
-      { kind: 'cn', text: '夜读', col: lch(0.68, 0.26, 355), core: lch(0.93, 0.08, 350), delay: 260 },
+      { kind: 'word', text: 'LATE', col: lch(0.68, 0.26, 355), core: lch(0.93, 0.08, 350), delay: 260 },
       { kind: 'en', text: 'READING ROOM', col: lch(0.84, 0.14, 205), core: lch(0.97, 0.04, 200), delay: 720 },
     ].map((s, i) => ({ ...s, on: false, ign: 0, off: -1e9, lv: 0, seed: i * 97 + 13 }));
     function texture(w, h, dpr) {
@@ -1077,7 +1077,7 @@ html[data-embedded] .rocker{width:20px;height:34px;border-radius:5px}
     }
     function shape(ctx, s, w, h, S) {
       const cx = w / 2;
-      if (s.kind === 'cn') { ctx.font = `200 ${S}px "Noto Sans SC", "WenQuanYi Zen Hei", sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; return () => ctx.fillText(s.text, cx + S * 0.18, h * 0.40); }
+      if (s.kind === 'word') { ctx.font = `200 ${S * 0.69}px "Roboto Flex", sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; return () => ctx.fillText(s.text, cx + S * 0.18, h * 0.40); }
       if (s.kind === 'en') {
         ctx.font = `250 ${S * 0.155}px "Roboto Flex", sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         if ('letterSpacing' in ctx) ctx.letterSpacing = (S * 0.06).toFixed(1) + 'px';
@@ -1141,8 +1141,8 @@ html[data-embedded] .rocker{width:20px;height:34px;border-radius:5px}
     plate.addEventListener('click', () => { S4.toggle(plate); plate.blur(); });
     let rx = 16;
     return {
-      id: 'neon', name: '霓虹', el,
-      desc: '开关只是让天黑下来。招牌有自己的光敏开关：环境光低于 50 lux 才点亮。',
+      id: 'neon', name: 'Neon', el,
+      desc: 'The switch darkens the scene. The sign has its own light sensor and turns on below 50 lux.',
       enter() { setLight({ L: 1, K: 5600, lx: 0.3, el: 0.6 }, null); signs.forEach((s) => { s.on = false; s.lv = 0; s.off = -1e9; }); },
       toggle(origin) { tweenLight(light.L > 0.5 ? { L: 0.035, K: 7800 } : { L: 1, K: 5600 }, 3200, origin || plate); },
       frame(t) {
@@ -1152,30 +1152,30 @@ html[data-embedded] .rocker{width:20px;height:34px;border-radius:5px}
           if (!dark && s.on) { s.on = false; s.off = now; }
         });
         draw(now, c.L, c.K, c.lx);
-        $('#pc-read').textContent = `环境光 ≈ ${nf.format(Math.round(lux))} lux · 阈值 50 lux · ${dark ? '已点亮' : '待机'}`;
+        $('#pc-read').textContent = `Ambient light ≈ ${nf.format(Math.round(lux))} lux · Threshold 50 lux · ${dark ? 'On' : 'Standby'}`;
         $('#pc-dot').classList.toggle('on', dark);
         const target = light.L > 0.5 ? 16 : -16; rx += (target - rx) * 0.25;
         rocker.style.setProperty('--rx', rx.toFixed(2) + 'deg');
       },
-      readout() { const lux = Math.pow(10, 5 * rootCur().L); return `环境光 ≈ ${nf.format(Math.round(lux))} lux · ${fmtK(light.K)} · 招牌${lux < 50 ? '已点亮' : '待机'}`; },
+      readout() { const lux = Math.pow(10, 5 * rootCur().L); return `Ambient light ≈ ${nf.format(Math.round(lux))} lux · ${fmtK(light.K)} · Sign ${lux < 50 ? 'On' : 'Standby'}`; },
     };
   })();
 
   /* =================================================================
-     05 · 色温
+     05 · Color temperature
      ================================================================= */
   const S5 = (() => {
     const el = $('#s-lamp'), track = $('#ktrack'), thumb = $('#kthumb'), bulb = $('#bulb'), cone = $('#cone'), art = $('#lp-article');
     const kMin = 1900, kMax = 10000;
     const stops = []; for (let i = 0; i <= 16; i++) stops.push(`${kcss(kMin + (kMax - kMin) * i / 16)} ${(i / 16 * 100).toFixed(1)}%`);
     track.style.background = `linear-gradient(90deg, ${stops.join(', ')})`;
-    $('#kmarks').innerHTML = [[2700, '白炽灯'], [4000, '暖白'], [5600, '日光'], [6500, '阴天'], [9000, '蓝调']].map(([K, n]) => `<span style="left:${((K - kMin) / (kMax - kMin) * 100).toFixed(2)}%">${n}<em>${nf.format(K)}</em></span>`).join('');
+    $('#kmarks').innerHTML = [[2700, 'Incandescent'], [4000, 'Warm white'], [5600, 'Daylight'], [6500, 'Overcast'], [9000, 'Blue hour']].map(([K, n]) => `<span style="left:${((K - kMin) / (kMax - kMin) * 100).toFixed(2)}%">${n}<em>${nf.format(K)}</em></span>`).join('');
     const kFrom = (e) => { const b = track.getBoundingClientRect(); return kMin + clamp((e.clientX - b.left) / b.width) * (kMax - kMin); };
     track.addEventListener('pointerdown', (e) => startDrag(e, { move(ev) { setLight({ K: kFrom(ev) }, thumb); } }));
     sliderKeys(track, () => (light.K - kMin) / (kMax - kMin), (v) => setLight({ K: kMin + v * (kMax - kMin) }, thumb));
     return {
-      id: 'lamp', name: '色温', el,
-      desc: '色温只移动白点。纸张跟着变暖，正文仍然每帧按对比度求解。',
+      id: 'lamp', name: 'Color temperature', el,
+      desc: 'Color temperature moves the white point. The paper gets warmer while the text updates each frame to maintain contrast.',
       enter() { setLight({ L: 1, K: 6500, lx: -0.3, el: 0.7 }, null); },
       toggle(origin) { tweenLight(light.L > 0.7 ? { L: 0.26, K: 2400 } : { L: 1, K: 6500 }, 2200, origin || bulb); },
       frame() {
@@ -1193,11 +1193,11 @@ html[data-embedded] .rocker{width:20px;height:34px;border-radius:5px}
         const ar = regionMap.get(art);
         if (ar && ar.T) {
           const ct = ar.T.contrast;
-          $('#lp-badge').textContent = `正文对比度 ${ct.toFixed(1)} : 1 · ${ct >= 7 ? 'AAA' : ct >= 4.5 ? 'AA' : '不足'}`;
-          $('#lp-w').textContent = ar.T.darkInk ? '字重 400 · GRAD 0' : '暗底浅字：字重 370 · GRAD −50';
+          $('#lp-badge').textContent = `Text contrast ${ct.toFixed(1)} : 1 · ${ct >= 7 ? 'AAA' : ct >= 4.5 ? 'AA' : 'Low'}`;
+          $('#lp-w').textContent = ar.T.darkInk ? 'Weight 400 · GRAD 0' : 'Light text: Weight 370 · GRAD −50';
         }
       },
-      readout() { const ar = regionMap.get(art); return `${fmtK(light.K)} · ${kName(light.K)} · L ${light.L.toFixed(2)}${ar && ar.T ? ' · 正文 ' + ar.T.contrast.toFixed(1) + ':1' : ''}`; },
+      readout() { const ar = regionMap.get(art); return `${fmtK(light.K)} · ${kName(light.K)} · L ${light.L.toFixed(2)}${ar && ar.T ? ' · Text ' + ar.T.contrast.toFixed(1) + ':1' : ''}`; },
       kPoint(K) { const b = track.getBoundingClientRect(); return [b.left + (K - kMin) / (kMax - kMin) * b.width, b.top + b.height / 2]; },
     };
   })();
@@ -1285,7 +1285,7 @@ html[data-embedded] .rocker{width:20px;height:34px;border-radius:5px}
     yield* path((k) => onDial(-43 - 90 * k), 1500);
     yield* up();
     yield* wait(1700);
-    yield* key(' ', '空格');
+    yield* key(' ', 'Space');
     yield* wait(2300);
     yield* key('ArrowRight', '→');
     yield* wait(1000);
@@ -1298,7 +1298,7 @@ html[data-embedded] .rocker{width:20px;height:34px;border-radius:5px}
     yield* up();
     yield* move(() => { const p = S2.xAt(21.8); return [p[0] + 40, p[1] + innerHeight * 0.2]; }, 700);
     yield* wait(1700);
-    yield* key(' ', '空格');
+    yield* key(' ', 'Space');
     yield* wait(3800);
     yield* key('ArrowRight', '→');
     yield* wait(1000);
@@ -1324,7 +1324,7 @@ html[data-embedded] .rocker{width:20px;height:34px;border-radius:5px}
     yield* path((k) => S5.kPoint(6500 - 4100 * k), 2800);
     yield* up();
     yield* wait(800);
-    yield* key(' ', '空格');
+    yield* key(' ', 'Space');
     yield* wait(3600);
     yield* fade(0, 300);
     title = { start: now, mode: 'outro' };
@@ -1345,8 +1345,8 @@ html[data-embedded] .rocker{width:20px;height:34px;border-radius:5px}
     keycap.textContent = cur.keyLabel;
     keycap.style.opacity = ka < 0 ? 0 : (ka < 120 ? ka / 120 : ka < 900 ? 1 : clamp(1 - (ka - 900) / 300)).toFixed(3);
     let op = 0;
-    if (title.mode === 'intro') { $('#tc-h').innerHTML = '没有亮色主题，<br>也没有暗色主题。<br>只有光。'; $('#tc-p').textContent = '颜色 = f(材质, 光)'; const a = now - title.start; op = a < 2300 ? 1 : clamp(1 - (a - 2300) / 600); }
-    if (title.mode === 'outro') { $('#tc-h').innerHTML = '一个变量，<br>五种光。'; $('#tc-p').textContent = '颜色 = f(材质, 光) · 浏览器原生 · 无需两套主题'; const a = now - title.start; op = clamp(a / 700); }
+    if (title.mode === 'intro') { $('#tc-h').innerHTML = 'Only light.'; $('#tc-p').textContent = 'Color = f(material, light)'; const a = now - title.start; op = a < 2300 ? 1 : clamp(1 - (a - 2300) / 600); }
+    if (title.mode === 'outro') { $('#tc-h').innerHTML = 'One variable.<br>Five light scenes.'; $('#tc-p').textContent = 'Color = f(material, light) · Rendered in the browser'; const a = now - title.start; op = clamp(a / 700); }
     tc.style.opacity = op.toFixed(3);
     tc.style.visibility = op > 0 ? 'visible' : 'hidden';
   }
@@ -1374,10 +1374,8 @@ html[data-embedded] .rocker{width:20px;height:34px;border-radius:5px}
   } else step(0);
   window.__ready = (async () => {
     try {
-      const txt = document.body.innerText + document.body.textContent.slice(0, 20000) + '夜读一个变量五种光没有亮色主题也暗只材质浏览器原生无需两套';
       await Promise.all([
-        document.fonts.load('400 16px "Noto Sans SC"', txt), document.fonts.load('600 16px "Noto Sans SC"', txt),
-        document.fonts.load('200 100px "Noto Sans SC"', '夜读'), document.fonts.load('700 40px "Noto Serif SC"', txt),
+        document.fonts.load('200 100px "Roboto Flex"', 'LATE'),
         document.fonts.load('300 40px "Roboto Flex"', '0123456789,.:%K READING ROOM'), document.fonts.load('400 12px "Martian Mono"', '0123456789 abcdefghijklmnopqrstuvwxyzLKW.:·,%()='),
       ]);
       await document.fonts.ready;

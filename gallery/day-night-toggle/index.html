@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>昼夜开关</title>
+<title>Day / Night Toggle</title>
 <script src="../../assets/embed.js"></script>
 <style>
 :root { --bg: #ecebe8; color-scheme: light; }
@@ -18,7 +18,7 @@ body { background: var(--bg); overflow: hidden; }
 </head>
 <body>
 <canvas id="c" aria-hidden="true"></canvas>
-<button id="sw" type="button" role="switch" aria-checked="false" aria-label="深色模式"></button>
+<button id="sw" type="button" role="switch" aria-checked="false" aria-label="Dark mode"></button>
 <script>
 (() => {
   const REC = !!window.__RECORD;

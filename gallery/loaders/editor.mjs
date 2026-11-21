@@ -1,4 +1,5 @@
 import {foreground,background} from '../../assets/site.mjs';
+import {onLanguageChange,translate as t} from '../../assets/locale.mjs';
 import {previewProps} from './catalog.mjs';
 import {escapeHtml as esc,htmlExample,reactExample} from './snippets.mjs';
 import {loaderPrompt,mountPrompt} from '../../assets/prompt.mjs';
@@ -33,30 +34,33 @@ const selectedLicense=()=>provider()?.license||itemLicense;
 const defaults=()=>previewProps(selected,foreground(),root.dataset.theme);
 function syncMotion(){setPreviewPlaying($('#selected-preview').firstElementChild,isPlaying()&&detail.open);}
 const ranges={
-  size:{label:'尺寸',min:16,max:160,step:1,suffix:' px'},
-  speed:{label:'周期',min:.2,max:5,step:.05,suffix:' 秒'},
-  stroke:{label:'线条粗细',min:.5,max:12,step:.5,suffix:' px'},
-  'stroke-length':{label:'线段长度',min:.05,max:.9,step:.01,suffix:''},
-  'bg-opacity':{label:'轨道透明度',min:0,max:1,step:.05,suffix:''},
+  size:{label:'Size',min:16,max:160,step:1,suffix:' px'},
+  speed:{label:'Duration',min:.2,max:5,step:.05,suffix:' s'},
+  stroke:{label:'Stroke width',min:.5,max:12,step:.5,suffix:' px'},
+  'stroke-length':{label:'Arc length',min:.05,max:.9,step:.01,suffix:''},
+  'bg-opacity':{label:'Track opacity',min:0,max:1,step:.05,suffix:''},
 };
 function controls(){
   $('#controls').innerHTML=Object.entries(props).map(([key,value])=>{
-    if(key==='color')return `<div class="control"><label for="prop-color">颜色 <input class="color-input" id="prop-color" type="color" data-prop="color" value="${esc(value)}"></label></div>`;
+    if(key==='color')return `<div class="control"><label for="prop-color"><span data-parameter="Color">${t('Color')}</span> <input class="color-input" id="prop-color" type="color" data-prop="color" value="${esc(value)}"></label></div>`;
     const range=ranges[key];if(!range)return '';
-    return `<div class="control"><label for="prop-${key}">${range.label}<output for="prop-${key}">${value}${range.suffix}</output></label><input id="prop-${key}" data-prop="${key}" type="range" min="${range.min}" max="${range.max}" step="${range.step}" value="${value}"></div>`;
+    return `<div class="control"><label for="prop-${key}"><span data-parameter="${range.label}">${t(range.label)}</span><output for="prop-${key}">${value}${range.suffix}</output></label><input id="prop-${key}" data-prop="${key}" type="range" min="${range.min}" max="${range.max}" step="${range.step}" value="${value}"></div>`;
   }).join('');
 }
 function currentCode(){
   if(provider())return format==='react'?provider().react(selected,props,background()):provider().html(selected,props,background());
   return format==='react'?reactExample(selected,props,selectedLicense()):htmlExample(selected,props,$('#selected-preview').firstElementChild.shadowRoot.innerHTML,selectedLicense(),background());
 }
+function localizeCode(){
+  $('#tab-html').textContent=t(provider()?'Standalone HTML':'HTML + CSS');
+  $('#code-help').textContent=t(provider()?(format==='html'?provider().htmlHelp:provider().reactHelp):format==='html'
+    ?'Save as an .html file and open it in a browser.'
+    :selected.original?'Use this JSX in a React project.':'Install the specified version of LDRS in your React project.');
+  $('#download').textContent=t(format==='html'?'Download HTML':provider()?'Download TSX':'Download JSX');
+}
 function paintCode(){
-  $('#tab-html').textContent=provider()?'独立 HTML':'HTML + CSS';
+  localizeCode();
   $('#code').value=currentCode();
-  $('#code-help').textContent=provider()?(format==='html'?provider().htmlHelp:provider().reactHelp):format==='html'
-    ?'保存为 .html 文件后即可独立打开。'
-    :selected.original?'将 JSX 放入 React 项目即可使用。':'在 React 项目中安装示例指定的 LDRS 版本。';
-  $('#download').textContent=format==='html'?'下载 HTML':provider()?'下载 TSX':'下载 JSX';
   $('#code-panel').setAttribute('aria-labelledby','tab-'+format);
   for(const tab of document.querySelectorAll('[data-format]')){const active=tab.dataset.format===format;tab.setAttribute('aria-selected',String(active));tab.tabIndex=active?0:-1;}
 }
@@ -64,21 +68,29 @@ function paintSelected(){
   $('#selected-preview').replaceChildren(createLoaderPreview(selected,props,providers));
   paintCode();refreshPrompt();requestAnimationFrame(syncMotion);
 }
+const credit=detail.querySelector('.code-credit');
+function localizeDetail(){
+  const item=selected;
+  $('#detail-group').textContent=`${t('Loading')} / ${t(item.group)}`;
+  const creditText=credit.querySelector('span');
+  if(creditText){
+    creditText.textContent=item.origin?`${item.origin.name} · ${item.origin.author} · ${item.origin.license}. ${t('Integration and preview by UI Moments.')}`:t(item.original?'MIT license.':'The example includes the original LDRS attribution and MIT license.');
+    const source=credit.querySelector('[data-upstream]');
+    if(source)source.textContent=t(item.reference?'Inspiration ↗':'Upstream repository ↗');
+  }
+}
 function open(item,button,sourceLicense=license){
   itemLicense=sourceLicense;
   selected=item;props=defaults();format='html';trigger=button;
-  $('#detail-title').textContent=item.name;$('#detail-group').textContent='加载动效 / '+item.group;$('#detail-description').textContent=item.description;
-  const credit=detail.querySelector('.code-credit');
-  const creditText=credit.querySelector('span');
-  if(creditText){
-    creditText.textContent=item.origin?`原作：${item.origin.name} · ${item.origin.author} · ${item.origin.license}。UI Moments 负责整合与预览。`:item.original?'UI Moments 原创 · MIT。':'示例保留 LDRS 原作者署名与 MIT 许可证。';
+  $('#detail-title').textContent=item.name;$('#detail-description').textContent=item.description;
+  if(credit.querySelector('span')){
     credit.querySelector('a').href=item.origin?.licensePath||(item.original?'LICENSE':'gallery/loaders/vendor/ldrs/LICENSE');
     let source=credit.querySelector('[data-upstream]');
     if(!source){source=document.createElement('a');source.dataset.upstream='';source.target='_blank';source.rel='noopener';credit.append(source);}
     source.hidden=!(item.origin||item.reference);
-    source.textContent=item.reference?'灵感原帖 ↗':'原仓库 ↗';
     source.href=item.reference||item.origin?.repository||'#';
   }
+  localizeDetail();
   controls();paintSelected();detail.showModal();document.body.style.overflow='hidden';
   history.replaceState(null,'','#'+item.key);
 }
@@ -116,8 +128,8 @@ async function copy(text){
     try{copied=document.execCommand('copy');}catch{}field.remove();return copied;
   }
 }
-async function copyWithFeedback(text,{success='已复制，署名与许可证一并保留',failure='复制受限，请在代码框内全选复制'}={}){
-  const ok=await copy(text);notify(ok?success:failure);return ok;
+async function copyWithFeedback(text,{success='Copied with attribution and license',failure='Select and copy the code manually'}={}){
+  const ok=await copy(text);notify(t(ok?success:failure));return ok;
 }
 const refreshPrompt=mountPrompt(detail,()=>provider()?provider().prompt(selected,props,background()):loaderPrompt(selected,props,$('#selected-preview').firstElementChild.shadowRoot.innerHTML,selectedLicense(),background()),copyWithFeedback);
 $('#copy').addEventListener('click',()=>copyWithFeedback(currentCode()));
@@ -131,6 +143,12 @@ root.addEventListener('ui-moments:theme',event=>{
   if(props.color===previewProps(selected,event.detail.previousForeground,previousTheme).color){
     props.color=defaults().color;controls();paintSelected();
   }else if(provider())paintSelected();
+});
+onLanguageChange(()=>{
+  if(!detail.open)return;
+  localizeDetail();
+  localizeCode();
+  for(const label of detail.querySelectorAll('[data-parameter]'))label.textContent=t(label.dataset.parameter);
 });
 return {open,syncMotion,copy:copyWithFeedback,notify,clearFeedback,isOpen:()=>detail.open};
 }

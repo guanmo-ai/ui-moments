@@ -7,11 +7,11 @@ const mono = {color: '#18181b', darkColor: '#fafafa'};
 export const motifLoaders = [
   {
     key: 'tide-ring',
-    name: '潮环',
-    group: '环形',
+    name: 'Tide Ring',
+    group: 'Rings',
     ...ink,
     speed: 1.6,
-    description: '弧线一边旋转一边像潮水一样涨落',
+    description: 'A rotating arc swells and recedes like the tide.',
     parts: ['track', 'arc'],
     css: `
 @property --um-sweep { syntax: '<percentage>'; inherits: false; initial-value: 10%; }
@@ -33,11 +33,11 @@ export const motifLoaders = [
   },
   {
     key: 'stack-blocks',
-    name: '叠块',
-    group: '几何',
+    name: 'Stack Blocks',
+    group: 'Geometry',
     ...warm,
     speed: 2.2,
-    description: '三块方砖依次落下叠成一摞，再一起滑出',
+    description: 'Three tiles drop into a stack, then slide out together.',
     parts: ['block block-1', 'block block-2', 'block block-3'],
     css: `
 .um-stack-blocks .block {
@@ -68,11 +68,11 @@ export const motifLoaders = [
   },
   {
     key: 'metronome-dot',
-    name: '节拍',
-    group: '圆点',
+    name: 'Beat Bounce',
+    group: 'Dots',
     ...sea,
     speed: 1.1,
-    description: '圆点在两道竖线之间来回弹，碰到时压扁',
+    description: 'A dot bounces between two bars and squashes on contact.',
     parts: ['wall wall-left', 'wall wall-right', 'dot'],
     css: `
 .um-metronome-dot .wall {
@@ -110,11 +110,11 @@ export const motifLoaders = [
   },
   {
     key: 'rising-words',
-    name: '浮字',
-    group: '文字',
+    name: 'Floating Text',
+    group: 'Text',
     ...mono,
     speed: 1.8,
-    description: '“Loading” 的字母从左到右依次浮起再落回',
+    description: 'The letters in “Loading” rise and fall from left to right.',
     parts: Array.from({length: 7}, (_, index) => `ch ch-${index}`),
     css: `
 .um-rising-words {
@@ -136,11 +136,11 @@ ${'Loading'.split('').map((letter, index) => `.um-rising-words .ch-${index} { an
   },
   {
     key: 'dot-field',
-    name: '点阵波',
-    group: '圆点',
+    name: 'Dot Field',
+    group: 'Dots',
     ...sea,
     speed: 1.4,
-    description: '九个圆点沿对角线依次涨大，像风吹过草地',
+    description: 'Nine dots swell along a diagonal, like wind crossing a field.',
     parts: Array.from({length: 9}, (_, index) => `cell cell-${(index % 3) + Math.floor(index / 3)}`),
     css: `
 .um-dot-field {
@@ -164,11 +164,11 @@ ${'Loading'.split('').map((letter, index) => `.um-rising-words .ch-${index} { an
   },
   {
     key: 'sand-turn',
-    name: '沙漏',
-    group: '图标',
+    name: 'Sand Turn',
+    group: 'Icons',
     ...warm,
     speed: 2.6,
-    description: '沙子从上半漏到下半，漏完整只沙漏翻转',
+    description: 'Sand runs into the lower half, then the hourglass flips.',
     parts: ['cap cap-top', 'cap cap-bottom', 'bulb bulb-top', 'bulb bulb-bottom', 'sand sand-top', 'sand sand-bottom', 'stream'],
     css: `
 .um-sand-turn { animation: um-sand-flip var(--period) cubic-bezier(.6,0,.3,1) infinite; }
@@ -202,11 +202,11 @@ ${'Loading'.split('').map((letter, index) => `.um-rising-words .ch-${index} { an
   },
   {
     key: 'draft-card',
-    name: '文稿',
-    group: '状态',
+    name: 'Article Skeleton',
+    group: 'States',
     ...ink,
     speed: 1.6,
-    description: '头像与三行文字的占位，一道柔光从左扫到右',
+    description: 'A highlight sweeps across an avatar and three placeholder lines.',
     parts: ['avatar', 'line line-1', 'line line-2', 'line line-3'],
     css: `
 .um-draft-card { width: calc(var(--size) * 1.6); }
@@ -225,11 +225,11 @@ ${'Loading'.split('').map((letter, index) => `.um-rising-words .ch-${index} { an
   },
   {
     key: 'clock-hands',
-    name: '时针',
-    group: '线条',
+    name: 'Clock Hands',
+    group: 'Lines',
     ...sea,
     speed: 2,
-    description: '长针一圈，短针一格，表盘四个刻度随之亮起',
+    description: 'The long hand turns once as the short hand advances and the ticks light up.',
     parts: ['face', 'tick tick-1', 'tick tick-2', 'tick tick-3', 'tick tick-4', 'hand hand-hour', 'hand hand-minute', 'pin'],
     css: `
 .um-clock-hands .face { position: absolute; inset: 14%; border-radius: 50%; border: calc(var(--size) * .045) solid currentColor; opacity: .3; }
@@ -248,11 +248,11 @@ ${'Loading'.split('').map((letter, index) => `.um-rising-words .ch-${index} { an
   },
   {
     key: 'orbit-pair',
-    name: '双星',
-    group: '环形',
+    name: 'Orbit Pair',
+    group: 'Rings',
     ...mono,
     speed: 1.4,
-    description: '两颗圆点沿同一轨道相向而行，交会时一起变小',
+    description: 'Two dots orbit in opposite directions and shrink as they meet.',
     parts: ['path', 'star star-a', 'star star-b'],
     css: `
 .um-orbit-pair .path { position: absolute; inset: 18%; border-radius: 50%; border: calc(var(--size) * .03) solid currentColor; opacity: .2; }
@@ -265,11 +265,11 @@ ${'Loading'.split('').map((letter, index) => `.um-rising-words .ch-${index} { an
   },
   {
     key: 'level-bars',
-    name: '电平',
-    group: '线条',
+    name: 'Level Bars',
+    group: 'Lines',
     ...mono,
     speed: 1.2,
-    description: '五根竖条像音量电平一样此起彼伏',
+    description: 'Five bars rise and fall like an audio level meter.',
     parts: Array.from({length: 5}, (_, index) => `bar bar-${index}`),
     css: `
 .um-level-bars { display: flex; align-items: center; justify-content: center; gap: 7%; }
@@ -284,11 +284,11 @@ ${'Loading'.split('').map((letter, index) => `.um-rising-words .ch-${index} { an
   },
   {
     key: 'square-lap',
-    name: '绕方',
-    group: '几何',
+    name: 'Square Track',
+    group: 'Geometry',
     ...mono,
     speed: 1.8,
-    description: '一颗方点沿方框的四条边绕圈，转角处停一下',
+    description: 'A square travels around a frame, pausing at each corner.',
     parts: ['frame', 'runner'],
     css: `
 .um-square-lap .frame { position: absolute; inset: 22%; border: calc(var(--size) * .035) solid currentColor; border-radius: 12%; opacity: .25; }
@@ -304,11 +304,11 @@ ${'Loading'.split('').map((letter, index) => `.um-rising-words .ch-${index} { an
   },
   {
     key: 'pendulum',
-    name: '摆锤',
-    group: '线条',
+    name: 'Pendulum',
+    group: 'Lines',
     ...mono,
     speed: 1.6,
-    description: '摆锤从一侧荡到另一侧，到顶时放慢',
+    description: 'A pendulum swings side to side and slows at the top of each swing.',
     parts: ['pivot', 'arm'],
     css: `
 .um-pendulum .pivot { position: absolute; top: 14%; left: 30%; right: 30%; height: 4%; border-radius: 100px; background: currentColor; opacity: .35; }
@@ -319,11 +319,11 @@ ${'Loading'.split('').map((letter, index) => `.um-rising-words .ch-${index} { an
   },
   {
     key: 'nested-squares',
-    name: '回字',
-    group: '几何',
+    name: 'Nested Squares',
+    group: 'Geometry',
     ...mono,
     speed: 2,
-    description: '三层方框由内向外扩散，最外层淡出',
+    description: 'Three square outlines expand from the center, with the outer one fading away.',
     parts: ['box box-1', 'box box-2', 'box box-3'],
     css: `
 .um-nested-squares .box { position: absolute; inset: 0; margin: auto; width: 70%; aspect-ratio: 1; border: calc(var(--size) * .035) solid currentColor; border-radius: 14%; animation: um-nest var(--period) cubic-bezier(.3,.6,.4,1) infinite; }
@@ -334,11 +334,11 @@ ${'Loading'.split('').map((letter, index) => `.um-rising-words .ch-${index} { an
   },
   {
     key: 'gap-ring',
-    name: '缺环',
-    group: '环形',
+    name: 'Broken Ring',
+    group: 'Rings',
     ...mono,
     speed: 1.3,
-    description: '虚线圆环一边旋转，缺口一边开合',
+    description: 'A dashed ring spins as its gap opens and closes.',
     parts: ['ring'],
     css: `
 .um-gap-ring .ring { position: absolute; inset: 14%; border-radius: 50%; border: calc(var(--size) * .07) dashed currentColor; animation: um-gap-spin var(--period) linear infinite, um-gap-breathe calc(var(--period) * 2) ease-in-out infinite; }
@@ -348,11 +348,11 @@ ${'Loading'.split('').map((letter, index) => `.um-rising-words .ch-${index} { an
   },
   {
     key: 'pixel-snake',
-    name: '方阵蛇',
-    group: '几何',
+    name: 'Pixel Snake',
+    group: 'Geometry',
     ...mono,
     speed: 1.8,
-    description: '四乘四方格里，一条亮起的小蛇沿 S 形路线爬过',
+    description: 'A lit snake winds through a four-by-four grid.',
     parts: Array.from({length: 16}, (_, index) => {
       const row = Math.floor(index / 4), col = index % 4;
       return `px px-${row * 4 + (row % 2 ? 3 - col : col)}`;
@@ -366,11 +366,11 @@ ${Array.from({length: 16}, (_, index) => `.um-pixel-snake .px-${index} { animati
   },
   {
     key: 'flip-tile',
-    name: '翻块',
-    group: '几何',
+    name: 'Flip Tile',
+    group: 'Geometry',
     ...mono,
     speed: 1.6,
-    description: '一块方片先横向翻、再纵向翻，像在纸上打滚',
+    description: 'A square flips horizontally, then vertically, as if rolling across a page.',
     parts: ['tile'],
     css: `
 .um-flip-tile { perspective: calc(var(--size) * 3); }
@@ -384,7 +384,7 @@ ${Array.from({length: 16}, (_, index) => `.um-pixel-snake .px-${index} { animati
   },
 ].map(({speed, color, darkColor, ...item}) => ({
   ...item,
-  collection: '原创动效',
+  collection: 'Original loaders',
   className: 'um-' + item.key,
   defaults: {size: 72, color, speed},
   darkColor,

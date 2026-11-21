@@ -15,18 +15,18 @@ UI Moments 用到的每一个外部仓库、字体、依赖和灵感来源都列
 
 | 来源类型 | 数量 | 作品 | 代码归属 | 许可 |
 | --- | ---: | --- | --- | --- |
-| **UI Moments 原创** | 64 | 37 个原创控件、18 款原创加载动效、9 款加载微动效 | UI Moments | MIT |
-| **开源完整集成** | 149 | LDRS 44 款、Loading UI 47 款、SVG Spinners 46 款、Micron.js 12 款 | 各上游作者 | MIT（保留原文） |
-| **参考想法后独立实现** | 19 | 昼夜开关、弹性滑尺、对齐拨片、夹页键；7 个参考 amicro 的 Motion 作品；8 个参考 @yui540 视觉语言的 Elastic 作品 | UI Moments | MIT |
-| **合计** | **232** | | | |
+| **UI Moments 原创** | 65 | 38 个原创控件、18 款原创加载动效、9 款加载微动效 | UI Moments | MIT |
+| **开源完整集成** | 979 | LDRS 44 款、Loading UI 47 款、SVG Spinners 46 款、Micron.js 12 款、Fluent UI React 51 个、Astryx 779 个 | 各上游作者 | MIT（保留原文） |
+| **参考想法后独立实现** | 21 | 昼夜开关、弹性滑尺、对齐拨片、夹页键、Quiet Hours、Roomlight；7 个参考 amicro 的 Motion 作品；8 个参考 @yui540 视觉语言的 Elastic 作品 | UI Moments | MIT |
+| **合计** | **1065** | | | |
 
-画廊卡片会分别标注「原创」「×× 开源」「参考后实现」。打开详情后能看到来源链接和许可。
+打开组件详情可以查看来源链接和许可。
 
 ---
 
 ## 2. 收录在仓库里的第三方代码
 
-这些文件**原样**保存在仓库中，固定了版本或提交，保留完整许可证。我们的改动只在外层：浏览、分类、参数面板、导出与无障碍。
+上游文件原样保存在仓库或通过锁定的发行包安装，固定版本或提交，并保留完整许可证。我们的改动在演示和接入代码里。
 
 | 项目 | 作者 | 固定版本 | 位置 | 许可 | 我们用它做什么 |
 | --- | --- | --- | --- | --- | --- |
@@ -34,6 +34,8 @@ UI Moments 用到的每一个外部仓库、字体、依赖和灵感来源都列
 | [Loading UI](https://github.com/turbostarter/loading-ui) | Bartosz Zagrodzki | 提交 `1b5348c` | `gallery/loading-ui/vendor/loading-ui/` | [MIT](gallery/loading-ui/vendor/loading-ui/LICENSE.md) | 47 款加载动效，构建为本地运行时 |
 | [SVG Spinners](https://github.com/n3r4zzurr0/svg-spinners) | Utkarsh Verma | 提交 `abfa05c` | `gallery/svg-spinners/vendor/svg-spinners/` | [MIT](gallery/svg-spinners/vendor/svg-spinners/LICENSE) | 46 款 SVG 动效的预览、着色与导出 |
 | [Micron.js](https://github.com/webkul/micron) | Webkul | 提交 `c46d1bd` | `gallery/micron/vendor/micron/` | [MIT](gallery/micron/vendor/micron/LICENSE) | 12 款点击反馈的按钮演示与导出 |
+| [Fluent UI React](https://github.com/microsoft/fluentui) | Microsoft Corporation | npm `@fluentui/react-components@9.75.2` | [接入和锁文件](gallery/fluent-ui/) | [MIT](gallery/fluent-ui/vendor/LICENSE) | 51 个可操作的表单、导航和反馈示例 |
+| [Astryx](https://github.com/meta/astryx) | Meta Platforms, Inc. | npm `@astryxdesign/core@0.7.16`、`@astryxdesign/theme-neutral@0.7.16` | [接入和锁文件](gallery/astryx/) | [MIT](gallery/astryx/vendor/astryx/LICENSE) | 165 个主示例、559 个变体、26 个图表示例、29 个实验组件示例 |
 | [Geist / Geist Mono](https://github.com/vercel/geist-font) | Vercel | latin 可变字重子集 | `assets/fonts/` | [SIL OFL 1.1](assets/fonts/OFL-Geist.txt) | 全站界面字体（自托管） |
 
 每一份导出的 HTML、React 示例和复刻提示词都会附带对应作品的作者与完整许可证。
@@ -44,6 +46,8 @@ Loading UI 需要 React 运行。构建脚本 `gallery/loading-ui/tools/build.mj
 
 `react`、`react-dom`、`scheduler`（Meta，MIT）· `motion`、`framer-motion`、`motion-dom`、`motion-utils`（Framer / Motion，MIT）· `clsx`（Luke Edwards，MIT）· `tailwind-merge`（Dany Castillo，MIT）· `tailwindcss`（Tailwind Labs，MIT）
 
+Astryx 稳定版与 canary 分别随网站附实际分发的依赖许可。图表包含 D3 和 Vega 运行依赖，详见 [Astryx 接入说明](gallery/astryx/README.md)。
+
 ## 4. 只在开发与构建时使用的工具
 
 不会出现在发布的网站里：
@@ -51,7 +55,7 @@ Loading UI 需要 React 运行。构建脚本 `gallery/loading-ui/tools/build.mj
 | 工具 | 用途 | 许可 |
 | --- | --- | --- |
 | [Playwright](https://github.com/microsoft/playwright) | 浏览器测试、逐帧录制 | Apache-2.0 |
-| [esbuild](https://github.com/evanw/esbuild) · [Tailwind CSS CLI](https://github.com/tailwindlabs/tailwindcss) | 构建 Loading UI 运行时 | MIT |
+| [esbuild](https://github.com/evanw/esbuild) · [Tailwind CSS CLI](https://github.com/tailwindlabs/tailwindcss) | 构建 Loading UI 和 Astryx 运行时 | MIT |
 | [Vite](https://github.com/vitejs/vite) · [TypeScript](https://github.com/microsoft/TypeScript) · [oxlint](https://github.com/oxc-project/oxc) | 已下架日期选择器的构建与检查 | MIT / Apache-2.0 / MIT |
 | [ffmpeg](https://ffmpeg.org/) | 把录制帧合成为视频（本地安装，不在仓库内） | LGPL / GPL |
 
@@ -61,11 +65,11 @@ Loading UI 需要 React 运行。构建脚本 `gallery/loading-ui/tools/build.mj
 
 这类来源**不在这里逐条维护**。规则很简单：
 
-- 明显受某一个具体作品启发时，在 [`gallery/works.js`](gallery/works.js) 对应条目写一行 `credit`（作者与链接）。画廊卡片会显示「参考后实现」，详情里自动出现来源链接。
+- 明显受某一个具体作品启发时，在 [`gallery/works.js`](gallery/works.js) 对应条目写一行 `credit`（作者与链接），详情会显示来源链接。
 - 开关、步进器、长按确认这类通用交互模式，不需要标注。
 - 不照搬对方的具体视觉造型、配色组合、文案或素材；如果做出来几乎一样，就改造型，或先征得原作者同意。
 
-当前标注了参考来源的作品可以在图鉴里直接筛到：卡片副标题为「参考后实现」。
+在图鉴搜索「参考后实现」可以查看带有该标签的作品。
 
 ## 6. 我们自己的其它仓库
 
@@ -76,6 +80,7 @@ Loading UI 需要 React 运行。构建脚本 `gallery/loading-ui/tools/build.mj
 | 作品 | 位置 |
 | --- | --- |
 | 37 个原创控件：Core、Visual、Motion、Gestures、Actions、Forms、Color 七组 | [gallery/originals/](gallery/originals/) |
+| Prism Tuner | [gallery/prism-tuner/](gallery/prism-tuner/) |
 | 折页、回信与 16 款原创加载动效 | [gallery/loaders/originals.mjs](gallery/loaders/originals.mjs)、[gallery/loaders/motifs.mjs](gallery/loaders/motifs.mjs) |
 | 风格库的「像素风」变体 | [gallery/elastic-controls/variants.css](gallery/elastic-controls/variants.css) |
 | 站点外壳、画廊、导出与提示词生成 | `assets/`、`index.html`、`styles.html` |

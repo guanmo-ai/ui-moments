@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Roomlight · UI Moments</title>
+<script src="../../assets/embed.js"></script>
+<link rel="stylesheet" href="./roomlight.css">
+<script type="module" src="./roomlight.mjs"></script>
+</head>
+<body>
+<main class="room" aria-labelledby="title">
+  <canvas id="optics" aria-hidden="true"></canvas>
+  <header class="top">
+    <a href="../../" aria-label="UI Moments gallery">UI Moments</a>
+    <button id="demo" class="demo" type="button" aria-pressed="false"><span aria-hidden="true"></span> Auto preview</button>
+  </header>
+  <div class="room-content">
+    <div class="intro">
+      <h1 id="title">Roomlight</h1>
+      <p id="ambience">Soft morning light over the water.</p>
+    </div>
+    <section class="control" aria-label="Room lighting">
+      <div class="control-title"><h2>Light scenes</h2><span id="temperature">4800 K</span></div>
+      <div class="scenes" role="group" aria-label="Scenes" id="scenes"></div>
+      <label class="dimmer" for="level">
+        <span>Dimmer</span>
+        <input id="level" type="range" min="0" max="100" value="76" aria-valuetext="76 percent">
+        <output id="reading" for="level">76%</output>
+      </label>
+    </section>
+  </div>
+</main>
+<footer class="credit"><a href="https://uberdesigner.ai/t/glass-scenes" target="_blank" rel="noopener noreferrer">Inspired by Glass Scenes · Sean Galt</a></footer>
+</body>
+</html>

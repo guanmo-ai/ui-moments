@@ -1,18 +1,18 @@
-export const loadingStudiesName = '加载微动效';
+export const loadingStudiesName = 'Loading studies';
 export const loadingStudiesReference = 'https://x.com/RaminNasibov/status/2122045748623609935';
 
-const line = {group: '线条', color: '#555092', darkColor: '#c9baff'};
-const shape = {group: '几何', color: '#99482f', darkColor: '#ffbd99'};
-const dot = {group: '圆点', color: '#3c5a94', darkColor: '#b8d4ff'};
-const object = {...dot, group: '图标'};
+const line = {group: 'Lines', color: '#555092', darkColor: '#c9baff'};
+const shape = {group: 'Geometry', color: '#99482f', darkColor: '#ffbd99'};
+const dot = {group: 'Dots', color: '#3c5a94', darkColor: '#b8d4ff'};
+const object = {...dot, group: 'Icons'};
 
 const studies = [
   {
     key: 'shutter-steps',
-    name: '开闸',
+    name: 'Shutter Steps',
     style: line,
     speed: 1.45,
-    description: '三扇斜闸共用一条底线，依次立起、落下。',
+    description: 'Three shutters rise and fall in sequence along a shared baseline.',
     parts: ['base', 'gate gate-1', 'gate gate-2', 'gate gate-3'],
     css: `
 .um-shutter-steps .base {
@@ -46,10 +46,10 @@ const studies = [
   },
   {
     key: 'ribbon-scan',
-    name: '列扫',
+    name: 'Column Scan',
     style: line,
     speed: 1.85,
-    description: '扫描线沿三行内容占位符扫过，点亮经过的部分。',
+    description: 'A scan line lights up three placeholder rows as it passes.',
     parts: ['strips', 'light', 'head'],
     css: `
 .um-ribbon-scan .strips, .um-ribbon-scan .light {
@@ -89,10 +89,10 @@ const studies = [
   },
   {
     key: 'bow-spring',
-    name: '弓弦',
+    name: 'Bow Spring',
     style: line,
     speed: 1.65,
-    description: '三根弧线两端固定，中段错拍拱起、回弹。',
+    description: 'Three anchored curves bow and spring back out of phase.',
     parts: ['bow bow-1', 'bow bow-2', 'bow bow-3'],
     css: `
 .um-bow-spring .bow {
@@ -120,10 +120,10 @@ const studies = [
   },
   {
     key: 'zip-stitch',
-    name: '合链',
+    name: 'Zip Link',
     style: shape,
     speed: 1.8,
-    description: '两排梳齿错开半格，像拉链一样扣合再分离。',
+    description: 'Two staggered rows of teeth zip together and pull apart.',
     parts: ['zip zip-start', 'zip zip-end'],
     css: `
 .um-zip-stitch .zip {
@@ -146,10 +146,10 @@ const studies = [
   },
   {
     key: 'corner-lock',
-    name: '对角',
+    name: 'Corner Lock',
     style: shape,
     speed: 1.75,
-    description: '四个角标按对角成对内收，像取景框逐步对准。',
+    description: 'Four corner marks move inward in diagonal pairs, like a viewfinder locking on.',
     parts: ['corner north-west', 'corner north-east', 'corner south-east', 'corner south-west'],
     css: `
 .um-corner-lock .corner {
@@ -177,10 +177,10 @@ const studies = [
   },
   {
     key: 'packet-sink',
-    name: '拆包',
+    name: 'Slice Stack',
     style: shape,
     speed: 1.8,
-    description: '三张斜切片依次滑出，再按原来的层次叠回。',
+    description: 'Three slanted slices slide out in sequence, then stack back up.',
     parts: ['packet upper', 'packet middle', 'packet lower'],
     css: `
 .um-packet-sink .packet {
@@ -204,10 +204,10 @@ const studies = [
   },
   {
     key: 'socket-feed',
-    name: '入槽',
+    name: 'Slot Drop',
     style: object,
     speed: 1.65,
-    description: '短胶囊落进槽口，触底压缩，槽沿随之回弹。',
+    description: 'A capsule drops into a slot, compressing on impact as the edges rebound.',
     parts: ['socket', 'insert'],
     css: `
 .um-socket-feed .socket {
@@ -248,10 +248,10 @@ const studies = [
   },
   {
     key: 'balance-pass',
-    name: '过桥',
+    name: 'Tilt Bridge',
     style: dot,
     speed: 2.15,
-    description: '横梁随方向倾斜，一颗圆点贴着梁面滚向低处。',
+    description: 'A beam tilts and a dot rolls toward its lower end.',
     parts: ['pivot', 'beam', 'bead'],
     css: `
 .um-balance-pass .pivot {
@@ -293,10 +293,10 @@ const studies = [
   },
   {
     key: 'relay-pair',
-    name: '交棒',
+    name: 'Relay Dots',
     style: dot,
     speed: 1.95,
-    description: '两颗点沿上下两侧擦肩，交换位置和亮度。',
+    description: 'Two dots pass on opposite sides and trade places and brightness.',
     parts: ['bead first', 'bead second'],
     css: `
 .um-relay-pair .bead {

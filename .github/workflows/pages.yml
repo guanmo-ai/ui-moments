@@ -25,7 +25,10 @@ jobs:
           cache: npm
           cache-dependency-path: |
             package-lock.json
+            gallery/astryx/package-lock.json
+            gallery/astryx/experimental/package-lock.json
             gallery/date-picker/package-lock.json
+            gallery/fluent-ui/package-lock.json
             gallery/loading-ui/package-lock.json
       - run: npm run setup
       - run: npm run build

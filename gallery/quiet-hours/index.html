@@ -1,0 +1,707 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quiet Hours · UI Moments</title>
+<script src="../../assets/embed.js"></script>
+<style>
+  :root {
+    color-scheme: light;
+    --paper: #e6e0d7;
+    --shell: #17181c;
+    --panel: #222329;
+    --line: #34353e;
+    --ink: #f4f0e9;
+    --muted: #aaa9b4;
+    --peach: #ffa77c;
+    --lilac: #bcb0fa;
+    font: 14px/1.4 system-ui, sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    display: grid;
+    place-items: center;
+    padding: 28px 16px;
+    background: radial-gradient(ellipse at 50% 18%, #f8f4ee, var(--paper) 75%);
+  }
+  button, select { color: inherit; font: inherit; cursor: pointer; }
+  button:focus-visible, select:focus-visible, a:focus-visible { outline: 2px solid var(--lilac); outline-offset: 3px; }
+  .page { width: min(100%, 748px); }
+  .board {
+    color-scheme: dark;
+    color: var(--ink);
+    background: var(--shell);
+    border: 1px solid #313139;
+    border-radius: 28px;
+    padding: 20px;
+    box-shadow: 0 24px 52px -26px #34292591, 0 3px 8px #34292525;
+  }
+  .header, .panel-title, .player, .timer, .footer, .sleep-intro {
+    display: flex;
+    align-items: center;
+  }
+  .header { justify-content: space-between; gap: 16px; padding: 4px 2px 20px; }
+  .identity { display: flex; align-items: center; gap: 12px; }
+  .monogram {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    aspect-ratio: 1;
+    border-radius: 12px;
+    background: #ccbafa;
+    color: #231735;
+    font: italic 650 20px Georgia, serif;
+  }
+  h1, h2, p, figure { margin: 0; }
+  h1 { font-size: 18px; letter-spacing: -.035em; font-weight: 600; }
+  h2 { font-size: 13px; font-weight: 600; }
+  .subtitle { color: var(--muted); font-size: 11px; }
+  .periods {
+    display: flex;
+    gap: 3px;
+    margin: 0;
+    padding: 3px;
+    border: 1px solid var(--line);
+    border-radius: 11px;
+  }
+  .periods label { position: relative; cursor: pointer; }
+  .periods input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .periods span { display: block; padding: 5px 10px; border-radius: 7px; color: var(--muted); font-size: 11px; }
+  .periods input:checked + span { color: #211e25; background: var(--ink); font-weight: 650; }
+  .periods input:focus-visible + span { outline: 2px solid var(--lilac); outline-offset: 1px; }
+  .grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 10px; }
+  .panel { border: 1px solid var(--line); border-radius: 16px; background: var(--panel); padding: 16px; min-width: 0; }
+  .energy { grid-column: span 7; }
+  .sleep { grid-column: span 5; }
+  .focus, .sound { grid-column: span 6; }
+  .panel-title { justify-content: space-between; gap: 6px; min-height: 28px; margin-bottom: 14px; }
+  .panel-title h2 { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .glyph {
+    display: inline-grid;
+    place-items: center;
+    width: 24px;
+    aspect-ratio: 1;
+    background: #ffffff0a;
+    border-radius: 7px;
+    color: var(--lilac);
+    font: 16px/1 system-ui, sans-serif;
+  }
+  .energy .glyph { color: var(--peach); }
+  .metric, .clock { font-variant-numeric: tabular-nums; font-weight: 400; letter-spacing: -.065em; line-height: 1; }
+  .metric { display: block; font-size: 38px; }
+  .energy .metric { font-size: 58px; margin-block: 6px 8px; }
+  .metric small { font-size: .47em; margin-left: 2px; letter-spacing: -.025em; }
+  .rolling-value { position: relative; display: inline-block; overflow: clip; }
+  #energy-value { display: inline-block; }
+  .outgoing-value { position: absolute; inset: 0; }
+  .energy-content { display: grid; grid-template-columns: .85fr 1.15fr; gap: 10px; align-items: end; }
+  .delta { color: var(--peach); font-size: 11px; }
+  .bars { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+  .bar { display: grid; gap: 5px; justify-items: center; min-width: 0; }
+  .track { width: min(100%, 15px); height: 91px; position: relative; border-radius: 5px; background: #ffffff07; }
+  .fill {
+    position: absolute;
+    inset: auto 0 0;
+    height: var(--value);
+    border-radius: inherit;
+    background: linear-gradient(0deg, #593d3e, #b57057);
+    transition: height .46s cubic-bezier(.2,.8,.25,1);
+  }
+  .bar[data-peak] .fill { background: linear-gradient(0deg, #ce674d, #ffba8e); }
+  .bar-label { color: var(--muted); font-size: 9px; white-space: nowrap; }
+  .action, .preset {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #1a1b20;
+    padding: 5px 9px;
+    font-size: 11px;
+  }
+  .action:hover, .preset:hover { background: #30313a; }
+  .preset { min-width: 0; text-overflow: ellipsis; }
+  .sleep-summary { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .dots { display: grid; grid-template-columns: repeat(16, 1fr); gap: 4px; margin-top: 14px; }
+  .dots i { width: 100%; max-width: 7px; aspect-ratio: 1; border-radius: 2px; background: #34343d; }
+  .dots i[data-lit] { background: var(--lilac); opacity: var(--alpha); }
+  .timer { gap: 14px; }
+  .dial {
+    --angle: 0deg;
+    width: 63px;
+    flex: none;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: conic-gradient(var(--lilac) var(--angle), #3a3944 0);
+    padding: 4px;
+  }
+  .dial::before { content: ''; display: block; height: 100%; border-radius: inherit; background: var(--panel); }
+  .clock { display: block; font-size: 32px; }
+  .timer-actions { display: flex; gap: 7px; margin-top: 7px; }
+  .primary { background: var(--ink); border-color: transparent; color: #211e25; font-weight: 650; }
+  .primary:hover { background: #d9cef5; }
+  .wave {
+    display: flex;
+    align-items: center;
+    gap: clamp(2px, .5vw, 4px);
+    height: 32px;
+    margin: 0 0 9px;
+    overflow: hidden;
+  }
+  .wave i {
+    flex: 1 1 2px;
+    min-width: 1px;
+    height: calc(4px + var(--height) * .23);
+    background: #6e638b;
+    border-radius: 2px;
+    transition: height .35s, background .35s;
+  }
+  .sound[data-playing] .wave i { height: var(--height); background: var(--lilac); animation: pulse .9s var(--delay) infinite alternate ease-in-out; }
+  @keyframes pulse { to { transform: scaleY(.56); } }
+  .player { gap: 10px; }
+  .play { width: 34px; height: 34px; padding: 0; border-radius: 50%; flex: none; }
+  .track-name { font-weight: 600; font-size: 12px; }
+  .sleep-detail { animation: reveal .28s ease both; }
+  @keyframes reveal { from { opacity: 0; transform: translateY(5px); } }
+  .sleep-intro { justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-block: 6px 20px; }
+  .sleep-intro .metric { font-size: 52px; margin-bottom: 6px; }
+  .stages { display: flex; gap: 20px; margin: 0; }
+  .stages dt { color: var(--muted); font-size: 11px; }
+  .stages dd { margin: 1px 0 0; font-size: 15px; }
+  .timeline { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 12px; }
+  .axis { display: flex; justify-content: space-between; color: var(--muted); font-size: 10px; }
+  .axis-y { flex-direction: column; padding-block: 4px; }
+  .axis-x { grid-column: 2; }
+  .timeline svg { display: block; width: 100%; height: clamp(100px, 21vw, 165px); }
+  .sleep-trace { animation: trace-in .8s .12s cubic-bezier(.24,.7,.35,1) both; }
+  @keyframes trace-in { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0); } }
+  .insight { margin-top: 16px; border-radius: 9px; padding: 10px 12px; background: #302a40; color: #e4d9ff; font-size: 12px; }
+  .trail { margin-top: 10px; padding-block: 0; }
+  .trail summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-block: 11px;
+    list-style: none;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .trail summary::-webkit-details-marker { display: none; }
+  .trail summary::after { content: '+'; color: var(--lilac); margin-left: 4px; }
+  .trail[open] summary::after { content: '−'; }
+  .trail summary:focus-visible { outline: 2px solid var(--lilac); outline-offset: 3px; border-radius: 4px; }
+  .trail-total { margin-left: auto; font-weight: 400; text-align: right; }
+  .trail-content { padding-bottom: 12px; }
+  .trail-strip { display: flex; gap: 2px; height: 7px; margin-block: 2px 10px; border-radius: 3px; overflow: clip; }
+  .trail-strip > span { flex: var(--length) 1 0; min-width: 0; background: var(--session-color); }
+  [data-session="25"] { --session-color: var(--lilac); }
+  [data-session="45"] { --session-color: var(--peach); }
+  [data-session="5"] { --session-color: #a8a7b2; }
+  .trail-list { max-height: 135px; overflow: auto; list-style: none; margin: 0; padding: 0; }
+  .trail-list li { display: flex; align-items: center; gap: 7px; padding-block: 4px; font-size: 12px; }
+  .trail-list li::before { content: ''; width: 6px; height: 6px; border-radius: 2px; background: var(--session-color); }
+  .trail-list time { margin-left: auto; color: var(--muted); padding-inline-end: 4px; }
+  .footer { justify-content: space-between; gap: 10px; margin: 15px 4px 0; color: #5d534e; font-size: 11px; }
+  .footer a { color: inherit; text-underline-offset: 3px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  @media (max-width: 510px) {
+    .board { padding: 12px; border-radius: 20px; }
+    .energy, .sleep, .focus, .sound { grid-column: span 12; }
+    .energy .metric { font-size: 46px; }
+    .header { padding-block: 1px 12px; gap: 6px; }
+    .periods span { padding-inline: 6px; }
+    .identity { gap: 7px; }
+    .monogram { width: 28px; }
+  }
+  [data-embedded] body { display: block; padding: 0; background: transparent; }
+  [data-embedded] .page { width: 100%; margin-inline: auto; }
+  [data-embedded] .board { padding: 10px; border-radius: 0; box-shadow: none; }
+  [data-embedded] .footer, [data-embedded] .header .subtitle, [data-embedded] .monogram { display: none; }
+  [data-embedded] .header { padding-block: 0 8px; }
+  [data-embedded] h1 { font-size: 14px; }
+  [data-embedded] .grid { gap: 5px; }
+  [data-embedded] .panel { padding: 7px; border-radius: 9px; }
+  [data-embedded] .panel-title { margin-bottom: 4px; min-height: 21px; }
+  [data-embedded] .panel-title h2 { font-size: 11px; gap: 4px; }
+  [data-embedded] .glyph { width: 17px; font-size: 12px; }
+  [data-embedded] .action, [data-embedded] .preset { padding: 3px 4px; font-size: 10px; }
+  [data-embedded] .energy, [data-embedded] .sleep,
+  [data-embedded] .focus, [data-embedded] .sound { grid-column: span 6; }
+  [data-embedded] .energy-content { grid-template-columns: 1fr 1fr; gap: 3px; }
+  [data-embedded] .energy .metric, [data-embedded] .metric, [data-embedded] .clock { font-size: 24px; }
+  [data-embedded] .track { height: 34px; }
+  [data-embedded] .delta, [data-embedded] .subtitle, [data-embedded] .bar-label { font-size: 8px; }
+  [data-embedded] .bars, [data-embedded] .dots { gap: 2px; }
+  [data-embedded] .sleep-summary { gap: 2px 6px; }
+  [data-embedded] .dots { margin-top: 6px; }
+  [data-embedded] .timer { gap: 7px; }
+  [data-embedded] .dial, [data-embedded] .play { width: 26px; }
+  [data-embedded] .play { height: 26px; }
+  [data-embedded] .wave { height: 18px; margin-bottom: 3px; }
+  @media (max-width: 280px) {
+    [data-embedded] .board { padding: 6px; }
+    [data-embedded] .header { padding-bottom: 5px; }
+    [data-embedded] h1 { font-size: 12px; white-space: nowrap; }
+    [data-embedded] .periods { padding: 2px; }
+    [data-embedded] .periods span { font-size: 9px; padding: 2px 4px; }
+    [data-embedded] .panel { padding: 5px; }
+    [data-embedded] .glyph, [data-embedded] .dial,
+    [data-embedded] .energy-content .subtitle, [data-embedded] .delta,
+    [data-embedded] .sleep-summary .subtitle, [data-embedded] .bar-label,
+    [data-embedded] .player .subtitle { display: none; }
+    [data-embedded] .energy .metric { margin-block: 0; }
+    [data-embedded] .panel-title { gap: 3px; min-height: 17px; margin-bottom: 3px; }
+    [data-embedded] .action, [data-embedded] .preset { padding-block: 1px; }
+    [data-embedded] .action { white-space: nowrap; }
+    [data-embedded] .track { height: 28px; }
+    [data-embedded] .dots { margin-top: 4px; }
+    [data-embedded] .dots i { max-width: 3px; }
+    [data-embedded] .clock { font-size: 22px; }
+    [data-embedded] .timer-actions { margin-top: 3px; }
+    [data-embedded] .wave { height: 15px; }
+    [data-embedded] .play { width: 22px; height: 22px; }
+    [data-embedded] .track-name { font-size: 10px; }
+    [data-embedded] .player { gap: 5px; }
+    [data-embedded] .sleep-intro .metric { margin-bottom: 3px; }
+    [data-embedded] .sleep-intro, [data-embedded] .insight { margin-block: 5px; }
+    [data-embedded] .stages { gap: 10px; }
+  }
+  @media (max-width: 360px) and (max-height: 240px) {
+    [data-embedded] .trail { display: none; }
+  }
+  [data-gallery-active="false"] .wave i { animation-play-state: paused; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<main class="page">
+  <div class="board">
+    <header class="header">
+      <div class="identity">
+        <span class="monogram" aria-hidden="true">Q</span>
+        <div><h1>Quiet Hours</h1><p class="subtitle">Daily rhythm</p></div>
+      </div>
+      <fieldset class="periods">
+        <legend class="sr-only">Energy period</legend>
+        <label><input type="radio" name="period" value="today" checked><span>Today</span></label>
+        <label><input type="radio" name="period" value="week"><span>Week</span></label>
+        <label><input type="radio" name="period" value="month"><span>Month</span></label>
+      </fieldset>
+    </header>
+
+    <div class="grid" id="overview">
+      <section class="panel energy">
+        <div class="panel-title">
+          <h2><span class="glyph" aria-hidden="true">ϟ</span> Energy</h2>
+          <p class="subtitle" id="energy-peak"></p>
+        </div>
+        <div class="energy-content">
+          <div aria-live="polite">
+            <p class="subtitle" id="energy-label"></p>
+            <strong class="metric"><span class="rolling-value"><span id="energy-value"></span></span><small>%</small></strong>
+            <p class="delta" id="energy-delta"></p>
+          </div>
+          <figure class="bars" id="bars" role="img"></figure>
+        </div>
+      </section>
+
+      <section class="panel sleep">
+        <div class="panel-title">
+          <h2><span class="glyph" aria-hidden="true">☾</span> Sleep</h2>
+          <button class="action" id="show-sleep" type="button" aria-controls="sleep-detail" aria-expanded="false">Stages ↗</button>
+        </div>
+        <div class="sleep-summary"><strong class="metric">7h 42m</strong><p class="subtitle">Score 86 · Restful</p></div>
+        <div class="dots" id="sleep-dots" aria-hidden="true"></div>
+      </section>
+
+      <section class="panel focus">
+        <div class="panel-title">
+          <h2><span class="glyph" aria-hidden="true">◎</span> Focus</h2>
+          <select class="preset" id="preset" aria-label="Focus preset">
+            <option value="25">Pomodoro · 25m</option>
+            <option value="45">Deep work · 45m</option>
+            <option value="5">Short break · 5m</option>
+          </select>
+        </div>
+        <div class="timer">
+          <div class="dial" id="dial" aria-hidden="true"></div>
+          <div>
+            <time class="clock" id="clock" role="timer" datetime="PT25M">25:00</time>
+            <div class="timer-actions">
+              <button class="action primary" id="toggle-timer" type="button">Start</button>
+              <button class="action" id="reset" type="button">Reset</button>
+            </div>
+          </div>
+        </div>
+        <p class="sr-only" id="timer-status" role="status"></p>
+      </section>
+
+      <section class="panel sound" id="sound">
+        <div class="panel-title">
+          <h2><span class="glyph" aria-hidden="true">≋</span> Sounds</h2>
+          <p class="subtitle" id="sound-status" role="status">Paused</p>
+        </div>
+        <div class="wave" id="wave" aria-hidden="true"></div>
+        <div class="player">
+          <button class="action primary play" id="play" type="button" aria-label="Play ambient rain">▶</button>
+          <div><p class="track-name">Window Rain</p><p class="subtitle">Ambient sound</p></div>
+        </div>
+      </section>
+    </div>
+
+    <section class="panel sleep-detail" id="sleep-detail" aria-labelledby="sleep-title" hidden>
+      <div class="panel-title">
+        <h2 id="sleep-title"><span class="glyph" aria-hidden="true">☾</span> Sleep stages</h2>
+        <button class="action" id="close-sleep" type="button">Back to overview</button>
+      </div>
+      <div class="sleep-intro">
+        <div><strong class="metric">7h 42m</strong><p class="subtitle">23:40–07:22 · Score 86</p></div>
+        <dl class="stages">
+          <div><dt>Deep</dt><dd>1h 48m</dd></div>
+          <div><dt>REM</dt><dd>2h 06m</dd></div>
+          <div><dt>Awake</dt><dd>12m</dd></div>
+        </dl>
+      </div>
+      <figure class="timeline" aria-label="Example sleep timeline, from 23:40 to 07:22">
+        <div class="axis axis-y" aria-hidden="true"><span>Awake</span><span>REM</span><span>Light</span><span>Deep</span></div>
+        <svg viewBox="0 0 462 144" preserveAspectRatio="none" aria-hidden="true">
+          <defs>
+            <linearGradient id="sleep-fill" x2="0" y2="1">
+              <stop stop-color="#bcb0fa" stop-opacity=".26"/>
+              <stop offset="1" stop-color="#bcb0fa" stop-opacity=".02"/>
+            </linearGradient>
+          </defs>
+          <path d="M0 10H462M0 51H462M0 92H462M0 133H462" stroke="#3a3845" stroke-dasharray="3 4" fill="none"/>
+          <g class="sleep-trace">
+            <path d="M0 10H6V92H37V133H84V92H121V51H153V92H190V133H228V92H262V51H302V92H336V133H359V92H385V51H418V92H435V51H456V10H462V144H0Z" fill="url(#sleep-fill)"/>
+            <path d="M0 10H6V92H37V133H84V92H121V51H153V92H190V133H228V92H262V51H302V92H336V133H359V92H385V51H418V92H435V51H456V10H462" stroke="#c6b7ff" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke" fill="none"/>
+          </g>
+        </svg>
+        <div class="axis axis-x" aria-hidden="true"><span>23:40</span><span>01:30</span><span>03:30</span><span>05:30</span><span>07:22</span></div>
+      </figure>
+      <p class="insight">You fell asleep 14 minutes earlier than your weekly average.</p>
+    </section>
+
+    <details class="panel trail" id="trail">
+      <summary>Focus trail <span class="subtitle trail-total" id="trail-total">0 min focused today</span></summary>
+      <div class="trail-content">
+        <p class="subtitle" id="trail-empty">Finish a timer to add your first session.</p>
+        <div class="trail-strip" id="trail-strip" aria-hidden="true" hidden></div>
+        <ol class="trail-list" id="trail-list" aria-label="Today’s completed sessions" hidden></ol>
+      </div>
+    </details>
+  </div>
+  <footer class="footer"><a href="../../index.html">UI Moments</a><a href="https://x.com/seanaiux/status/2122778549937422352" target="_blank" rel="noopener">Design reference · Sean Galt</a></footer>
+</main>
+<script>
+  const get = id => document.getElementById(id);
+  const periods = {
+    today: {value: 78, label: 'Today’s energy', delta: '+12 vs. yesterday', bars: [29, 44, 70, 84, 62, 49, 36], ticks: ['07', '09', '11', '13', '15', '17', '19']},
+    week: {value: 64, label: 'Weekly average', delta: '−3 vs. last week', bars: [61, 72, 47, 84, 65, 37, 53], ticks: ['M', 'T', 'W', 'T', 'F', 'S', 'S']},
+    month: {value: 71, label: 'Monthly average', delta: '+7 vs. last month', bars: [46, 58, 53, 68, 62, 83, 73], ticks: ['01', '05', '10', '15', '20', '25', '30']},
+  };
+  const bars = get('bars');
+  const metric = get('energy-value');
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+  let roll;
+  const barNodes = Array.from({length: 7}, () => {
+    const bar = document.createElement('div');
+    bar.className = 'bar';
+    bar.innerHTML = '<span class="track"><i class="fill"></i></span><span class="bar-label"></span>';
+    bars.append(bar);
+    return bar;
+  });
+
+  function rollEnergy(value) {
+    const previous = Number(metric.textContent);
+    roll?.cancel();
+    metric.parentElement.querySelector('.outgoing-value')?.remove();
+    metric.textContent = value;
+    if (!previous || previous === value || reducedMotion.matches || document.documentElement.dataset.galleryActive === 'false') return;
+
+    const direction = Math.sign(value - previous);
+    const outgoing = document.createElement('span');
+    outgoing.className = 'outgoing-value';
+    outgoing.setAttribute('aria-hidden', 'true');
+    outgoing.textContent = previous;
+    metric.before(outgoing);
+    const timing = {duration: 300, easing: 'cubic-bezier(.22,.7,.28,1)'};
+    outgoing.animate([
+      {transform: 'translateY(0)'},
+      {transform: 'translateY(' + direction * 100 + '%)', opacity: .4},
+    ], timing).onfinish = () => outgoing.remove();
+    roll = metric.animate([
+      {transform: 'translateY(' + -direction * 100 + '%)', opacity: .4},
+      {transform: 'translateY(0)'},
+    ], timing);
+  }
+
+  function showEnergy(period) {
+    const data = periods[period];
+    const peak = Math.max(...data.bars);
+    get('energy-label').textContent = data.label;
+    rollEnergy(data.value);
+    get('energy-delta').textContent = data.delta;
+    get('energy-peak').textContent = 'Peak ' + peak + '%';
+    bars.setAttribute('aria-label', data.bars.map((value, index) => data.ticks[index] + ': ' + value + '%').join(', '));
+    barNodes.forEach((bar, index) => {
+      bar.style.setProperty('--value', data.bars[index] + '%');
+      bar.toggleAttribute('data-peak', data.bars[index] === peak);
+      bar.lastElementChild.textContent = data.ticks[index];
+    });
+  }
+
+  document.querySelector('.periods').addEventListener('change', event => showEnergy(event.target.value));
+  showEnergy('today');
+
+  const depth = [0, 1, 3, 2, 4, 3, 2, 3, 2, 3, 1, 2, 1, 0, 1, 0];
+  for (let row = 0; row < 4; row++) {
+    depth.forEach((height, column) => {
+      const dot = document.createElement('i');
+      dot.toggleAttribute('data-lit', row >= 4 - height);
+      dot.style.setProperty('--alpha', .45 + (column % 4) * .17);
+      get('sleep-dots').append(dot);
+    });
+  }
+
+  const sleepButton = get('show-sleep');
+  const sleepBack = get('close-sleep');
+  function showSleep(open) {
+    get('overview').hidden = open;
+    get('sleep-detail').hidden = !open;
+    get('trail').hidden = open;
+    sleepButton.setAttribute('aria-expanded', String(open));
+    (open ? sleepBack : sleepButton).focus();
+  }
+  sleepButton.addEventListener('click', () => showSleep(true));
+  sleepBack.addEventListener('click', () => showSleep(false));
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && !get('sleep-detail').hidden) showSleep(false);
+  });
+
+  for (let index = 0; index < 44; index++) {
+    const bar = document.createElement('i');
+    const height = 5 + 20 * Math.abs(Math.sin(index * .33) * Math.cos(index * .12));
+    bar.style.setProperty('--height', height + 'px');
+    bar.style.setProperty('--delay', (index % 9) * -.11 + 's');
+    get('wave').append(bar);
+  }
+
+  let audio;
+  let rainWanted = false;
+  let timerStartedRain = false;
+  let audioRequest = 0;
+
+  function createRain() {
+    const context = new AudioContext();
+    const buffer = context.createBuffer(1, context.sampleRate * 5, context.sampleRate);
+    const samples = buffer.getChannelData(0);
+    let filtered = 0;
+    for (let index = 0; index < samples.length; index++) {
+      filtered = (filtered + (Math.random() * 2 - 1) * .16) / 1.16;
+      const time = index / samples.length * Math.PI * 2;
+      samples[index] = filtered * (.76 + .14 * Math.sin(time * 2) + .1 * Math.cos(time * 7));
+    }
+    const source = context.createBufferSource();
+    const filter = context.createBiquadFilter();
+    const gain = context.createGain();
+    source.buffer = buffer;
+    source.loop = true;
+    filter.type = 'bandpass';
+    filter.frequency.value = 1100;
+    filter.Q.value = .36;
+    gain.gain.value = 0;
+    source.connect(filter).connect(gain).connect(context.destination);
+    source.start();
+    return {context, gain};
+  }
+
+  function renderSound(playing, status) {
+    get('sound').toggleAttribute('data-playing', playing);
+    get('sound-status').textContent = status;
+    const play = get('play');
+    play.textContent = playing ? 'Ⅱ' : '▶';
+    play.setAttribute('aria-label', (rainWanted ? 'Pause' : 'Play') + ' ambient rain');
+  }
+
+  async function syncRain() {
+    const request = ++audioRequest;
+    const active = document.documentElement.dataset.galleryActive !== 'false';
+    if (!rainWanted || !active) {
+      if (audio) {
+        const now = audio.context.currentTime;
+        audio.gain.gain.setTargetAtTime(0, now, .03);
+      }
+      renderSound(false, 'Paused');
+      return;
+    }
+    try {
+      audio ??= createRain();
+      await audio.context.resume();
+      if (request !== audioRequest) return;
+      const now = audio.context.currentTime;
+      audio.gain.gain.setTargetAtTime(.55, now, .06);
+      renderSound(true, 'Playing');
+    } catch {
+      if (request !== audioRequest) return;
+      rainWanted = false;
+      renderSound(false, 'Unavailable');
+    }
+  }
+
+  function setRain(playing) {
+    rainWanted = playing;
+    void syncRain();
+  }
+  get('play').addEventListener('click', () => {
+    timerStartedRain = false;
+    setRain(!rainWanted);
+  });
+  new MutationObserver(syncRain).observe(document.documentElement, {attributes: true, attributeFilter: ['data-gallery-active']});
+
+  const preset = get('preset');
+  const clock = get('clock');
+  const timerButton = get('toggle-timer');
+  const dial = get('dial');
+  const sessionNames = {25: 'Pomodoro', 45: 'Deep work', 5: 'Short break'};
+  const trailPrefix = 'quiet-hours:focus:';
+  const volatileSessions = new Map();
+  const timeOfDay = new Intl.DateTimeFormat(undefined, {hour: 'numeric', minute: '2-digit'});
+  let duration = Number(preset.value) * 60_000;
+  let remaining = duration;
+  let deadline = 0;
+  let ticker;
+
+  function renderTrail() {
+    const entries = new Map(volatileSessions);
+    try {
+      for (let index = 0; index < localStorage.length; index++) {
+        const key = localStorage.key(index);
+        if (key?.startsWith(trailPrefix)) entries.set(key, Number(localStorage.getItem(key)));
+      }
+    } catch {
+      // Session history works in memory when the browser blocks local storage.
+    }
+    const today = new Date().toDateString();
+    const sessions = [...entries].flatMap(([key, minutes]) => {
+      const end = new Date(Number(key.slice(trailPrefix.length).split(':')[0]));
+      return Object.hasOwn(sessionNames, minutes) && end.toDateString() === today ? [{end, minutes}] : [];
+    }).sort((a, b) => a.end - b.end);
+
+    const strip = get('trail-strip');
+    const list = get('trail-list');
+    const focused = sessions.reduce((total, {minutes}) => total + (minutes === 5 ? 0 : minutes), 0);
+    get('trail-total').textContent = focused + ' min focused today';
+    get('trail-empty').hidden = sessions.length > 0;
+    strip.hidden = list.hidden = sessions.length === 0;
+    strip.replaceChildren(...sessions.map(({minutes}) => {
+      const block = document.createElement('span');
+      block.dataset.session = minutes;
+      block.style.setProperty('--length', minutes);
+      return block;
+    }));
+    list.replaceChildren(...sessions.map(({end, minutes}) => {
+      const item = document.createElement('li');
+      const time = document.createElement('time');
+      item.dataset.session = minutes;
+      item.textContent = sessionNames[minutes] + ' · ' + minutes + ' min';
+      time.dateTime = end.toISOString();
+      time.textContent = timeOfDay.format(end);
+      item.append(time);
+      return item;
+    }));
+  }
+
+  function recordSession(endedAt) {
+    const key = trailPrefix + Math.round(endedAt) + ':' + Math.random().toString(36).slice(2);
+    const minutes = duration / 60_000;
+    try {
+      localStorage.setItem(key, minutes);
+    } catch {
+      volatileSessions.set(key, minutes);
+    }
+    renderTrail();
+  }
+
+  get('trail').addEventListener('toggle', event => {
+    if (event.target.open) renderTrail();
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) renderTrail();
+  });
+  window.addEventListener('storage', event => {
+    if (!event.key || event.key.startsWith(trailPrefix)) renderTrail();
+  });
+  function refreshTrailAtMidnight() {
+    renderTrail();
+    const midnight = new Date();
+    midnight.setHours(24, 0, 0, 0);
+    setTimeout(refreshTrailAtMidnight, Math.max(1, midnight - Date.now()));
+  }
+  refreshTrailAtMidnight();
+
+  function renderTimer() {
+    const seconds = Math.ceil(remaining / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const rest = seconds % 60;
+    clock.textContent = [minutes, rest].map(value => String(value).padStart(2, '0')).join(':');
+    clock.dateTime = 'PT' + minutes + 'M' + rest + 'S';
+    dial.style.setProperty('--angle', 360 * (1 - remaining / duration) + 'deg');
+    timerButton.textContent = deadline ? 'Pause' : remaining > 0 && remaining < duration ? 'Resume' : 'Start';
+  }
+
+  function stopTimer() {
+    clearInterval(ticker);
+    deadline = 0;
+    if (timerStartedRain) {
+      timerStartedRain = false;
+      setRain(false);
+    }
+  }
+
+  function tick() {
+    const timeLeft = deadline - performance.now();
+    remaining = Math.max(0, timeLeft);
+    if (remaining === 0) {
+      stopTimer();
+      recordSession(Date.now() + timeLeft);
+      get('timer-status').textContent = 'Focus session complete.';
+    }
+    renderTimer();
+  }
+
+  function resetTimer() {
+    if (deadline && deadline <= performance.now()) tick();
+    stopTimer();
+    duration = Number(preset.value) * 60_000;
+    remaining = duration;
+    get('timer-status').textContent = 'Timer reset.';
+    renderTimer();
+  }
+
+  timerButton.addEventListener('click', () => {
+    if (deadline) {
+      tick();
+      if (!deadline) return;
+      stopTimer();
+      get('timer-status').textContent = 'Focus paused.';
+    } else {
+      if (remaining === 0) remaining = duration;
+      deadline = performance.now() + remaining;
+      ticker = setInterval(tick, 150);
+      get('timer-status').textContent = 'Focus started.';
+      if (!rainWanted) {
+        timerStartedRain = true;
+        setRain(true);
+      }
+    }
+    renderTimer();
+  });
+  preset.addEventListener('change', resetTimer);
+  get('reset').addEventListener('click', resetTimer);
+</script>
+</body>
+</html>

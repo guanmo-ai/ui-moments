@@ -1,0 +1,50 @@
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  color: var(--color-text-primary);
+  background: var(--color-background-surface);
+}
+
+[data-embedded] body { background: transparent; }
+
+.stage {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+.stage output { font-size: 12px; }
+.stage output:empty { display: none; }
+.date-range { width: min(100%, 245px); }
+[data-embedded] .stage[data-sample="date-range"] {
+  justify-content: flex-start;
+  padding-top: 24px;
+}
+.sheet-content { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.showcase { display: grid; justify-items: center; width: min(100%, 600px); }
+.stage:is([data-sample="lab-navigation-stack"], [data-sample="lab-transfer-list"]) .showcase > * { width: 100%; }
+
+[data-fit-preview] body { overflow: hidden; }
+[data-fit-preview] .showcase {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: 400px;
+  transform: translate(-50%, -50%) scale(var(--preview-scale, 0));
+}
+
+[data-gallery-active="false"] :where(*, *::before, *::after) {
+  animation-duration: 0.01ms !important;
+  transition-duration: 0.01ms !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where(*, *::before, *::after) {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
