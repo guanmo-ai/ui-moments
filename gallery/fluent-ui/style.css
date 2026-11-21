@@ -40,6 +40,7 @@ body { margin: 0; }
 .control-sample.fui-Combobox,
 .control-sample.fui-Dropdown,
 .labeled-control > .fui-SpinButton { min-width: 0; }
+.control-sample.fui-Field { grid-template-columns: minmax(0, 1fr); }
 .control-sample .fui-Combobox__input { flex: 1; min-width: 0; }
 .labeled-control { display: grid; gap: 6px; }
 .labeled-control > span { display: flex; justify-content: space-between; }
@@ -144,6 +145,12 @@ body { margin: 0; }
   .control-sample .fui-Tab { flex: 1; min-width: 0; padding-inline: 3px; }
   .control-sample .fui-Tab__content,
   .control-sample .fui-Tab__content--reserved-space { font-size: 12px; }
+  .message-sample.fui-MessageBar { grid-template-columns: auto minmax(0, 1fr) auto; }
+  .message-sample .fui-MessageBarBody {
+    padding-inline-end: 4px;
+    overflow-wrap: anywhere;
+  }
+  .message-sample .fui-MessageBarActions__containerAction { padding-inline-end: 4px; }
 }
 
 @media (max-height: 170px) {
