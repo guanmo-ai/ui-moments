@@ -6,7 +6,7 @@
     "@astryxdesign/charts": "0.7.17-canary.g72f2d7c",
     "@astryxdesign/core": "0.7.17-canary.g72f2d7c",
     "@astryxdesign/lab": "0.7.17-canary.g72f2d7c",
-    "@astryxdesign/theme-neutral": "0.7.17-canary.g72f2d7c",
+    "@astryxdesign/theme-neutral": "0.7.17",
     "@astryxdesign/vega": "0.7.17-canary.g72f2d7c",
     "@heroicons/react": "2.2.0",
     "@stylexjs/stylex": "0.19.2",
