@@ -1,0 +1,48 @@
+name: 投稿组件 / New component
+description: 提议新增原创组件或集成开源库 / Suggest an original component or an open-source integration
+labels: [component]
+body:
+  - type: input
+    id: name
+    attributes:
+      label: 组件名称 / Component name
+    validations:
+      required: true
+  - type: dropdown
+    id: origin
+    attributes:
+      label: 来源类型 / Source type
+      options:
+        - 原创（自己构思与实现） / Original design and implementation
+        - 开源完整集成（组织维护，OSI 批准许可） / Open-source integration (organization-maintained, OSI-approved license)
+        - 参考后重新实现（只借鉴想法） / Independent implementation inspired by a reference
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: 交互描述 / Interaction
+      description: 它解决什么问题？用户怎样操作？有哪些动效？ / What problem does this solve? How does it work? What motion does it use?
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: 来源链接 / Source link
+      description: 原创填「原创」。有上游或具体参考作品时填写链接。 / Enter “Original” or provide a link to the upstream project or reference.
+    validations:
+      required: true
+  - type: input
+    id: license
+    attributes:
+      label: 许可证 / License
+      description: 集成请填写上游许可证及版本。其余填「不适用」。 / For integrations, list the upstream license and version. Otherwise, enter “Not applicable.”
+    validations:
+      required: true
+  - type: checkboxes
+    id: rules
+    attributes:
+      label: 确认 / Confirmation
+      options:
+        - label: 我已阅读 CONTRIBUTING.md 中的来源规则 / I read the attribution rules in CONTRIBUTING.md
+          required: true

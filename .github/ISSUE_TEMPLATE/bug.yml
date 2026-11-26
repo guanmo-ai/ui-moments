@@ -1,0 +1,34 @@
+name: 问题反馈 / Bug report
+description: 组件、导出或页面异常 / A component, export, or page behaves unexpectedly
+labels: [bug]
+body:
+  - type: input
+    id: component
+    attributes:
+      label: 涉及的组件或页面 / Component or page
+      placeholder: 墨滴开关、Fluent UI 抽屉、加载动效导出 / Ink Switch, Fluent UI Drawer, loader export
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤 / Steps to reproduce
+      placeholder: |
+        1. 打开 … / Open …
+        2. 点按 … / Select …
+        3. 看到 … / Observe …
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望的结果 / Expected result
+  - type: input
+    id: env
+    attributes:
+      label: 浏览器与系统 / Browser and operating system
+      placeholder: 例如 Firefox on Windows 或 Safari on iOS / For example, Firefox on Windows or Safari on iOS
+  - type: textarea
+    id: media
+    attributes:
+      label: 截图或录屏 / Screenshots or recording
