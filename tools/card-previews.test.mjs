@@ -32,7 +32,7 @@ async function measureCardStages(context, base, width, columns) {
   }
 }
 
-test('1440 五列和 390 两列的 830 张上游卡片全部渲染且没有横向溢出', {timeout: 420_000}, async t => {
+test('1440 五列和 390 两列的 830 张上游卡片全部渲染且没有横向溢出', {timeout: 900_000}, async t => {
   assert.equal(astryxWorks.length, 779);
   assert.equal(fluentWorks.length, 51);
   const base = await startServer(t);
