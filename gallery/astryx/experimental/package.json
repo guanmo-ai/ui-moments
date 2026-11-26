@@ -4,7 +4,7 @@
   "type": "module",
   "dependencies": {
     "@astryxdesign/charts": "0.7.17-canary.g72f2d7c",
-    "@astryxdesign/core": "0.7.17-canary.g72f2d7c",
+    "@astryxdesign/core": "0.7.17",
     "@astryxdesign/lab": "0.7.17-canary.g72f2d7c",
     "@astryxdesign/theme-neutral": "0.7.17-canary.g72f2d7c",
     "@astryxdesign/vega": "0.7.17-canary.g72f2d7c",
