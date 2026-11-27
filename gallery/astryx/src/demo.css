@@ -82,10 +82,12 @@ body {
   position: absolute;
   inset: 0 auto auto 0;
   width: 400px;
-  visibility: hidden;
   transform-origin: top left;
   transform: translate(var(--preview-x, 0px), var(--preview-y, 0px)) scale(var(--preview-scale, 1));
+  /* Apply the fit in the same frame, including under reduced motion. */
+  transition-property: none;
 }
+[data-fit-preview] .showcase:not([data-preview-fit="ready"]) { visibility: hidden; }
 /* 只缩放表格的滚动视口，横向滚动仍能访问虚拟化的列。 */
 [data-fit-preview] [data-sample="variant-table-columns-virtualization-hook-usage"] .showcase > * {
   width: 100%;

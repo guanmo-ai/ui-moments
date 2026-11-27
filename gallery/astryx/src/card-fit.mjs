@@ -1,4 +1,4 @@
-export function fitCardPreview(panel) {
+export function fitCardPreview(panel, {waitForGraphic = false} = {}) {
   const stage = panel.parentElement;
   const padding = 7;
   let scale = 1;
@@ -24,13 +24,35 @@ export function fitCardPreview(panel) {
     panel.style.setProperty('--preview-scale', scale);
     panel.style.setProperty('--preview-x', `${(stage.clientWidth - width * scale) / 2 - left * scale}px`);
     panel.style.setProperty('--preview-y', `${(stage.clientHeight - height * scale) / 2 - top * scale}px`);
-    panel.style.visibility = 'visible';
+    panel.dataset.previewFit = 'ready';
   }
 
-  resize();
   const observer = new ResizeObserver(resize);
-  observer.observe(stage);
-  observer.observe(panel);
-  for (const child of panel.children) observer.observe(child);
-  return () => observer.disconnect();
+  function observeLayout() {
+    observer.observe(stage);
+    observer.observe(panel);
+    for (const child of panel.children) observer.observe(child);
+  }
+
+  if (!waitForGraphic) {
+    resize();
+    observeLayout();
+    return () => observer.disconnect();
+  }
+
+  // Some charts mount their drawing only after measuring their own container.
+  function observeChart() {
+    const graphic = panel.querySelector('svg, canvas');
+    if (!graphic) return;
+    renderObserver.disconnect();
+    observer.observe(graphic);
+    observeLayout();
+  }
+  const renderObserver = new MutationObserver(observeChart);
+  renderObserver.observe(panel, {childList: true, subtree: true});
+  observeChart();
+  return () => {
+    renderObserver.disconnect();
+    observer.disconnect();
+  };
 }

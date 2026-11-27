@@ -18,6 +18,7 @@ const embedded = params.get('embed') === 'ui';
 if (!embedded) addEventListener('hashchange', () => location.reload());
 const sample = embedded ? params.get('sample') : location.hash.slice(1);
 const compact = params.get('preview') === 'card';
+const selected = canaryStories.find(([id]) => id === sample) || canaryStories[0];
 const systemTheme = matchMedia('(prefers-color-scheme: light)');
 const modeForPage = () => embedded ? root.dataset.theme : (systemTheme.matches ? 'light' : 'dark');
 if (compact) root.dataset.fitPreview = '';
@@ -43,7 +44,7 @@ function App({render, Component, args}) {
   }, []);
 
   useLayoutEffect(() => {
-    if (compact) return fitCardPreview(ref.current);
+    if (compact) return fitCardPreview(ref.current, {waitForGraphic: selected[4] === 'chart'});
   }, []);
 
   return <Theme theme={neutralTheme} mode={mode}>
@@ -56,7 +57,6 @@ function App({render, Component, args}) {
   </Theme>;
 }
 
-const selected = canaryStories.find(([id]) => id === sample) || canaryStories[0];
 document.title = `${selected[1]} · UI Moments`;
 const reactRoot = createRoot(document.getElementById('sample'));
 stories.get(selected[0])().then(({meta, story}) => {

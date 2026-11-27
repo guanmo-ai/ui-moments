@@ -53,6 +53,8 @@ npm test
 npm run test:cards
 ```
 
+用 `UI_MOMENTS_CARD_CPU_RATE=4 npm run test:cards` 可在 Chromium 中模拟 4 倍 CPU 降速。降速时最多并行检查两个页面，CI 使用 2 倍降速。
+
 ## 维护与许可
 
 UI Moments 由观默维护，项目代码采用 MIT 许可。部分组件示例基于开源组件库构建，第三方代码与字体保留各自的版权和许可证，详见 [CREDITS.md](CREDITS.md)。

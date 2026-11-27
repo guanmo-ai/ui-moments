@@ -53,6 +53,8 @@ npm test
 npm run test:cards
 ```
 
+Run `UI_MOMENTS_CARD_CPU_RATE=4 npm run test:cards` to simulate a 4× CPU slowdown in Chromium. Throttled runs use at most two pages in parallel. CI runs with a 2× slowdown.
+
 ## Maintenance and license
 
 UI Moments is maintained by 观默 (Guanmo). Project code is licensed under MIT. Some component examples are built on open-source component libraries. Third-party code and fonts keep their own copyright notices and licenses; see [CREDITS.md](CREDITS.md).

@@ -36,8 +36,11 @@ async function measureCardStages(context, base, width, columns) {
 
 test('1440 五列和 390 两列的 830 张上游卡片全部渲染且没有横向溢出', {timeout: 900_000}, async t => {
   const start = performance.now();
-  const concurrency = availableParallelism();
-  t.after(() => t.diagnostic(`卡片检查用时 ${((performance.now() - start) / 1000).toFixed(1)} 秒，并发页数 ${concurrency}`));
+  const cpuRate = Number(process.env.UI_MOMENTS_CARD_CPU_RATE ?? '1');
+  assert.ok(Number.isFinite(cpuRate) && cpuRate >= 1, 'UI_MOMENTS_CARD_CPU_RATE 必须是大于等于 1 的有限数值');
+  const cores = availableParallelism();
+  const concurrency = cpuRate > 1 ? Math.min(cores, 2) : cores;
+  t.after(() => t.diagnostic(`卡片检查用时 ${((performance.now() - start) / 1000).toFixed(1)} 秒，并发页数 ${concurrency}，CPU 降速倍率 ${cpuRate}`));
   assert.equal(astryxWorks.length, 779);
   assert.equal(fluentWorks.length, 51);
   const base = await startServer(t, {cacheAssets: true});
@@ -62,6 +65,10 @@ test('1440 五列和 390 两列的 830 张上游卡片全部渲染且没有横�
       const page = await context.newPage();
       const errors = [];
       await page.goto(base + 'card-preview-test');
+      if (cpuRate > 1) {
+        const session = await context.newCDPSession(page);
+        await session.send('Emulation.setCPUThrottlingRate', {rate: cpuRate});
+      }
       monitor(page, errors, base);
       const iframe = await page.locator('iframe').elementHandle();
       const frame = await iframe.contentFrame();
@@ -73,13 +80,13 @@ test('1440 五列和 390 两列的 830 张上游卡片全部渲染且没有横�
               node.style.width = bounds.width + 'px';
               node.style.height = bounds.height + 'px';
             }, size);
-            await frame.goto(previewUrl(item, base), {waitUntil: 'commit', timeout: 15_000});
+            await frame.goto(previewUrl(item, base), {waitUntil: 'commit', timeout: 15_000 * cpuRate});
             const content = frame.locator(item.library.id === 'astryx'
               ? '#sample .stage > :not(.showcase, output), #sample .showcase > *'
               : '#demo .demo-stage > *');
-            await content.first().waitFor({timeout: 12_000});
+            await content.first().waitFor({timeout: 12_000 * cpuRate});
             if (item.type === 'Data visualization') {
-              await frame.locator('.showcase :is(svg, canvas)').first().waitFor({timeout: 6_000});
+              await frame.locator('.showcase[data-preview-fit="ready"] :is(svg, canvas)').first().waitFor({timeout: 6_000 * cpuRate});
             }
 
             const dimensions = await frame.evaluate(async () => {
