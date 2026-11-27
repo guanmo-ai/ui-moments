@@ -156,7 +156,7 @@
     .notch-thumb { position: absolute; top: 3px; height: 28px; width: 34px; border-radius: 14px; left: calc(var(--v) * (100% - 40px) / 4 + 3px); background: var(--raised); box-shadow: var(--shadow); transition: left .45s var(--spring), width .3s var(--spring), margin .3s var(--spring); }
     .notch[data-drag] .notch-thumb { width: 44px; margin-left: -5px; }
     .notch-fill { position: absolute; inset: 0 auto 0 0; width: calc(var(--v) * (100% - 40px) / 4 + 37px); border-radius: 17px; background: var(--accent-soft); transition: width .45s var(--spring); }
-    .notch input { position: absolute; inset: 26px 0 0; width: 100%; height: 34px; margin: 0; opacity: 0; cursor: pointer; }
+    .notch input { position: absolute; inset: 26px 0 0; width: 100%; height: 34px; margin: 0; opacity: 0; cursor: pointer; z-index: 1; }
     .notch input:focus-visible ~ .notch-track { outline: 2px solid var(--accent); outline-offset: 3px; }
 
     /* Strength Meter */
@@ -196,7 +196,7 @@
     .plans small { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
     .plans input:checked ~ small { color: var(--accent); }
     .plans input:focus-visible ~ b { text-decoration: underline; text-underline-offset: 3px; }
-    .plan-ring { position: absolute; top: 0; left: 0; width: 74px; height: 86px; border: 2px solid var(--accent); border-radius: 14px; pointer-events: none; translate: var(--x, 0) 0; transition: translate .5s var(--spring); }
+    .plan-ring { position: absolute; top: 0; left: 0; width: 74px; height: 86px; border: 2px solid var(--accent); border-radius: 14px; pointer-events: none; z-index: 1; translate: var(--x, 0) 0; transition: translate .5s var(--spring); }
     .plan-ring::after { position: absolute; top: -8px; right: -8px; display: grid; place-items: center; width: 20px; height: 20px; content: '✓'; border-radius: 50%; background: var(--accent); color: var(--on-accent); font-size: 12px; font-weight: 700; }
     .plan-ring[data-move] { animation: ring-squash .5s var(--ease); }
     @keyframes ring-squash { 40% { scale: 1.08 .94; } }
