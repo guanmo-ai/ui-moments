@@ -4,8 +4,7 @@ import {localizedText,onLanguageChange,translate as t} from './locale.mjs';
 import {buildCatalog,cardMarkup,categories,categoryMarkup,getCategoryFilters,initialCardCount,matches,standaloneExamplePath,workHeading,kindLabel} from './catalog.mjs';
 import {previewProps} from '../gallery/loaders/catalog.mjs';
 import {escapeHtml as esc} from '../gallery/loaders/snippets.mjs';
-import {createLoaderEditor,createLoaderPreview,setPreviewPlaying} from '../gallery/loaders/editor.mjs';
-import {componentPrompt,componentSourceHref,mountPrompt} from './prompt.mjs';
+import {createLoaderPreview,setPreviewPlaying} from '../gallery/loaders/preview.mjs';
 
 // The published HTML starts with the gallery. Closed dialogs travel with its module.
 if(typeof __UI_MOMENTS_DIALOGS__!=='undefined'){
@@ -20,6 +19,7 @@ let homeStylesReady=pendingSheets.length ? Promise.all(pendingSheets.map(link=>n
 
 const $=selector=>document.querySelector(selector);
 const root=document.documentElement,grid=$('#ui-grid');
+const OriginalCard=customElements.get('ui-original-card');
 const galleryEnd=$('#gallery-end');
 const loaderDialog=$('#detail'),componentDialog=$('#component-detail'),componentFrame=$('#component-frame');
 const componentPreviewFeedback=$('#component-preview-feedback'),componentPreviewStatus=$('#component-preview-status');
@@ -31,7 +31,7 @@ const itemsById=new Map(items.map(item=>[item.id,item]));
 const reduced=matchMedia('(prefers-reduced-motion:reduce)');
 const search=$('#work-search');
 const params=new URLSearchParams(location.search);
-search.value=params.get('q')||'';
+search.value=params.get('q')??search.value;
 
 let playing=!reduced.matches,category='all',shape='all';
 let component=null,componentTrigger=null,opening=null;
@@ -81,10 +81,20 @@ function restoreDetailFocus(button){
   else button.focus({preventScroll:true});
 }
 
-const editor=createLoaderEditor({
-  restoreFocus:restoreDetailFocus,
-  isPlaying:()=>playing&&!document.hidden,
-});
+let editor,componentSourceHref,refreshComponentPrompt,detailModules;
+function loadDetailModules(){
+  detailModules??=import('../gallery/loaders/editor.mjs').then(
+    ({createLoaderEditor,componentPrompt,componentSourceHref:sourceHref,mountPrompt})=>{
+      editor=createLoaderEditor({restoreFocus:restoreDetailFocus,isPlaying:canAnimate});
+      componentSourceHref=sourceHref;
+      refreshComponentPrompt=mountPrompt(componentDialog,()=>componentPrompt(component),editor.copy);
+    }
+  ).catch(error=>{
+    detailModules=undefined;
+    throw error;
+  });
+  return detailModules;
+}
 
 function effect(loader){
   const preview=createLoaderPreview(loader,previewProps(loader,themeColor));
@@ -97,10 +107,10 @@ function registerCard(item,element){
   const card={item,element,stage,detail:element.querySelector('[data-detail]'),near:false,visible:false,paused:false};
   if(item.loader)stage.disabled=!playing;
   cards.set(item.id,card);
-  const priorityFrame=stage.querySelector('[data-priority-preview]');
-  if(priorityFrame){
-    card.previewSrc=priorityFrame.getAttribute('src');
-    trackCardFrame(card,priorityFrame);
+  card.original=OriginalCard.get(stage);
+  if(card.original){
+    mounted.add(card);
+    localizeOriginal(card);
   }
   nearObserver.observe(element);
   visibleObserver.observe(element);
@@ -187,7 +197,11 @@ function sendEmbed(frame,active){
 
 function syncCard(card,{reload=false}={}){
   const run=canAnimate()&&!scrollTimer&&!modalOpen()&&!card.element.hidden&&card.visible&&!card.paused;
-  if(card.frame){
+  if(card.original){
+    const theme=root.dataset.theme;
+    if(card.original.dataset.theme!==theme)card.original.dataset.theme=theme;
+    if(card.original.dataset.galleryActive!==String(run))card.original.dataset.galleryActive=String(run);
+  }else if(card.frame){
     const state=`${run}:${root.dataset.theme}`;
     if(reload||card.motion!==state){
       card.motion=state;
@@ -202,7 +216,7 @@ function syncCard(card,{reload=false}={}){
 function syncMotion(){
   for(const card of mounted)syncCard(card);
   if(componentDialog.open)sendEmbed(componentFrame,canAnimate());
-  editor.syncMotion();
+  editor?.syncMotion();
   schedulePreviews();
 }
 
@@ -311,7 +325,7 @@ function mountFrame(card){
   const frame=document.createElement('iframe');
   frame.title=t('{name} interactive preview',workHeading(card.item));
   frame.allow='fullscreen; clipboard-write';
-  const url=card.previewSrc ? new URL(card.previewSrc,location.href) : embedUrl(card.item.demo,root.dataset.theme);
+  const url=embedUrl(card.item.demo,root.dataset.theme);
   url.searchParams.set('paused','1');
   if(card.item.library)url.searchParams.set('preview','card');
   trackCardFrame(card,frame);
@@ -328,6 +342,32 @@ function mountFrame(card){
   }
   frame.src=url.href;
   card.stage.append(frame);
+}
+
+function localizeOriginal(card){
+  const host=card.original.getRootNode().host;
+  host.setAttribute('role','group');
+  host.setAttribute('aria-label',t('{name} interactive preview',workHeading(card.item)));
+}
+
+async function mountOriginal(card){
+  card.loading=true;
+  try{
+    card.original=await OriginalCard.mount(card.stage,card.item.id,root.dataset.theme,false);
+    mounted.add(card);
+    localizeOriginal(card);
+    if(document.activeElement===card.retry){
+      card.original.querySelector('button:not([disabled]), input:not([disabled]), [tabindex="0"]')?.focus({preventScroll:true});
+    }
+    card.retry?.remove();
+    card.retry=null;
+    syncCard(card);
+  }catch{
+    card.failed=true;
+    paintFrameRetry(card);
+  }finally{
+    card.loading=false;
+  }
 }
 
 function schedulePreviews(){
@@ -391,6 +431,11 @@ async function mountPreview(card){
 }
 
 function updateCard(card){
+  if(card.item.original){
+    if(nearScreen(card)&&card.visible&&!card.original&&!card.loading&&!card.failed)void mountOriginal(card);
+    syncCard(card);
+    return;
+  }
   if(nearScreen(card)){
     idleFrames.delete(card);
     if(card.item.loader){
@@ -611,7 +656,6 @@ root.addEventListener('ui-moments:theme',()=>{
 });
 loaderDialog.addEventListener('close',syncMotion);
 
-const refreshComponentPrompt=mountPrompt(componentDialog,()=>componentPrompt(component),editor.copy);
 const componentCopy=$('#component-copy');
 const componentReuse=$('#component-reuse'),componentDownload=$('#component-download');
 function localizeComponent(){
@@ -729,10 +773,9 @@ async function openDetails(card){
   const {item,detail}=card;
   const attempt={card};
   opening=attempt;
-  if(item.loader||homeStylesReady)setDetailState(card,'loading');
+  setDetailState(card,'loading');
   try{
-    const license=item.loader ? await fetchText('LICENSE') : null;
-    if(homeStylesReady)await homeStylesReady;
+    const [license]=await Promise.all([item.loader ? fetchText('LICENSE') : null,homeStylesReady,loadDetailModules()]);
     if(opening!==attempt)return;
     favorites.showFor(item.id);
     if(item.loader){
@@ -746,7 +789,7 @@ async function openDetails(card){
   }catch{
     if(opening===attempt){
       setDetailState(card,'error');
-      editor.notify(t('{name} details could not load. Try again.',workHeading(item)));
+      editor?.notify(t('{name} details could not load. Try again.',workHeading(item)));
     }
   }finally{
     if(opening===attempt)opening=null;
@@ -896,6 +939,7 @@ function localizeCard(card){
     if(card.failed)card.stage.firstElementChild.textContent=t('Preview failed. Click to retry.');
   }
   if(card.frame)card.frame.title=t('{name} interactive preview',heading);
+  if(card.original)localizeOriginal(card);
   if(card.retry)paintFrameRetry(card,!card.failed);
 }
 

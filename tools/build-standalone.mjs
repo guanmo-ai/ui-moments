@@ -138,3 +138,5 @@ mkdirSync(destination, { recursive: true });
 for (const [name, html] of pages) writeFileSync(new URL(name, destination), html);
 writeFileSync(new URL('magnet-grid-preview.html', destination), magnetGridPreview());
 console.log(`已生成 ${pages.length} 个独立示例（gallery/originals/dist/）`);
+
+await import("./build-original-cards.mjs");

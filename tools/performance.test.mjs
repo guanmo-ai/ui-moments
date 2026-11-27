@@ -15,8 +15,11 @@ for (const {page, modules, gzipKiB} of budgets) {
     const html = await readFile(url, 'utf8');
     const entries = [...html.matchAll(/<script type="module" src="([^"]+)"/g)];
     assert.equal(entries.length, 1);
+    assert.match(entries[0][1], /original-cards-[A-Z0-9]{8}\.mjs$/);
+    const entry = html.match(/<template data-gallery-entry="([^"]+)"/)?.[1];
+    assert.match(entry, /gallery-[A-Z0-9]{8}\.mjs$/);
     const preloads = [...html.matchAll(/<link rel="modulepreload" href="([^"]+)"/g)];
-    const files = [...new Set([entries[0][1], ...preloads.map(match => match[1])])];
+    const files = [...new Set([entries[0][1], entry, ...preloads.map(match => match[1])])];
     assert.ok(files.length <= modules, `${files.length} 个初始模块，预算为 ${modules}`);
     const sizes = await Promise.all(files.map(async file => {
       const asset = new URL(file, url);
@@ -36,7 +39,7 @@ test('发布版首页从 HTML 显示首批卡片和完整数量', async () => {
   assert.equal(cards[0][1], 'magnet-grid');
   assert.doesNotMatch(html, /<article[^>]+data-category="loading"/);
   assert.match(html, /<style data-home-critical>/);
-  assert.match(html, /<iframe data-priority-preview[^>]+magnet-grid-preview\.html/);
+  assert.doesNotMatch(html, /<iframe data-priority-preview/);
   assert.match(html, /<span data-stat="total">884<\/span>/);
   assert.ok(gzipSync(html).length <= 7 * 1024, '带静态卡片的首页 HTML 压缩后不超过 7 KiB');
 });

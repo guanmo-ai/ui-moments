@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
-import {mkdir, readFile} from 'node:fs/promises';
+import {mkdir, mkdtemp, readFile, rm} from 'node:fs/promises';
 import {join} from 'node:path';
+import {tmpdir} from 'node:os';
+import {pathToFileURL} from 'node:url';
 import {test} from 'node:test';
 import {runInNewContext} from 'node:vm';
 import {chromium, webkit} from 'playwright';
@@ -24,7 +26,7 @@ test('图鉴首页默认黑色、收录 884 个示例，支持筛选、试玩和
   assert.equal(await page.locator('[data-stat="total"]').textContent(), '884');
   const card = id => page.locator(`[data-ui="${id}"]`);
   assert.ok(await card('magnet-grid').isVisible());
-  const ink = card('ink-switch').frameLocator('iframe').getByRole('switch', {name: 'Ink Switch'});
+  const ink = card('ink-switch').locator('[data-original-card]').getByRole('switch', {name: 'Ink Switch'});
   await ink.press('Space');
   assert.equal(await ink.getAttribute('aria-checked'), 'true');
 
@@ -194,19 +196,22 @@ test('卡片和详情的临时预览故障可以重试', {timeout: 25_000}, asyn
   t.after(() => browser.close());
   const page = await browser.newPage({viewport: {width: 1180, height: 860}, locale: 'en-US'});
   let broken = true;
-  await page.route(url => url.pathname.endsWith('/gallery/originals/index.html') && url.searchParams.get('sample') === 'ink-switch', route =>
+  await page.route(url => url.pathname.includes('/gallery/fluent-ui/dist/') && url.searchParams.get('sample') === 'drawer', route =>
     broken ? route.fulfill({status: 404, body: 'preview unavailable'}) : route.continue());
-  await page.goto(site + '?q=Ink%20Switch');
-  const card = page.locator('[data-ui="ink-switch"]');
+  await page.goto(site + '?q=Fluent%20Drawer');
+  const card = page.locator('[data-ui="fluent-drawer"]');
   const retryCard = card.locator('.ui-preview-retry');
   await retryCard.waitFor();
   assert.equal(await card.locator('iframe[data-loaded]').count(), 0);
   broken = false;
   await retryCard.click();
-  await card.frameLocator('iframe').getByRole('switch', {name: 'Ink Switch'}).waitFor();
+  await card.frameLocator('iframe').getByRole('button', {name: 'Open settings'}).waitFor();
 
   broken = true;
-  await card.getByRole('button', {name: 'Details Ink Switch'}).click();
+  await page.route(url => url.pathname.endsWith('/gallery/originals/index.html') && url.searchParams.get('sample') === 'ink-switch', route =>
+    broken ? route.fulfill({status: 404, body: 'preview unavailable'}) : route.continue());
+  await page.getByRole('searchbox').fill('Ink Switch');
+  await page.locator('[data-ui="ink-switch"]').getByRole('button', {name: 'Details Ink Switch'}).click();
   const retryDetail = page.locator('#component-retry');
   await retryDetail.waitFor();
   broken = false;
@@ -416,13 +421,15 @@ test('解析首页即可操作首卡，不等待图鉴脚本或整页预览', {t
     await route.continue();
   });
   await page.goto(site, {waitUntil: 'commit'});
-  const frame = page.frameLocator('[data-ui="magnet-grid"] iframe[data-loaded]');
-  await frame.locator('.magnet').press('ArrowRight');
-  assert.equal(await frame.locator('.magnet i').count(), 40);
-  assert.ok(await frame.locator('.magnet i').evaluateAll(dots =>
+  const card = page.locator('[data-ui="magnet-grid"] [data-original-card]');
+  await card.locator('.magnet').press('ArrowRight');
+  assert.equal(await page.locator('html').getAttribute('data-preview-pending'), null);
+  assert.equal(await card.locator('.magnet i').count(), 40);
+  assert.ok(await card.locator('.magnet i').evaluateAll(dots =>
     dots.some(dot => Number(dot.style.getPropertyValue('--p')) > 0)));
   assert.equal(await page.locator('html').getAttribute('data-ready'), null);
-  assert.ok(requests.some(path => path.endsWith('/magnet-grid-preview.html')));
+  assert.ok(requests.some(path => /\/original-cards-[A-Z0-9]{8}\.mjs$/.test(path)));
+  assert.ok(!requests.some(path => path.endsWith('/magnet-grid-preview.html')));
   assert.ok(!requests.some(path => path.endsWith('/gallery/originals/visual.html')));
   resume();
   await page.locator('html[data-ready="true"]').waitFor();
@@ -559,4 +566,171 @@ test('Astryx 新示例可全选表单、拖选图表和进入实验导航的下�
   await open('lab-navigation-stack');
   await page.getByText('General', {exact: true}).click();
   await page.getByText('Software Update', {exact: true}).waitFor();
+});
+
+test('36 个原创卡片都可在各自的 Shadow DOM 内操作', {timeout: 60_000}, async t => {
+  const site = await startServer(t);
+  const browser = await chromium.launch();
+  t.after(() => browser.close());
+  const page = await browser.newPage({viewport: {width: 1440, height: 900}, locale: 'en-US'});
+  const issues = [];
+  monitor(page, issues, site);
+  await page.goto(site);
+  await page.locator('html[data-ready="true"]').waitFor();
+  const search = page.getByRole('searchbox');
+  const cards = new Map((await fullCatalog()).filter(item => item.original).map(item => [item.id, item]));
+  const tested = new Set();
+  async function control(id) {
+    assert.ok(cards.has(id), id);
+    tested.add(id);
+    await search.fill(id);
+    const card = page.locator(`[data-ui="${id}"]`);
+    const preview = card.locator('[data-original-card]');
+    await preview.locator('.stage').waitFor();
+    assert.equal(await card.locator('iframe').count(), 0, id);
+    assert.equal(await preview.evaluate(host => host.shadowRoot.querySelectorAll('.sample').length), 1, id);
+    return preview;
+  }
+
+  const changes = [
+    ['ink-switch', '.ink', 'Space', '.ink[aria-checked="true"]'],
+    ['detent-dial', '.dial-knob', 'ArrowRight', '.dial-knob[aria-valuenow="5"]'],
+    ['odometer-stepper', '.reels', 'ArrowUp', '.reels[aria-valuenow="9"]'],
+    ['leaf-tabs', '[role="tab"][aria-selected="true"]', 'ArrowRight', '[role="tab"]:nth-child(4)[aria-selected="true"]'],
+    ['tide-progress', '.tide', 'Space', '.tide[aria-label="Tide Progress 75%"]'],
+    ['magnet-grid', '.magnet', 'ArrowRight', '.magnet i[style*="--p: 0."]'],
+    ['jelly-pad', '.jelly', 'ArrowRight', '.jelly-cube[style*="transform"]'],
+    ['hue-orbit', '.hue', 'ArrowRight', '.hue:not([aria-valuenow="270"])'],
+    ['merge-drops', '.drops', 'ArrowLeft', '.drops .small[cx="138.0"]'],
+    ['pull-cord', '.lamp-bead', 'Space', '.lamp-bead[aria-checked="true"]'],
+    ['flip-coin', '.coin', 'Space', '.coin[style*="rotateY"]'],
+    ['ripple-pad', '.ripples', 'Space', '.ripples b'],
+    ['bloom-toggle', '.bloom', 'Space', '.bloom[aria-checked="true"]'],
+    ['swipe-confirm', '.swipe-knob', 'Space', '.swipe[data-done]'],
+    ['pull-refresh', '.pull', 'Space', '.pull-list [data-new]'],
+    ['elastic-string', '.string', 'Space', '.string path:not([d="M14 60 Q110 60 206 60"])'],
+    ['domino-row', '.domino', 'Space', '.domino[aria-pressed="true"]'],
+    ['rocker-switch', '.rocker', 'Space', '.rocker[aria-checked="true"]'],
+    ['scrub-wave', '.wave-bars', 'ArrowRight', '.wave-bars[aria-valuenow="40"]'],
+    ['snap-grid', '.snap', 'ArrowRight', '.snap-tile[style*="--tx: 92px"]'],
+    ['radial-menu', '.radial-main', 'Space', '.radial-main[aria-expanded="true"]'],
+    ['step-track', '.steps-nav [data-step="1"]', 'Space', '.steps-track[aria-valuenow="3"]'],
+    ['breath-orb', '.orb', 'Space', '.orb[aria-pressed="true"]'],
+    ['stroke-checklist', 'input[type="checkbox"]', 'Space', 'input[type="checkbox"]:first-child:checked'],
+    ['pebble-rating', 'input[value="4"]', 'ArrowRight', 'input[type="radio"]:checked:not([value="4"])'],
+    ['notch-slider', 'input[type="range"]', 'ArrowRight', 'input[aria-valuetext="L"]'],
+    ['strength-meter', '.secret-eye', 'Space', 'input[type="text"]'],
+    ['plan-picker', 'input[value="pro"]', 'ArrowRight', 'input[value="team"]:checked'],
+    ['copy-morph', '.copy', 'Space', '.copy[data-done]'],
+    ['like-burst', '.like', 'Space', '.like[aria-pressed="true"]'],
+    ['paper-plane', '.send', 'Space', '.send[data-done]'],
+    ['download-ring', '.dl', 'Space', '.dl[data-state="loading"], .dl[data-state="done"]'],
+    ['bell-toggle', '.bell', 'Space', '.bell[aria-pressed="false"]'],
+  ];
+  for (const [id, selector, key, outcome] of changes) {
+    const preview = await control(id);
+    const target = preview.locator(selector).first();
+    if (['ripple-pad', 'elastic-string', 'flip-coin'].includes(id)) {
+      await preview.locator('.original-root[data-gallery-active="true"]').waitFor();
+    }
+    if (id === 'stroke-checklist') assert.equal(await target.isChecked(), false);
+    await target.press(key);
+    if (id === 'stroke-checklist') assert.equal(await target.isChecked(), true);
+    await preview.locator(outcome).first().waitFor({state: 'attached', timeout: 4000}).catch(error => {
+      throw new Error(`${id} 操作后未出现 ${outcome}`, {cause: error});
+    });
+  }
+
+  const hold = (await control('hold-confirm')).locator('.hold');
+  await hold.focus();
+  await page.keyboard.down('Space');
+  await hold.locator('xpath=self::*[@data-holding]').waitFor({state: 'attached'});
+  await page.keyboard.up('Space');
+
+  const chip = await control('chip-input');
+  await chip.locator('input').fill('demo');
+  await chip.locator('input').press('Enter');
+  await chip.locator('.chip').filter({hasText: 'demo'}).waitFor();
+
+  const code = await control('code-shake');
+  const digits = code.locator('.code input');
+  for (const [index, digit] of [...'2468'].entries()) await digits.nth(index).fill(digit);
+  await code.locator('.code[data-state="ok"]').waitFor();
+
+  assert.deepEqual([...tested].sort(), [...cards.keys()].sort());
+  assert.deepEqual(issues, []);
+});
+
+test('原创卡片批量内联，跟随主题、语言、全局与离屏暂停', {timeout: 30_000}, async t => {
+  const site = await startServer(t);
+  const browser = await chromium.launch();
+  t.after(() => browser.close());
+  const page = await browser.newPage({viewport: {width: 1440, height: 900}, locale: 'en-US'});
+  await page.goto(site);
+  await page.locator('html[data-ready="true"]').waitFor();
+  const originals = [...(await fullCatalog()).slice(0, initialCardCount).filter(item => item.original).map(item => item.id)];
+  const visible = await page.locator('#ui-grid > article').evaluateAll((cards, ids) =>
+    cards.filter(card => ids.includes(card.dataset.ui) && card.getBoundingClientRect().top < innerHeight)
+      .map(card => ({shadow: card.querySelector('[data-original-card]')?.shadowRoot?.mode, iframe: Boolean(card.querySelector('iframe'))})), originals);
+  assert.ok(visible.length >= 10);
+  assert.ok(visible.every(({shadow, iframe}) => shadow === 'open' && !iframe));
+
+  const ink = page.locator('[data-ui="ink-switch"]');
+  const paper = page.locator('[data-ui="magnet-grid"] [data-original-card]');
+  const background = () => paper.locator('.stage').evaluate(node => getComputedStyle(node).backgroundColor);
+  const dark = await background();
+  await page.locator('#theme').click();
+  await paper.locator('.original-root[data-theme="light"]').waitFor();
+  assert.notEqual(await background(), dark);
+  await page.locator('#language').click();
+  assert.equal(await ink.locator('.ui-caption h2').textContent(), '墨滴开关');
+  assert.match(await paper.getAttribute('aria-label'), /磁吸/);
+  await page.locator('#language').click();
+  assert.equal(await ink.locator('.ui-caption h2').textContent(), 'Ink Switch');
+
+  const orb = page.locator('[data-ui="breath-orb"] [data-original-card]');
+  await page.getByRole('searchbox').fill('Breath Orb');
+  await orb.locator('.original-root[data-gallery-active="true"]').waitFor();
+  const animation = () => orb.locator('.orb .core').evaluate(node => getComputedStyle(node).animationPlayState);
+  assert.equal(await animation(), 'running');
+  await page.locator('#motion').click();
+  assert.equal(await animation(), 'paused');
+  await page.locator('#motion').click();
+  assert.equal(await animation(), 'running');
+  await page.emulateMedia({reducedMotion: 'reduce'});
+  assert.equal(await orb.locator('.orb .core').evaluate(node => getComputedStyle(node).animationName), 'none');
+  await page.emulateMedia({reducedMotion: 'no-preference'});
+  await page.getByRole('searchbox').fill('');
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await orb.locator('.original-root[data-gallery-active="false"]').waitFor({state: 'attached'});
+  assert.equal(await animation(), 'paused');
+});
+
+test('从内联原创卡片的详情下载单文件，断网后仍能操作', {timeout: 25_000}, async t => {
+  const site = await startServer(t);
+  const browser = await chromium.launch();
+  t.after(() => browser.close());
+  const context = await browser.newContext({locale: 'en-US'});
+  const page = await context.newPage();
+  await page.goto(site);
+  const card = page.locator('[data-ui="ink-switch"]');
+  await card.locator('[data-original-card]').getByRole('switch', {name: 'Ink Switch'}).waitFor();
+  await card.locator('[data-detail]').click();
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.locator('#component-download').click(),
+  ]);
+  assert.equal(download.suggestedFilename(), 'ui-moments-ink-switch.html');
+  const local = await readFile(await download.path(), 'utf8');
+  assert.equal(local, await readFile(new URL('../_site/gallery/originals/dist/ink-switch.html', import.meta.url), 'utf8'));
+  await context.setOffline(true);
+  const offline = await context.newPage();
+  const temp = await mkdtemp(join(tmpdir(), 'original-download-'));
+  t.after(() => rm(temp, {recursive: true, force: true}));
+  const file = join(temp, download.suggestedFilename());
+  await download.saveAs(file);
+  await offline.goto(pathToFileURL(file).href);
+  const ink = offline.getByRole('switch', {name: 'Ink Switch'});
+  await ink.press('Space');
+  assert.equal(await ink.getAttribute('aria-checked'), 'true');
 });
