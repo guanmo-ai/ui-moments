@@ -131,6 +131,7 @@
     .lamp-bead { position: absolute; top: calc(78px + var(--pull, 0px)); left: calc(50% + 25px); width: 16px; height: 20px; margin-left: -8px; padding: 0; border: 0; border-radius: 8px; background: var(--muted); cursor: grab; touch-action: none; transition: top .6s var(--spring), background .2s; }
     .lamp-bead:hover { background: var(--ink); }
     .lamp[data-drag] .lamp-cord, .lamp[data-drag] .lamp-bead { transition: none; }
+    @container (max-height: 128px) { .widget:has(.lamp) { scale: .6; } }
 
     /* Flip Coin */
     .coin-wrap { position: relative; display: grid; place-items: center; width: 120px; height: 150px; perspective: 500px; }

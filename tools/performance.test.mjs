@@ -40,6 +40,13 @@ test('发布版首页从 HTML 显示首批卡片和完整数量', async () => {
   assert.doesNotMatch(html, /<article[^>]+data-category="loading"/);
   assert.match(html, /<style data-home-critical>/);
   assert.doesNotMatch(html, /<iframe data-priority-preview/);
+  assert.doesNotMatch(html, /\bblocking=["']render["']/);
+  const previews = [...html.matchAll(/data-ui="([^"]+)"[^>]*><div class="ui-stage">(?:<template data-original-wide>)?<ui-original-card[^>]*><template shadowrootmode="open">/g)];
+  assert.equal(previews.length, 18);
+  assert.equal(previews[0][1], 'magnet-grid');
+  assert.equal([...html.matchAll(/shadowrootmode="open"><style data-first-paint>/g)].length, previews.length);
   assert.match(html, /<span data-stat="total">884<\/span>/);
-  assert.ok(gzipSync(html).length <= 7 * 1024, '带静态卡片的首页 HTML 压缩后不超过 7 KiB');
+  // 首屏原创卡片以声明式 Shadow DOM 写入 HTML。A/B 中模拟手机首屏由
+  // 297 ms 降至 125 ms。18 KiB 给当前 16.22 KiB 留出余量，同时限制以后无意增加体积。
+  assert.ok(gzipSync(html).length <= 18 * 1024, '带静态卡片的首页 HTML 压缩后不超过 18 KiB');
 });

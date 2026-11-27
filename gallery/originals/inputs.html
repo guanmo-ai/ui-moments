@@ -185,21 +185,33 @@
     .chip button:hover { opacity: 1; background: color-mix(in srgb, var(--accent) 16%, transparent); }
     .chips input { flex: 1; min-width: 64px; height: 28px; padding: 0 4px; border: 0; outline: 0; background: none; font-size: 14px; }
     .chips input::placeholder { color: var(--muted); }
+    @container (max-height: 128px) {
+      .chips { max-height: calc((100cqh - 12px) / .7); align-content: start; overflow: auto; scrollbar-width: thin; }
+    }
     @keyframes chip-in { from { scale: .6; opacity: 0; } }
 
     /* Plan Picker */
-    .plans { position: relative; display: grid; grid-template-columns: repeat(3, 74px); gap: 8px; margin: 0; padding: 0; border: 0; }
+    .plans { --plan-gap: 8px; position: relative; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--plan-gap); width: min(238px, calc(100cqw - 4px)); min-width: 0; margin: 0; padding: 0; border: 0; }
     .plans label { position: relative; display: grid; align-content: center; gap: 2px; height: 86px; padding: 0 10px; border: 1px solid var(--line); border-radius: 14px; background: var(--raised); cursor: pointer; transition: translate .3s var(--spring); }
-    .plans label:hover { translate: 0 -2px; }
+    .plans label:hover:not(:has(input:checked)) { translate: 0 -2px; }
     .plans input { position: absolute; opacity: 0; pointer-events: none; }
     .plans b { font-size: 13px; font-weight: 650; }
     .plans small { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
     .plans input:checked ~ small { color: var(--accent); }
     .plans input:focus-visible ~ b { text-decoration: underline; text-underline-offset: 3px; }
-    .plan-ring { position: absolute; top: 0; left: 0; width: 74px; height: 86px; border: 2px solid var(--accent); border-radius: 14px; pointer-events: none; z-index: 1; translate: var(--x, 0) 0; transition: translate .5s var(--spring); }
+    .plan-ring { position: absolute; top: 0; left: 0; width: calc((100% - 2 * var(--plan-gap)) / 3); height: 100%; border: 2px solid var(--accent); border-radius: 14px; pointer-events: none; z-index: 1; translate: calc(var(--plan-index, 1) * (100% + var(--plan-gap))) 0; transition: translate .5s var(--spring); }
     .plan-ring::after { position: absolute; top: -8px; right: -8px; display: grid; place-items: center; width: 20px; height: 20px; content: '✓'; border-radius: 50%; background: var(--accent); color: var(--on-accent); font-size: 12px; font-weight: 700; }
     .plan-ring[data-move] { animation: ring-squash .5s var(--ease); }
     @keyframes ring-squash { 40% { scale: 1.08 .94; } }
+    @container (max-width: 180px) {
+      .widget:has(.plans) { scale: 1; }
+      .plans { --plan-gap: 5px; width: calc(100cqw - 22px); }
+      .plans label { height: 62px; padding-inline: 4px; border-radius: 10px; }
+      .plans b { font-size: 11px; }
+      .plans small { font-size: 9px; }
+      .plan-ring { border-radius: 10px; }
+      .plan-ring::after { top: -6px; right: -6px; width: 16px; height: 16px; font-size: 10px; }
+    }
 
     [data-single] .samples { grid-template-columns: 1fr; }
     [data-single] .sample { width: min(100%, 420px); }
@@ -432,6 +444,7 @@
         close.addEventListener('click', () => { remove(chip); input.focus(); });
         chip.append(close);
         field.insertBefore(chip, input);
+        field.scrollTop = field.scrollHeight;
       }
       function remove(chip) {
         if (!chip || chip.dataset.leaving) return;
@@ -460,7 +473,7 @@
       const labels = $$('label', plans);
       function place(animate) {
         const index = labels.findIndex(label => $('input', label).checked);
-        ring.style.setProperty('--x', labels[index].offsetLeft + 'px');
+        ring.style.setProperty('--plan-index', index);
         if (!animate || !motionEnabled()) return;
         ring.removeAttribute('data-move');
         void ring.offsetWidth;

@@ -9,7 +9,7 @@ import {chromium, webkit} from 'playwright';
 import {fluentWorks} from '../gallery/fluent-ui/catalog.mjs';
 import {astryxWorks} from '../gallery/astryx/catalog.mjs';
 import {originalLoaders} from '../gallery/loaders/originals.mjs';
-import {buildCatalog, initialCardCount} from '../assets/catalog.mjs';
+import {buildCatalog, initialCardCount, usesTextEntry} from '../assets/catalog.mjs';
 import {remainingScenarios} from '../gallery/fluent-ui/tools/browser-scenarios.mjs';
 import {monitor, revealGalleryCards, startServer} from './browser-site.mjs';
 
@@ -435,7 +435,92 @@ test('解析首页即可操作首卡，不等待图鉴脚本或整页预览', {t
   await page.locator('html[data-ready="true"]').waitFor();
 });
 
-test('全部按黑白可操作、彩色可操作、自动动效排序，初始只挂载近屏卡片', {timeout: 45_000}, async t => {
+test('声明式首屏先按保存的浅色与中文绘制，接管保持节点和像素', {timeout: 25_000}, async t => {
+  let sendCards;
+  const firstCardsGate = new Promise(resolve => { sendCards = resolve; });
+  t.after(sendCards);
+  const site = await startServer(t, {firstCardsGate});
+  const browser = await chromium.launch();
+  t.after(() => browser.close());
+  const page = await browser.newPage({viewport: {width: 1440, height: 900}, colorScheme: 'dark', locale: 'en-US', reducedMotion: 'reduce'});
+  await page.addInitScript(() => {
+    localStorage.setItem('ui-moments-theme', 'light');
+    localStorage.setItem('ui-moments-language', 'zh-CN');
+  });
+  let resume;
+  const gate = new Promise(resolve => { resume = resolve; });
+  t.after(resume);
+  await page.route('**/assets/original-cards-*.mjs', async route => {
+    await gate;
+    await route.continue();
+  });
+  await page.goto(site, {waitUntil: 'commit'});
+  await page.locator('#ui-grid').waitFor({state: 'attached'});
+  assert.equal(await page.locator('body').evaluate(body => getComputedStyle(body).visibility), 'hidden');
+  assert.equal(await page.evaluate(() => performance.getEntriesByName('first-contentful-paint').length), 0);
+  sendCards();
+  const magnet = page.locator('[data-ui="magnet-grid"]');
+  const original = magnet.locator('[data-original-card]');
+  const pad = original.locator('.magnet');
+  await pad.waitFor();
+  const ink = page.locator('[data-ui="ink-switch"] .ui-stage');
+  const stage = original.locator('.stage');
+  await page.waitForFunction(() => {
+    const view = document.querySelector('[data-ui="magnet-grid"] ui-original-card')?.shadowRoot?.querySelector('.stage');
+    return view && getComputedStyle(view).backgroundColor === 'rgb(242, 242, 243)';
+  });
+  await page.waitForFunction(() => performance.getEntriesByName('first-contentful-paint').length > 0);
+  assert.equal(await page.locator('html').getAttribute('data-ready'), null);
+  assert.equal(await page.locator('html').getAttribute('data-theme'), 'light');
+  assert.equal(await page.locator('html').getAttribute('lang'), 'zh-CN');
+  assert.equal(await magnet.locator('.ui-caption h2').textContent(), '磁吸点阵');
+  assert.equal(await page.locator('#work-search').getAttribute('placeholder'), '搜索');
+  assert.equal(await pad.locator('i').count(), 40);
+  await page.evaluate(() => document.fonts.ready);
+  const before = await ink.screenshot();
+  const node = await pad.elementHandle();
+  const background = await stage.evaluate(element => getComputedStyle(element).backgroundColor);
+  resume();
+  await page.locator('html[data-ready="true"]').waitFor();
+  assert.equal(await pad.evaluate((element, initial) => element === initial, node), true);
+  assert.equal(await stage.evaluate(element => getComputedStyle(element).backgroundColor), background);
+  assert.deepEqual(await ink.screenshot(), before);
+  await pad.press('ArrowRight');
+  assert.ok(await pad.locator('i').evaluateAll(dots => dots.some(dot => Number(dot.style.getPropertyValue('--p')) > 0)));
+  await page.locator('#language').click();
+  assert.equal(await magnet.locator('.ui-caption h2').textContent(), 'Magnet Grid');
+  assert.equal(await page.locator('#gallery-title').textContent(), 'Interactive UI Gallery');
+  assert.equal(await page.locator('#work-search').getAttribute('placeholder'), 'Search');
+});
+
+test('声明式模板未被解析时，脚本采用同一份静态控件', {timeout: 20_000}, async t => {
+  const site = await startServer(t);
+  const browser = await chromium.launch();
+  t.after(() => browser.close());
+  const page = await browser.newPage({viewport: {width: 390, height: 844}, reducedMotion: 'reduce'});
+  let resume;
+  const gate = new Promise(resolve => { resume = resolve; });
+  t.after(resume);
+  await page.route('**/assets/original-cards-*.mjs', async route => {
+    await gate;
+    await route.continue();
+  });
+  await page.goto(site, {waitUntil: 'commit'});
+  const host = page.locator('[data-ui="magnet-grid"] ui-original-card');
+  await host.locator('.magnet').waitFor();
+  await host.evaluate(element => {
+    const fallback = element.cloneNode(false);
+    fallback.innerHTML = '<template shadowrootmode="open">' + element.shadowRoot.innerHTML + '</template>';
+    if (fallback.shadowRoot) throw new Error('模板应在脚本接管前保持未解析');
+    element.replaceWith(fallback);
+  });
+  resume();
+  await host.locator('.magnet').press('ArrowRight');
+  assert.equal(await host.locator('i').count(), 40);
+  assert.ok(await host.locator('i').evaluateAll(dots => dots.some(dot => Number(dot.style.getPropertyValue('--p')) > 0)));
+});
+
+test('全部按直接操作、文字输入、彩色控件和自动动效排序，初始只挂载近屏卡片', {timeout: 45_000}, async t => {
   const site = await startServer(t);
   const browser = await chromium.launch();
   t.after(() => browser.close());
@@ -450,6 +535,45 @@ test('全部按黑白可操作、彩色可操作、自动动效排序，初始�
   assert.deepEqual(order, [
     ...Array(863).fill('input'), ...Array(3).fill('color'), ...Array(18).fill('loading'),
   ]);
+  const items = new Map((await fullCatalog()).map(item => [item.id, item]));
+  const interactive = (await cards.evaluateAll(rows => rows.map(row => row.dataset.ui))).slice(0, 863);
+  const textEntries = interactive.map(id => usesTextEntry(items.get(id)));
+  const boundary = textEntries.indexOf(true);
+  assert.ok(boundary > 0);
+  assert.ok(textEntries.slice(boundary).every(Boolean));
+  for (const id of ['code-shake', 'chip-input', 'strength-meter', 'fluent-input', 'fluent-searchbox',
+    'fluent-combobox', 'astryx-date-range', 'astryx-text-area', 'astryx-variant-hooks-use-input-container-hook-usage',
+    'astryx-variant-multi-selector-multi-selector-searchable-multi-selector']) {
+    assert.ok(interactive.indexOf(id) >= boundary, `${id} 属于文字输入段`);
+  }
+  for (const id of ['plan-picker', 'magnet-grid', 'fluent-dropdown', 'fluent-slider', 'astryx-calendar', 'astryx-selector',
+    'astryx-variant-hooks-use-typeahead-hook-usage']) {
+    const index = interactive.indexOf(id);
+    assert.ok(index >= 0 && index < boundary, `${id} 属于直接操作段`);
+  }
+});
+
+test('滚动目标暂时留在视口之外时，卡片检查仍能推进到下一个批次', {timeout: 15_000}, async t => {
+  const site = await startServer(t);
+  const browser = await chromium.launch();
+  t.after(() => browser.close());
+  const page = await browser.newPage({viewport: {width: 390, height: 844}, reducedMotion: 'reduce'});
+  await page.addInitScript(() => {
+    const scrollIntoView = Element.prototype.scrollIntoView;
+    Element.prototype.scrollIntoView = function (options) {
+      if (this.id === 'gallery-end' && !window.missedGalleryScroll) {
+        window.missedGalleryScroll = true;
+        return;
+      }
+      return scrollIntoView.call(this, options);
+    };
+  });
+  await page.goto(site);
+  await page.locator('html[data-ready="true"]').waitFor();
+  const next = (await fullCatalog())[initialCardCount];
+  await revealGalleryCards(page, next.id);
+  assert.equal(await page.evaluate(() => window.missedGalleryScroll), true);
+  assert.equal(await page.locator(`[data-ui="${next.id}"]:not([hidden])`).count(), 1);
 });
 
 test('最后一张动效可分享直达、搜索、收藏，结果数反映全量筛选', {timeout: 30_000}, async t => {
@@ -586,7 +710,7 @@ test('36 个原创卡片都可在各自的 Shadow DOM 内操作', {timeout: 60_0
     await search.fill(id);
     const card = page.locator(`[data-ui="${id}"]`);
     const preview = card.locator('[data-original-card]');
-    await preview.locator('.stage').waitFor();
+    await card.locator('[data-original-card][data-hydrated] .stage').waitFor();
     assert.equal(await card.locator('iframe').count(), 0, id);
     assert.equal(await preview.evaluate(host => host.shadowRoot.querySelectorAll('.sample').length), 1, id);
     return preview;

@@ -23,7 +23,59 @@
 <meta name="ui-moments:ref" content="main">
 <link rel="icon" href="assets/icon.svg">
 <script>
-  try { if (localStorage.getItem('ui-moments-theme') === 'light') document.documentElement.dataset.theme = 'light'; } catch {}
+  (() => {
+    const root = document.documentElement;
+    let language;
+    try {
+      if (localStorage.getItem('ui-moments-theme') === 'light') root.dataset.theme = 'light';
+      language = localStorage.getItem('ui-moments-language');
+    } catch {}
+    root.lang = language != null ? (language === 'zh-CN' ? 'zh-CN' : 'en') : (/^zh(?:-|$)/i.test(navigator.language) ? 'zh-CN' : 'en');
+    const wide = matchMedia('(min-width:760px), (min-height:1000px)').matches;
+    const zh = root.lang === 'zh-CN';
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const paint = () => {
+      if (wide) for (const template of document.querySelectorAll('template[data-original-wide]')) {
+        const end = template.nextElementSibling;
+        if (!end) continue;
+        template.replaceWith(template.content);
+        end.remove();
+      }
+      const icon = document.querySelector(`template[data-theme-icon="${root.dataset.theme}"]`);
+      if (icon?.parentElement.lastElementChild?.hidden) {
+        const button = icon.parentElement;
+        button.title = zh ? icon.dataset.titleZh : icon.dataset.title;
+        button.setAttribute('aria-label', button.title);
+        button.replaceChildren(icon.content);
+      }
+      const motion = reduced && document.querySelector('#motion[data-play-label]');
+      if (motion) {
+        motion.textContent = zh ? motion.dataset.zhPlayLabel : motion.dataset.playLabel;
+        motion.setAttribute('aria-pressed', 'true');
+        motion.removeAttribute('data-zh');
+        motion.removeAttribute('data-play-label');
+      }
+      if (!zh) return;
+      for (const field of ['placeholder', 'title', 'aria-label', 'content']) {
+        const translated = `data-zh-${field}`;
+        for (const node of document.querySelectorAll(`[${translated}]`)) {
+          node.setAttribute(`data-i18n-source-${field}`, node.getAttribute(field));
+          node.setAttribute(field, node.getAttribute(translated));
+          node.removeAttribute(translated);
+        }
+      }
+      for (const node of document.querySelectorAll('[data-zh]')) {
+        if (node.dataset.i18n === 'text') node.dataset.i18nSource = node.textContent.trim();
+        node.textContent = node.dataset.zh;
+        if (node.parentElement.id === 'language') node.lang = 'en';
+        else if (node.lang === 'en') node.lang = root.lang;
+        node.removeAttribute('data-zh');
+      }
+    };
+    const observer = new MutationObserver(paint);
+    observer.observe(root, {childList: true, subtree: true});
+    document.addEventListener('DOMContentLoaded', () => { observer.disconnect(); paint(); }, {once: true});
+  })();
 </script>
 <link rel="stylesheet" href="assets/site.css">
 <link rel="stylesheet" href="gallery/loaders/style.css">

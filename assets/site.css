@@ -46,7 +46,8 @@
 @media(max-width:380px){.nav-end .nav-github{display:none}.nav-inner{gap:6px}/* home-deferred */.nav-links a{padding-inline:5px}/* /home-deferred */}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
 
-.gallery-page #categories .category-marker {
+.gallery-page #categories .category-marker,
+.gallery-page #categories:not(:has(.category-marker)) [aria-pressed="true"]::after {
   position: absolute;
   bottom: 0;
   height: 2px;
@@ -54,6 +55,7 @@
   background: var(--gallery-accent, var(--c-fg));
   pointer-events: none;
 }
+.gallery-page #categories:not(:has(.category-marker)) [aria-pressed="true"]::after { content: ''; inset-inline: 0; }
 /* /home-critical */
 .gallery-page .dialog-actions .save-work {
   display: grid;

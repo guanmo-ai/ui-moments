@@ -17,9 +17,71 @@ function previewUrl(item, base) {
   return url.href;
 }
 
-async function measureCardStages(context, base, width, columns) {
+async function throttleCpu(context, page, rate) {
+  if (rate === 1) return;
+  const session = await context.newCDPSession(page);
+  await session.send('Emulation.setCPUThrottlingRate', {rate});
+}
+
+async function checkOriginalCards(page, width) {
+  const ids = await page.evaluate(() => window.WORKS.map(({id}) => id));
+  assert.equal(ids.length, 36);
+  for (const id of ids) {
+    // A card can fill a spare column in All. Filter at phone width to exercise the actual narrow slot.
+    if (width === 390) await page.locator('#work-search').fill(id);
+    const card = page.locator(`[data-ui="${id}"]`);
+    await card.scrollIntoViewIfNeeded();
+    const preview = card.locator('[data-original-card][data-hydrated]');
+    const stage = preview.locator('.stage');
+    if (id === 'chip-input' && width === 390) {
+      const input = preview.getByRole('textbox');
+      for (let i = 1; i <= 5; i++) {
+        await input.fill(`WWWWWWW${i}`);
+        await input.press('Enter');
+      }
+      assert.equal(await preview.locator('.chip').count(), 5);
+      assert.ok(await input.evaluate(node => {
+        const field = node.closest('.chips');
+        return node.getBoundingClientRect().bottom <= field.getBoundingClientRect().bottom;
+      }), '390px chip-input 保留输入框');
+    }
+    const dimensions = await stage.evaluate(node => {
+      const box = node.getBoundingClientRect();
+      const clipped = [...node.children].some(child => {
+        const bounds = child.getBoundingClientRect();
+        return bounds.left < box.left - 0.5 || bounds.right > box.right + 0.5 ||
+          bounds.top < box.top - 0.5 || bounds.bottom > box.bottom + 0.5;
+      });
+      const viewport = node.getRootNode().host.parentElement;
+      const columnWidth = Number.parseFloat(getComputedStyle(viewport.closest('#ui-grid')).gridTemplateColumns);
+      return {width: node.clientWidth, height: node.clientHeight, viewportWidth: viewport.clientWidth, viewportHeight: viewport.clientHeight,
+        columnWidth, scrollWidth: node.scrollWidth, scrollHeight: node.scrollHeight, clipped};
+    });
+    assert.ok(dimensions.width === dimensions.viewportWidth && dimensions.height === dimensions.viewportHeight &&
+      (width !== 390 || dimensions.width <= Math.ceil(dimensions.columnWidth)) &&
+      dimensions.scrollWidth <= dimensions.width && dimensions.scrollHeight <= dimensions.height && !dimensions.clipped,
+      `${width}px ${id} ${JSON.stringify(dimensions)}`);
+    if (id !== 'plan-picker') continue;
+    for (const name of ['Basic', 'Pro', 'Team']) {
+      await preview.locator('.plans label').filter({hasText: name}).click();
+      const ring = await stage.evaluate(node => {
+        const active = node.querySelector('label:has(input:checked)');
+        const label = active.getBoundingClientRect();
+        const overlay = node.querySelector('.plan-ring').getBoundingClientRect();
+        const box = node.getBoundingClientRect();
+        const fits = label.left >= box.left && label.right <= box.right && label.top >= box.top && label.bottom <= box.bottom;
+        return {name: active.querySelector('b').textContent, fits,
+          aligned: ['left', 'top', 'width', 'height'].every(key => Math.abs(label[key] - overlay[key]) <= 0.5)};
+      });
+      assert.deepEqual(ring, {name, fits: true, aligned: true}, `${width}px ${id} ${name}`);
+    }
+  }
+}
+
+async function measureCardStages(context, base, width, columns, cpuRate) {
   const page = await context.newPage();
   try {
+    await throttleCpu(context, page, cpuRate);
     await page.setViewportSize({width, height: 900});
     await page.goto(base);
     await page.locator('html[data-ready="true"]').waitFor();
@@ -27,16 +89,18 @@ async function measureCardStages(context, base, width, columns) {
       Number(getComputedStyle(grid).getPropertyValue('--columns'))), columns);
     await revealGalleryCards(page);
     assert.equal(await page.locator('#ui-grid > article:not([hidden])').count(), 884);
-    return await page.locator('.ui-item').evaluateAll(cards => Object.fromEntries(cards.map(card => {
+    const sizes = await page.locator('.ui-item').evaluateAll(cards => Object.fromEntries(cards.map(card => {
       const stage = card.querySelector('.ui-stage');
       return [card.dataset.ui, {width: stage.clientWidth, height: stage.clientHeight}];
     })));
+    await checkOriginalCards(page, width);
+    return sizes;
   } finally {
     await page.close();
   }
 }
 
-test('1440 五列和 390 两列的 830 张上游卡片全部渲染且没有横向溢出', {timeout: 900_000}, async t => {
+test('1440 五列和 390 两列的 866 张卡片全部渲染且没有溢出', {timeout: 900_000}, async t => {
   const start = performance.now();
   const cpuRate = Number(process.env.UI_MOMENTS_CARD_CPU_RATE ?? '1');
   assert.ok(Number.isFinite(cpuRate) && cpuRate >= 1, 'UI_MOMENTS_CARD_CPU_RATE 必须是大于等于 1 的有限数值');
@@ -52,7 +116,7 @@ test('1440 五列和 390 两列的 830 张上游卡片全部渲染且没有横�
   const samples = [...astryxWorks, ...fluentWorks];
   const jobs = [];
   for (const [width, columns] of [[1440, 5], [390, 2]]) {
-    const sizes = await measureCardStages(context, base, width, columns);
+    const sizes = await measureCardStages(context, base, width, columns, cpuRate);
     for (const item of samples) {
       assert.ok(sizes[item.id]?.width && sizes[item.id]?.height, item.id);
       jobs.push({item, width, size: sizes[item.id]});
@@ -67,10 +131,7 @@ test('1440 五列和 390 两列的 830 张上游卡片全部渲染且没有横�
       const page = await context.newPage();
       const errors = [];
       await page.goto(base + 'card-preview-test');
-      if (cpuRate > 1) {
-        const session = await context.newCDPSession(page);
-        await session.send('Emulation.setCPUThrottlingRate', {rate: cpuRate});
-      }
+      await throttleCpu(context, page, cpuRate);
       monitor(page, errors, base);
       const iframe = await page.locator('iframe').elementHandle();
       const frame = await iframe.contentFrame();
@@ -121,5 +182,5 @@ test('1440 五列和 390 两列的 830 张上游卡片全部渲染且没有横�
   }
   assert.equal(checked, 1660);
   assert.deepEqual(failures, []);
-  t.diagnostic('1440 × 830 + 390 × 830，共 1660 个 iframe 检查通过');
+  t.diagnostic('1440 五列与 390 两列各检查 830 个 iframe 和 36 个原创卡片');
 });

@@ -4,7 +4,10 @@ import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { runInNewContext } from 'node:vm';
 import { build, transform } from 'esbuild';
-import { buildCatalog, cardMarkup, categoryMarkup, initialCardCount, standaloneExamplePath } from '../assets/catalog.mjs';
+import { buildCatalog, cardMarkup, categoryMarkup, initialCardCount, kindLabel, standaloneExamplePath } from '../assets/catalog.mjs';
+import {translate} from '../assets/locale.mjs';
+import {themeIcons} from '../assets/site.mjs';
+import {escapeHtml as esc} from '../gallery/loaders/snippets.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const output = join(root, '_site');
@@ -39,7 +42,10 @@ const dialogs = /<!-- gallery dialogs -->([\s\S]*?)<!-- \/gallery dialogs -->/;
 if (!dialogs.test(homepage)) throw new Error('找不到图鉴详情模板');
 const scripts = await build({
   absWorkingDir: root,
-  define: {__UI_MOMENTS_DIALOGS__: JSON.stringify(homepage.match(dialogs)[1])},
+  define: {
+    __UI_MOMENTS_DIALOGS__: JSON.stringify(homepage.match(dialogs)[1]),
+    __PUBLISHED_PREVIEWS__: 'true',
+  },
   entryPoints: pages.flatMap(({entries}) => entries),
   outbase: root,
   outdir: output,
@@ -59,6 +65,16 @@ const moduleFiles = new Map(Object.entries(scripts.metafile.outputs));
 const window = {};
 runInNewContext(readFileSync(join(root, 'gallery/works.js'), 'utf8'), {window});
 const items = buildCatalog(window.WORKS);
+const staticCards = JSON.parse(readFileSync(join(root, 'gallery/originals/dist/cards-static.json'), 'utf8'));
+const originalPalette = readFileSync(join(root, 'gallery/originals/dist/cards-static-theme.css'), 'utf8');
+const wideMedia = '(min-width:760px), (min-height:1000px)';
+const staticItems = items.filter(({id}) => Object.hasOwn(staticCards, id));
+const lastPhoneCard = staticItems.filter(({id}) => !staticCards[id].wide).at(-1).id;
+const lastWideCard = staticItems.at(-1).id;
+// A streamed response may expose the title one frame before the card HTML.
+// These selectors wait only for the visible batch's end marker in the HTML.
+const firstPaintCss = `html:not([data-ready],:has([data-phone-ready])) body{visibility:hidden}
+@media ${wideMedia}{html:not([data-ready],:has([data-wide-ready])) body{visibility:hidden}}`;
 
 // The shared source sheets remain the source of truth for both render paths.
 const criticalSources = ['assets/site.css', 'assets/gallery.css'];
@@ -67,19 +83,55 @@ const criticalCss = await transform(criticalSources.flatMap(path => {
   const source = readFileSync(join(root, path), 'utf8')
     .replace(/\/\* home-deferred \*\/[\s\S]*?\/\* \/home-deferred \*\//g, '');
   return [...source.matchAll(/\/\* home-critical \*\/([\s\S]*?)\/\* \/home-critical \*\//g)]
-    .map(([, css]) => css.replaceAll("url('./fonts/", "url('assets/fonts/"));
+    .map(([, css]) => css);
 }).join('\n'), {loader: 'css', minify: true});
 
-function inlineHomeStyles(html) {
-  const firstStylesheet = '<link rel="stylesheet" href="assets/site.css">';
-  return html.replace(firstStylesheet, () => `<style data-home-critical>${criticalCss.code}[data-preview-pending] body{visibility:hidden;animation:reveal-previews 0s 1.8s forwards}@keyframes reveal-previews{to{visibility:visible}}</style>
-<link rel="stylesheet" href="assets/site-home.css">`)
-    .replace(/<link rel="stylesheet" href="([^"]+)">/g, (link, path) => (
-      `<link rel="stylesheet" data-home-href="${path}" media="print" onload="this.media='all'"><noscript>${link}</noscript>`
-    ));
+function homeStyles(html) {
+  return html
+    .replace('<link rel="stylesheet" href="assets/site.css">', '')
+    .replace('<link rel="stylesheet" href="gallery/loaders/style.css">', '')
+    .replace('<link rel="stylesheet" href="assets/gallery.css">', '<link rel="stylesheet" data-home-href="assets/site-home.css" media="print" onload="this.media=&quot;all&quot;"><noscript><link rel="stylesheet" href="assets/site-home.css"></noscript>');
 }
 
-function pageHtml({html, entries}) {
+const zh = (text, values) => translate(text, values, 'zh-CN');
+
+function zhAttr(text, translation) {
+  return text === translation ? '' : ` data-zh="${esc(translation)}"`;
+}
+
+function staticCard(item) {
+  const title = item.original ? zhAttr(item.en, item.title) : '';
+  const type = kindLabel(item);
+  const card = cardMarkup(item)
+    .replace('<h2 lang="en">', `<h2 lang="en"${title}>`)
+    .replace('</h2><p>', `</h2><p${zhAttr(type, kindLabel(item, zh))}>`)
+    .replace('class="ui-detail-label"', `class="ui-detail-label"${zhAttr('Details', zh('Details'))}`);
+  const original = staticCards[item.id];
+  if (!original) return card;
+  const page = `data-original-page="${original.page}"`;
+  const styles = `<style data-first-paint>${original.style}</style>`;
+  const preview = `<ui-original-card data-original-card ${page}><template shadowrootmode="open">${styles}<div class="original-root" lang="en" data-embedded="true" data-gallery-active="false" ${page}>${original.html}</div></template></ui-original-card>`;
+  const content = original.wide ? `<template data-original-wide>${preview}</template><i hidden></i>` : preview;
+  const ready = item.id === lastPhoneCard ? 'data-phone-ready' : item.id === lastWideCard ? 'data-wide-ready' : '';
+  return card.replace('<div class="ui-stage"></div>', `<div class="ui-stage">${content}</div>`)
+    .replace('</article>', () => (ready ? `<template ${ready}></template>` : '') + '</article>');
+}
+
+function initialToolbar(source) {
+  const icons = Object.entries(themeIcons).map(([theme, svg]) => {
+    const label = theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode';
+    return `<template data-theme-icon="${theme}" data-title="${label}" data-title-zh="${esc(zh(label))}">${svg}</template>`;
+  }).join('');
+  return source
+    .replace('<button class="language-btn" id="language" type="button" hidden><span></span></button>',
+      `<button class="language-btn" id="language" type="button" aria-label="Switch to Simplified Chinese" data-zh-aria-label="${esc(zh('Switch to English'))}"><span lang="zh-CN" data-zh="EN">中文</span></button>`)
+    .replace('<button class="theme-btn" id="theme" type="button" aria-label="Switch to light mode"></button>',
+      `<button class="theme-btn" id="theme" type="button" aria-label="Switch to light mode">${icons}<i hidden></i></button>`)
+    .replace('id="motion" type="button"',
+      `id="motion" data-play-label="Play motion" data-zh-play-label="${esc(zh('Play motion'))}"${zhAttr('Pause motion', zh('Pause motion'))} type="button"`);
+}
+
+async function pageHtml({html, entries}) {
   const mains = entries.map(entry => [...moduleFiles].find(([, file]) => file.entryPoint === entry)[0]);
   const preload = new Map();
   function addImports(path, priority) {
@@ -102,22 +154,44 @@ function pageHtml({html, entries}) {
   const hints = priority => [...preload].filter(([, value]) => value === priority)
     .map(([path]) => `<link rel="modulepreload" href="${href(path)}">`).join('\n');
   const head = [
+    `<script type="module" src="${href(originals)}" fetchpriority="high"></script>`,
+    `<style data-home-critical>${criticalCss.code.replaceAll('./fonts/', 'assets/fonts/')}ui-original-card{position:absolute;inset:0;container:original-card / size}${originalPalette}${firstPaintCss}</style>`,
     hints('high'),
-    `<link rel="modulepreload" href="${href(wide)}" media="(min-width: 760px)">`,
-    `<script type="module" src="${href(originals)}" blocking="render"></script>`,
+    `<link rel="modulepreload" href="${href(wide)}" media="${wideMedia}">`,
     `<template data-gallery-entry="${href(gallery)}">${hints('low')}</template>`,
   ];
-  const page = source.replace('<script>\n', '<script>document.documentElement.dataset.previewPending="";\n')
-    .replace(/<meta name="viewport"[^>]+>/, viewport => viewport + '\n' + head.join('\n'));
+  const preference = source.match(/<script>([^]*?)<\/script>/)?.[0];
+  if (!preference) throw new Error('找不到首页偏好脚本');
+  const boot = await transform(preference.slice(8, -9), {loader: 'js', minify: true});
+  const page = source.replace(preference, '')
+    .replace(/<meta name="viewport"[^>]+>/,
+    viewport => viewport + '<script>' + boot.code + '</script>' + head.join('\n'));
   if (html !== 'index.html') return page;
-  const cards = items.slice(0, initialCardCount).map(item => cardMarkup(item).replace(/>\s+</g, '><')).join('');
-  return inlineHomeStyles(page).replace(dialogs, '').replace('<!-- initial gallery cards -->', () => cards)
-    .replace('<!-- gallery categories -->', () => categoryMarkup(items))
+  const cards = items.slice(0, initialCardCount).map(item => staticCard(item).replace(/>\s+</g, '><')).join('');
+  const [introStart, introEnd] = zh('Explore {count} live UI examples.').split('{count}');
+  const heroName = items.find(item => item.id === 'jelly-pad').title;
+  return initialToolbar(homeStyles(page).replace(dialogs, '')).replace('<!-- initial gallery cards -->', () => cards)
+    .replace('<!-- gallery categories -->', () => categoryMarkup(items)
+      .replace(/<span class="category-label">([^<]+)/g, (_tag, text) => `<span class="category-label"${zhAttr(text, zh(text))}>${text}`))
+    .replace('Explore <span data-stat="total"></span> live UI examples.', () =>
+      `<span data-zh="${esc(introStart)}">Explore </span><span data-stat="total"></span><span data-zh="${esc(introEnd)}"> live UI examples.</span>`)
+    .replace('<span>Try Jelly Cube</span>', () => `<span data-zh="${esc(zh('Try {name}', {name: heroName}))}">Try Jelly Cube</span>`)
+    .replace(/(<[a-z][^>]* data-i18n="text"[^>]*)(>)([^<]+)/g, (original, start, end, text) => {
+      const attribute = zhAttr(text, zh(text));
+      return attribute ? start + attribute + end + text : original;
+    })
+    .replace(/<([a-z][^<>]*?) data-i18n="(placeholder|title|aria-label|content)"([^<>]*)>/g, (tag, head, field, tail) => {
+      const source = tag.match(new RegExp(` ${field}="([^"]+)"`))?.[1];
+      const translation = source && zh(source);
+      return translation && translation !== source
+        ? `<${head} data-i18n="${field}" data-zh-${field}="${esc(translation)}"${tail}>`
+        : tag;
+    })
     .replace('<span data-stat="total"></span>', `<span data-stat="total">${items.length}</span>`)
     .replace(/<!--[^]*?-->/g, '').replace(/>[ \t]*\n[ \t\n]*</g, '><');
 }
 
-const htmlOutputs = pages.map(page => [page.html, pageHtml(page)]);
+const htmlOutputs = await Promise.all(pages.map(async page => [page.html, await pageHtml(page)]));
 const manifest = join(root, 'private/release-files.txt');
 const tracked = existsSync(manifest)
   ? readFileSync(manifest, 'utf8').trimEnd().split('\n')
@@ -159,6 +233,7 @@ for (const file of scripts.outputFiles) {
   mkdirSync(dirname(file.path), {recursive: true});
   writeFileSync(file.path, file.contents);
 }
-writeFileSync(join(output, 'assets/site-home.css'), siteHomeCss);
+const deferredCss = [siteHomeCss, ...['gallery/loaders/style.css', 'assets/gallery.css'].map(path => readFileSync(join(root, path), 'utf8'))];
+writeFileSync(join(output, 'assets/site-home.css'), deferredCss.join('\n'));
 for (const [path, html] of htmlOutputs) writeFileSync(join(output, path), html);
 console.log('已准备 GitHub Pages 站点：_site/');

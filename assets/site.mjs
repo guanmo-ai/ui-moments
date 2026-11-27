@@ -3,10 +3,10 @@ import {onLanguageChange,setupLanguage,translate as t} from './locale.mjs';
 
 const sun='<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><circle cx="10" cy="10" r="3.5"/><path d="M10 1v2m0 14v2M1 10h2m14 0h2M3.6 3.6 5 5m10 10 1.4 1.4M3.6 16.4 5 15M15 5l1.4-1.4"/></svg>';
 const moon='<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M16.5 12.2A7 7 0 0 1 7.8 3.5a7 7 0 1 0 8.7 8.7Z"/></svg>';
+export const themeIcons={dark:sun,light:moon};
 
-const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
-const allowMotion=()=>!reducedMotion.matches&&document.getElementById('motion')?.getAttribute('aria-pressed')!=='true';
-function setupCategoryMarker(categories){
+function setupCategoryMarker(categories,reducedMotion){
+  const allowMotion=()=>!reducedMotion.matches&&document.getElementById('motion')?.getAttribute('aria-pressed')!=='true';
   const marker=document.createElement('span');
   marker.className='category-marker';
   marker.setAttribute('aria-hidden','true');
@@ -45,10 +45,11 @@ function setupCategoryMarker(categories){
 
 export function setupSite(){
   const root=document.documentElement,button=document.getElementById('theme'),header=document.getElementById('top');
+  const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
   setupLanguage();
   let theme=root.dataset.theme||'dark';try{theme=localStorage.getItem('ui-moments-theme')||theme;}catch{}
   root.dataset.theme=theme==='light'?'light':'dark';
-  const paint=()=>{if(!button)return;const dark=root.dataset.theme!=='light';button.innerHTML=dark?sun:moon;button.setAttribute('aria-label',t(dark?'Switch to light mode':'Switch to dark mode'));button.title=button.getAttribute('aria-label');};
+  const paint=()=>{if(!button)return;const {theme}=root.dataset;button.innerHTML=themeIcons[theme];button.setAttribute('aria-label',t(theme==='dark'?'Switch to light mode':'Switch to dark mode'));button.title=button.getAttribute('aria-label');};
   paint();
   onLanguageChange(paint);
   const switchTheme=()=>{
@@ -69,7 +70,7 @@ export function setupSite(){
     if(search){event.preventDefault();search.focus();}
   });
   const categories=document.getElementById('categories');
-  if(categories)setupCategoryMarker(categories);
+  if(categories)setupCategoryMarker(categories,reducedMotion);
 }
 
 export function setupGalleryFavorites(onChange){

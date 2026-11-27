@@ -17,7 +17,7 @@ const types = {
   '.woff2': 'font/woff2',
 };
 
-export async function startServer(t, {cacheAssets = false} = {}) {
+export async function startServer(t, {cacheAssets = false, firstCardsGate} = {}) {
   const server = createServer(async (req, res) => {
     const path = new URL(req.url, 'http://127.0.0.1').pathname;
     const relative = path.slice(prefix.length);
@@ -36,7 +36,15 @@ export async function startServer(t, {cacheAssets = false} = {}) {
       if (cacheAssets && /\/(?:dist|media)\//.test(file) && !file.endsWith('.html')) {
         headers['Cache-Control'] = 'public, max-age=3600';
       }
-      res.writeHead(200, headers).end(data);
+      res.writeHead(200, headers);
+      if (firstCardsGate && file === 'index.html') {
+        const start = data.indexOf('<article class="ui-item"');
+        res.write(data.subarray(0, start));
+        await firstCardsGate;
+        res.end(data.subarray(start));
+      } else {
+        res.end(data);
+      }
     } catch {
       res.writeHead(404).end();
     }
@@ -48,14 +56,22 @@ export async function startServer(t, {cacheAssets = false} = {}) {
 
 // Exercise the same scroll path as a visitor, including results outside the first batch.
 export async function revealGalleryCards(page, id) {
-  const cards = page.locator('#ui-grid > article:not([hidden])');
   const sentinel = page.locator('#gallery-end');
-  const target = id && page.locator(`[data-ui="${id}"]:not([hidden])`);
-  while ((!target || !await target.count()) && !await sentinel.evaluate(node => node.hidden)) {
-    const count = await cards.count();
-    await sentinel.evaluate(node => node.scrollIntoView({block: 'end'}));
-    await page.waitForFunction(previous =>
-      document.querySelectorAll('#ui-grid > article:not([hidden])').length > previous, count);
+  for (;;) {
+    const count = await sentinel.evaluate((node, targetId) => {
+      const cards = document.querySelectorAll('#ui-grid > article:not([hidden])');
+      if (node.hidden || (targetId && document.querySelector(`[data-ui="${CSS.escape(targetId)}"]:not([hidden])`))) return null;
+      return cards.length;
+    }, id);
+    if (count === null) return;
+    await page.waitForFunction(previous => {
+      const end = document.getElementById('gallery-end');
+      if (end.hidden || document.querySelectorAll('#ui-grid > article:not([hidden])').length > previous) return true;
+      // Layout can move the sentinel after a scroll. Bring it back into view before waiting for the observer.
+      const {top, bottom} = end.getBoundingClientRect();
+      if (top >= innerHeight || bottom < 0) end.scrollIntoView({block: 'center', behavior: 'instant'});
+      return false;
+    }, count);
   }
 }
 

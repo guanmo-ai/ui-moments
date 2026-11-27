@@ -202,7 +202,9 @@ export function setupLanguage() {
   const label = button.querySelector('span');
   const fields = [...document.querySelectorAll('[data-i18n]')].flatMap(element =>
     element.dataset.i18n.split(' ').map(field => ({
-      element, field, message: field === 'text' ? element.textContent.trim() : element.getAttribute(field),
+      element, field, message: field === 'text'
+        ? element.dataset.i18nSource ?? element.textContent.trim()
+        : element.getAttribute(`data-i18n-source-${field}`) ?? element.getAttribute(field),
     }))
   );
 

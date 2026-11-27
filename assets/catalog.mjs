@@ -42,6 +42,34 @@ const taskById = {
   'fluent-card': 'input', 'fluent-list': 'input', 'fluent-toggle-button': 'input', 'snap-grid': 'input',
 };
 
+// 按主要玩法区分文字输入与直接操作。可键入内容的搜索、日期和组合框归入文字段；
+// 只选现成选项的菜单、下拉列表和日历仍归入直接操作段。
+const textEntryTypes = new Set(['Combobox', 'Field', 'Input', 'Number input', 'Search']);
+const textEntryFamilies = new Set([
+  'BaseTypeahead', 'ChatComposer', 'ChatComposerDrawer', 'ChatComposerInput', 'CodeEditor',
+  'CommandPalette', 'CommandPaletteInput', 'DateInput', 'DateRangeInput', 'DateTimeInput',
+  'EmojiPicker', 'Field', 'FieldStatus', 'FormLayout', 'InputGroup', 'ListInput', 'NumberInput',
+  'PowerSearch', 'TextArea', 'TextInput', 'TimeInput', 'Tokenizer', 'Typeahead',
+]);
+// 同一家族有不同玩法时，只把实际带文字字段的演示移到文字段。
+const textEntryExamples = new Set([
+  'fluent-tag-picker',
+  'astryx-variant-complex-selector-complex-selector-tree-search',
+  'astryx-variant-dialog-dialog-form-dialog',
+  'astryx-variant-hooks-use-announce-hook-usage',
+  'astryx-variant-hooks-use-hotkeys-hook-usage',
+  'astryx-variant-hooks-use-input-container-hook-usage',
+  'astryx-variant-hooks-use-merged-refs-hook-usage',
+  'astryx-variant-multi-selector-multi-selector-column-visibility-selector',
+  'astryx-variant-multi-selector-multi-selector-searchable-multi-selector',
+  'astryx-variant-multi-selector-use-multi-combobox-hook-usage',
+  'astryx-variant-selector-use-combobox-hook-usage',
+]);
+
+export function usesTextEntry(item) {
+  return textEntryTypes.has(item.type) || textEntryFamilies.has(item.family) || textEntryExamples.has(item.id);
+}
+
 const searchAliases = [
   [/\b(?:calendar|date (?:input|picker|range|time))\b/, 'calendar date picker date range 日历 日期选择 日期选择器'],
   [/\b(?:switch|toggle)\b/, 'toggle switch 开关 切换'],
@@ -153,8 +181,13 @@ export function buildCatalog(works = []) {
       if (group[index]) result.push(group[index]);
     }
   }
-  // 保留各组内部的策展顺序，按可操作黑白、可操作彩色、自动播放排列。
-  return ['input', 'color', 'loading'].flatMap(id => result.filter(item => item.category === id));
+  // 黑白控件先放点击、拖动或拨动即可操作的示例，再放文字输入。各段保留策展顺序。
+  const interactive = result.filter(item => item.category === 'input');
+  return [
+    ...interactive.filter(item => !usesTextEntry(item)),
+    ...interactive.filter(usesTextEntry),
+    ...['color', 'loading'].flatMap(id => result.filter(item => item.category === id)),
+  ];
 }
 
 export function getCategoryFilters(items, category) {
