@@ -2,7 +2,7 @@
 
 UI Moments 为 Microsoft Fluent UI React 编写了 51 个互动示例，覆盖表单、导航、反馈与数据展示。组件版本固定为 `@fluentui/react-components@9.75.2`，构建依赖由锁文件固定。
 
-按[项目 README](../../README.md#本地运行) 构建站点后，在图鉴首页搜索 `Fluent UI` 或示例名。在本目录运行 `npm run dev` 可迭代组件。开发入口可使用 `?sample=drawer` 选择示例。
+按[项目 README](../../README.zh-CN.md#本地运行) 构建站点后，在图鉴首页搜索 `Fluent UI` 或示例名。在本目录运行 `npm run dev` 可迭代组件。开发入口可使用 `?sample=drawer` 选择示例。
 
 ## 示例清单
 

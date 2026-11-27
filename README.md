@@ -1,62 +1,62 @@
-# UI Moments · 界面图鉴
+<p align="right"><strong>English</strong> · <a href="README.zh-CN.md">简体中文</a></p>
 
-[English](README.en.md) | [简体中文](README.md)
+# UI Moments · Interactive UI Gallery
 
-UI Moments 是一个可以直接上手的界面交互与动效图鉴，由观默维护。首发收录 884 个示例，卡片打开即可操作。
+UI Moments is a hands-on gallery of interactive UI and motion, maintained by 观默 (Guanmo). The first release has 884 examples, and every card is live.
 
-## 图鉴内容
+## What's in the gallery
 
-| 分类 | 控件 |
+| Category | Examples |
 | --- | --- |
-| [基础控件](gallery/originals/index.html) | 墨滴开关、刻度旋钮、长按确认、滚轮步进器、翻页标签、潮汐进度 |
-| [图形交互](gallery/originals/visual.html) | 磁吸点阵、果冻方块、融合水滴、涟漪画板、花朵开关 |
-| [手势与物理](gallery/originals/gestures.html) | 滑动确认、下拉刷新、弹弦、多米诺、翘板开关、波形拖动、吸附网格、扇形菜单、步骤条、呼吸球 |
-| [操作反馈](gallery/originals/actions.html) | 复制按钮、点赞爆发、纸飞机发送、下载进度环、验证码输入、通知铃 |
-| [表单输入](gallery/originals/inputs.html) | 划线清单、石子评分、档位滑块、密码强度、标签输入、方案卡片 |
-| [多彩控件](gallery/originals/color.html) | 色轮、拉绳灯、抛硬币 |
-| 原创加载动效 | 纸张折叠、信号回转及 16 款加载动效。支持调参和导出 HTML 或 JSX |
-| 组件示例 | 抽屉、表单、菜单、数据表格、图表、日程、代码编辑等 830 个可交互示例 |
+| [Core controls](gallery/originals/index.html) | Ink Switch, Detent Dial, Hold to Confirm, Odometer Stepper, Leaf Tabs, Tide Progress |
+| [Visual interactions](gallery/originals/visual.html) | Magnet Grid, Jelly Cube, Merge Drops, Ripple Pad, Bloom Toggle |
+| [Gestures and physics](gallery/originals/gestures.html) | Swipe to Confirm, Pull to Refresh, Elastic String, Domino Row, Rocker Switch, Scrub Wave, Snap Grid, Radial Menu, Step Track, Breath Orb |
+| [Action feedback](gallery/originals/actions.html) | Copy Button, Like Burst, Paper Plane Send, Download Ring, Code Shake, Bell Toggle |
+| [Form inputs](gallery/originals/inputs.html) | Stroke Checklist, Pebble Rating, Notch Slider, Strength Meter, Chip Input, Plan Picker |
+| [Color controls](gallery/originals/color.html) | Hue Orbit, Pull Cord Lamp, Flip Coin |
+| Original loaders | Paper Fold, Signal Return, and 16 other loaders with adjustable parameters and HTML or JSX export |
+| Component examples | 830 live examples covering drawers, forms, menus, data grids, charts, schedules, code editors, and more |
 
-![UI Moments 黑底图鉴首页](docs/gallery-preview.png)
+![UI Moments gallery in dark mode](docs/gallery-preview.png)
 
-## 复用一个示例
+## Reuse an example
 
-打开卡片详情，使用 **复制提示词（Copy prompt）** 获取示例链接、具体源文件或示例入口，以及本地复现方式。控件详情也可以直接打开源文件。
+Open a card's details and select **Copy prompt** for its link, exact source file or entry point, and local setup instructions. You can also open source files from the details.
 
-| 示例 | 复用方式 |
+| Examples | How to reuse |
 | --- | --- |
-| 墨滴开关、刻度旋钮、果冻方块 | 复制或下载独立 HTML，保存后可离线运行 |
-| 其余原创控件 | 复制包含所选控件的完整演示页，集成时从中提取该控件及它的样式和脚本 |
-| 原创加载动效 | 调整尺寸、颜色和时长。HTML 可离线运行，JSX 可在 React 项目中使用 |
-| 组件示例 | 按下方命令构建本地示例，从详情定位代码、锁定版本和许可 |
+| Ink Switch, Detent Dial, Jelly Cube | Copy or download the standalone HTML and open it offline |
+| Other original controls | Copy the demo page for the selected control, then extract that control with its styles and script |
+| Original loaders | Adjust size, color, and duration. Open the HTML offline or use the JSX in React |
+| Component examples | Build locally and use the details to find the example code, locked dependencies, and license |
 
-## 本地运行
+## Run locally
 
-从 Git 克隆项目后运行以下命令。需要 Node.js 22.18+ 或 24.11+、npm 和 Python 3。
+Clone the Git repository. You need Node.js 22.18+ or 24.11+, npm, and Python 3.
 
-```bash
+```sh
 npm run setup
 npm run build
 npm run package:site
 python3 -m http.server 5173 --bind 127.0.0.1 --directory _site
 ```
 
-打开 [http://127.0.0.1:5173](http://127.0.0.1:5173)。部署静态站点时使用 `_site/`。
+Open [http://127.0.0.1:5173](http://127.0.0.1:5173). Use `_site/` as the static site output.
 
-从 fork 或审核分支打包时，可给 `npm run package:site` 设置 `UI_MOMENTS_REPOSITORY`（GitHub 仓库完整地址）和 `UI_MOMENTS_REF`（分支、标签或提交）。站点的源码、贡献和署名链接会指向对应版本。
+For a fork or another branch, set `UI_MOMENTS_REPOSITORY` to the full GitHub repository URL and `UI_MOMENTS_REF` to the branch, tag, or commit when running `npm run package:site`. Source, contributing, and credits links will point to that revision.
 
-## 浏览器测试
+## Browser tests
 
-```bash
+```sh
 npx playwright install --only-shell chromium firefox webkit
 npm test
 npm run test:cards
 ```
 
-用 `UI_MOMENTS_CARD_CPU_RATE=4 npm run test:cards` 可在 Chromium 中模拟 4 倍 CPU 降速。降速时最多并行检查两个页面，CI 使用 2 倍降速。
+Run `UI_MOMENTS_CARD_CPU_RATE=4 npm run test:cards` to simulate a 4× CPU slowdown in Chromium. Throttled runs use at most two pages in parallel. CI runs with a 2× slowdown.
 
-## 维护与许可
+## Maintenance and license
 
-UI Moments 由观默维护，项目代码采用 MIT 许可。部分组件示例基于开源组件库构建，第三方代码与字体保留各自的版权和许可证，详见 [CREDITS.md](CREDITS.md)。
+UI Moments is maintained by 观默 (Guanmo). Project code is licensed under MIT. Some component examples are built on open-source component libraries. Third-party code and fonts keep their own copyright notices and licenses; see [CREDITS.md](CREDITS.md).
 
-[贡献指南](CONTRIBUTING.md) · [MIT 许可证](LICENSE) · [第三方署名](CREDITS.md) · [观默](https://x.com/guanmo_ai)
+[Contributing](CONTRIBUTING.md) · [MIT license](LICENSE) · [Third-party credits](CREDITS.md) · [Guanmo](https://x.com/guanmo_ai)

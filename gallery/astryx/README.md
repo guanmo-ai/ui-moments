@@ -18,4 +18,4 @@
 - 卡片预览按示例两侧的实际边界缩放。列虚拟化示例保留可横向滚动的表格视口。命令面板、底部弹层和抽屉在卡片上展示打开状态，详情保留完整交互。
 - 主示例和 Storybook 示例分别生成随网站分发的 `dist/THIRD_PARTY_LICENSES.txt`。文件包含实际打包的依赖许可证。Astryx 和 StyleX 的 MIT 原文也保存在 [vendor](vendor/)。
 
-按[项目 README](../../README.md#本地运行) 安装锁定依赖并构建、启动图鉴。示例的详情提示词指向具体模板或 Storybook 导出。
+按[项目 README](../../README.zh-CN.md#本地运行) 安装锁定依赖并构建、启动图鉴。示例的详情提示词指向具体模板或 Storybook 导出。
