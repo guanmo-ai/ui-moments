@@ -124,9 +124,11 @@
     .pad:focus-visible { outline-offset: 2px; }
     /* /standalone:pad */
 
+    /* standalone:magnet-grid-style */
     /* Magnet Grid */
     .magnet { display: grid; grid-template-columns: repeat(8, 1fr); place-items: center; padding: 14px; cursor: crosshair; }
     .magnet i { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); opacity: calc(.28 + var(--p, 0) * .72); transform: translate(var(--x, 0), var(--y, 0)) scale(calc(1 + var(--p, 0) * 1.5)); transition: transform .45s var(--spring), opacity .3s; }
+    /* /standalone:magnet-grid-style */
 
     /* standalone:jelly-pad-style */
     .jelly { display: grid; place-items: center; padding: 0; border: 0; background: none; cursor: grab; }
@@ -193,10 +195,13 @@
       <nav class="sets" aria-label="Original sets"><a href="./index.html">Core</a><a href="./visual.html" aria-current="page">Visual</a><a href="./gestures.html">Gestures</a><a href="./actions.html">Actions</a><a href="./inputs.html">Forms</a><a href="./color.html">Color</a></nav>
 
       <div class="samples">
+        <!-- standalone:magnet-grid -->
         <section class="sample" id="magnet-grid" aria-labelledby="magnet-title">
           <div class="stage"><div class="widget"><div class="pad magnet" tabindex="0" role="img" aria-label="Magnet grid: move the pointer or use the arrow keys and the dots gather toward it"></div></div></div>
           <div class="caption"><h2 id="magnet-title">Magnet Grid</h2><p>Move the pointer</p></div>
         </section>
+
+        <!-- /standalone:magnet-grid -->
 
         <!-- standalone:jelly-pad -->
         <section class="sample" id="jelly-pad" aria-labelledby="jelly-title">
@@ -285,6 +290,7 @@
     }
     /* /standalone:spring */
 
+    /* standalone:magnet-grid-script */
     /* ---------- Magnet Grid ---------- */
     {
       const pad = $('.magnet');
@@ -323,6 +329,8 @@
         attract(cursor.x, cursor.y);
       });
     }
+
+    /* /standalone:magnet-grid-script */
 
     /* standalone:jelly-pad-script */
     {

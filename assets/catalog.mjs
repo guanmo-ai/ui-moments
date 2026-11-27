@@ -101,16 +101,16 @@ export function kindLabel(item, t = translate) {
 }
 
 export function cardMarkup(item, t = translate) {
-  const titleId = `work-title-${item.id}`, actionId = `work-action-${item.id}`;
   const {name, lang} = workHeading(item);
+  const details = t('Details');
   return `<article class="ui-item" data-ui="${escape(item.id)}" data-category="${escape(item.category)}"${item.previewSize ? ` data-preview-size="${escape(item.previewSize)}"` : ''}>
     ${item.loader
       ? `<button type="button" class="ui-stage ui-playback" aria-pressed="false" aria-label="${escape(t('Pause {name} preview', {name}))}"></button>`
       : '<div class="ui-stage"></div>'}
     <div class="ui-caption">
-      <div><h2 lang="${lang}" id="${titleId}">${escape(name)}</h2><p>${escape(kindLabel(item, t))}</p></div>
-      <button type="button" class="ui-expand" data-detail aria-labelledby="${actionId} ${titleId}" aria-haspopup="dialog">
-        <span class="ui-detail-label" id="${actionId}">${escape(t('Details'))}</span>
+      <div><h2 lang="${lang}">${escape(name)}</h2><p>${escape(kindLabel(item, t))}</p></div>
+      <button type="button" class="ui-expand" data-detail aria-label="${escape(`${details} ${name}`)}" aria-haspopup="dialog">
+        <span class="ui-detail-label">${escape(details)}</span>
         <span class="ui-expand-icon" aria-hidden="true"></span>
       </button>
     </div></article>`;
@@ -153,8 +153,8 @@ export function buildCatalog(works = []) {
       if (group[index]) result.push(group[index]);
     }
   }
-  // 「All」里多彩作品统一排在最后。
-  return [...result.filter(item => item.category !== 'color'), ...result.filter(item => item.category === 'color')];
+  // 保留各组内部的策展顺序，按可操作黑白、可操作彩色、自动播放排列。
+  return ['input', 'color', 'loading'].flatMap(id => result.filter(item => item.category === id));
 }
 
 export function getCategoryFilters(items, category) {

@@ -5,7 +5,7 @@ import {test} from 'node:test';
 import {chromium} from 'playwright';
 import {astryxWorks} from '../gallery/astryx/catalog.mjs';
 import {fluentWorks} from '../gallery/fluent-ui/catalog.mjs';
-import {monitor, startServer} from './browser-site.mjs';
+import {monitor, revealGalleryCards, startServer} from './browser-site.mjs';
 
 function previewUrl(item, base) {
   const url = new URL(item.demo, base);
@@ -25,6 +25,8 @@ async function measureCardStages(context, base, width, columns) {
     await page.locator('html[data-ready="true"]').waitFor();
     assert.equal(await page.locator('#ui-grid').evaluate(grid =>
       Number(getComputedStyle(grid).getPropertyValue('--columns'))), columns);
+    await revealGalleryCards(page);
+    assert.equal(await page.locator('#ui-grid > article:not([hidden])').count(), 884);
     return await page.locator('.ui-item').evaluateAll(cards => Object.fromEntries(cards.map(card => {
       const stage = card.querySelector('.ui-stage');
       return [card.dataset.ui, {width: stage.clientWidth, height: stage.clientHeight}];

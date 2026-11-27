@@ -7,8 +7,9 @@ import {chromium, webkit} from 'playwright';
 import {fluentWorks} from '../gallery/fluent-ui/catalog.mjs';
 import {astryxWorks} from '../gallery/astryx/catalog.mjs';
 import {originalLoaders} from '../gallery/loaders/originals.mjs';
+import {buildCatalog, initialCardCount} from '../assets/catalog.mjs';
 import {remainingScenarios} from '../gallery/fluent-ui/tools/browser-scenarios.mjs';
-import {monitor, startServer} from './browser-site.mjs';
+import {monitor, revealGalleryCards, startServer} from './browser-site.mjs';
 
 test('图鉴首页默认黑色、收录 884 个示例，支持筛选、试玩和导出', {timeout: 40_000}, async t => {
   const site = await startServer(t);
@@ -394,6 +395,95 @@ test('其余 48 个 Fluent UI 示例在手机卡片尺寸下可交互', { timeou
   assert.deepEqual(errors, []);
 });
 
+async function fullCatalog() {
+  const window = {};
+  runInNewContext(await readFile(new URL('../gallery/works.js', import.meta.url), 'utf8'), {window});
+  return buildCatalog(window.WORKS);
+}
+
+test('解析首页即可操作首卡，不等待图鉴脚本或整页预览', {timeout: 20_000}, async t => {
+  const site = await startServer(t);
+  const browser = await chromium.launch();
+  t.after(() => browser.close());
+  const page = await browser.newPage({viewport: {width: 390, height: 844}});
+  const requests = [];
+  page.on('request', request => requests.push(new URL(request.url()).pathname));
+  let resume;
+  const gate = new Promise(resolve => { resume = resolve; });
+  t.after(resume);
+  await page.route('**/assets/gallery-*.mjs', async route => {
+    await gate;
+    await route.continue();
+  });
+  await page.goto(site, {waitUntil: 'commit'});
+  const frame = page.frameLocator('[data-ui="magnet-grid"] iframe[data-loaded]');
+  await frame.locator('.magnet').press('ArrowRight');
+  assert.equal(await frame.locator('.magnet i').count(), 40);
+  assert.ok(await frame.locator('.magnet i').evaluateAll(dots =>
+    dots.some(dot => Number(dot.style.getPropertyValue('--p')) > 0)));
+  assert.equal(await page.locator('html').getAttribute('data-ready'), null);
+  assert.ok(requests.some(path => path.endsWith('/magnet-grid-preview.html')));
+  assert.ok(!requests.some(path => path.endsWith('/gallery/originals/visual.html')));
+  resume();
+  await page.locator('html[data-ready="true"]').waitFor();
+});
+
+test('全部按黑白可操作、彩色可操作、自动动效排序，初始只挂载近屏卡片', {timeout: 45_000}, async t => {
+  const site = await startServer(t);
+  const browser = await chromium.launch();
+  t.after(() => browser.close());
+  const page = await browser.newPage({viewport: {width: 390, height: 844}, reducedMotion: 'reduce'});
+  await page.goto(site);
+  await page.locator('html[data-ready="true"]').waitFor();
+  const cards = page.locator('#ui-grid > article:not([hidden])');
+  assert.equal(await cards.count(), initialCardCount);
+  assert.equal(await page.locator('#ui-count[aria-live="polite"]').textContent(), '884 components');
+  await revealGalleryCards(page);
+  const order = await cards.evaluateAll(rows => rows.map(row => row.dataset.category));
+  assert.deepEqual(order, [
+    ...Array(863).fill('input'), ...Array(3).fill('color'), ...Array(18).fill('loading'),
+  ]);
+});
+
+test('最后一张动效可分享直达、搜索、收藏，结果数反映全量筛选', {timeout: 30_000}, async t => {
+  const site = await startServer(t);
+  const browser = await chromium.launch();
+  t.after(() => browser.close());
+  const page = await browser.newPage({locale: 'en-US'});
+  const last = (await fullCatalog()).at(-1);
+  await page.goto(site + '#' + last.id);
+  await page.locator('#detail[open]').waitFor();
+  assert.equal(await page.locator('#detail-title').textContent(), last.en);
+  assert.equal(await page.locator(`[data-ui="${last.id}"]`).count(), 0);
+  await page.locator('#detail [data-save-work]').click();
+  await page.locator('#close').click();
+  await page.getByRole('searchbox').fill(last.id);
+  const result = page.locator(`[data-ui="${last.id}"]:not([hidden])`);
+  await result.waitFor();
+  await page.locator('#work-search').fill('');
+  await page.locator('#gallery-favorites').click();
+  await result.waitFor();
+  assert.match(await page.locator('#ui-count[aria-live="polite"]').textContent(), /^1 components?$/);
+});
+
+test('Tab 和 Shift+Tab 按目录顺序穿过首次渲染的边界', {timeout: 20_000}, async t => {
+  const site = await startServer(t);
+  const browser = await chromium.launch();
+  t.after(() => browser.close());
+  const page = await browser.newPage({viewport: {width: 390, height: 844}});
+  const items = await fullCatalog();
+  await page.goto(site);
+  await page.locator('html[data-ready="true"]').waitFor();
+  const oldLast = page.locator(`[data-ui="${items[initialCardCount - 1].id}"] [data-detail]`);
+  assert.equal(await page.locator(`[data-ui="${items[initialCardCount].id}"]`).count(), 0);
+  await oldLast.focus();
+  await page.keyboard.press('Tab');
+  assert.equal(await page.evaluate(() => document.activeElement.closest('[data-ui]')?.dataset.ui),
+    items[initialCardCount].id);
+  await page.keyboard.press('Shift+Tab');
+  assert.equal(await oldLast.evaluate(node => node === document.activeElement), true);
+});
+
 test('宽卡片预览展开状态，详情仍能触发原交互', {timeout: 90_000}, async t => {
   const base = await startServer(t);
   const browser = await chromium.launch();
@@ -414,7 +504,12 @@ test('宽卡片预览展开状态，详情仍能触发原交互', {timeout: 90_0
     ['astryx-bottom-sheet-switcher', 'Set up notifications', frame => frame.getByText('Important activity')],
     ['astryx-drawer', 'Open drawer', frame => frame.getByText('Close with Escape, the scrim, or the close button.')],
   ];
+  const search = page.getByRole('searchbox');
   for (const [id, trigger, result] of examples) {
+    // Filter by library to retain mixed card widths and reach the actual preview.
+    const library = id.startsWith('fluent-') ? 'Fluent UI' : 'Astryx';
+    if (await search.inputValue() !== library) await search.fill(library);
+    await revealGalleryCards(page, id);
     const card = page.locator(`[data-ui="${id}"]`);
     await card.evaluate(node => node.scrollIntoView({block: 'center'}));
     const snapshot = card.frameLocator('iframe[data-loaded]').locator('[data-preview-snapshot]');

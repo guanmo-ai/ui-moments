@@ -34,6 +34,9 @@ test('发布版首页从 HTML 显示首批卡片和完整数量', async () => {
   const cards = [...html.matchAll(/<article class="ui-item" data-ui="([^"]+)"/g)];
   assert.equal(cards.length, initialCardCount);
   assert.equal(cards[0][1], 'magnet-grid');
+  assert.doesNotMatch(html, /<article[^>]+data-category="loading"/);
+  assert.match(html, /<style data-home-critical>/);
+  assert.match(html, /<iframe data-priority-preview[^>]+magnet-grid-preview\.html/);
   assert.match(html, /<span data-stat="total">884<\/span>/);
   assert.ok(gzipSync(html).length <= 7 * 1024, '带静态卡片的首页 HTML 压缩后不超过 7 KiB');
 });

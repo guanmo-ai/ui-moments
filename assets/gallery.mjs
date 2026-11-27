@@ -7,9 +7,20 @@ import {escapeHtml as esc} from '../gallery/loaders/snippets.mjs';
 import {createLoaderEditor,createLoaderPreview,setPreviewPlaying} from '../gallery/loaders/editor.mjs';
 import {componentPrompt,componentSourceHref,mountPrompt} from './prompt.mjs';
 
+// The published HTML starts with the gallery. Closed dialogs travel with its module.
+if(typeof __UI_MOMENTS_DIALOGS__!=='undefined'){
+  document.body.insertAdjacentHTML('beforeend',__UI_MOMENTS_DIALOGS__);
+}
 setupSite();
+const pendingSheets=[...document.querySelectorAll('link[rel="stylesheet"][media="print"][onload]')];
+let homeStylesReady=pendingSheets.length ? Promise.all(pendingSheets.map(link=>new Promise(resolve=>{
+  link.addEventListener('load',resolve,{once:true});
+  link.addEventListener('error',resolve,{once:true});
+}))).then(()=>{homeStylesReady=null;}) : null;
+
 const $=selector=>document.querySelector(selector);
 const root=document.documentElement,grid=$('#ui-grid');
+const galleryEnd=$('#gallery-end');
 const loaderDialog=$('#detail'),componentDialog=$('#component-detail'),componentFrame=$('#component-frame');
 const componentPreviewFeedback=$('#component-preview-feedback'),componentPreviewStatus=$('#component-preview-status');
 const componentRetry=$('#component-retry');
@@ -34,7 +45,6 @@ const idleFrameLimit=6;
 const resourceTimeout=8000;
 let loadingFrames=0,previewFrame=0,scrollTimer=0;
 let browseUrlTimer;
-let renderRevision=0;
 let lastScrollY=scrollY,lastScrollTime=performance.now();
 const favorites=setupGalleryFavorites(filter);
 const resourceLoads=new Map();
@@ -87,6 +97,11 @@ function registerCard(item,element){
   const card={item,element,stage,detail:element.querySelector('[data-detail]'),near:false,visible:false,paused:false};
   if(item.loader)stage.disabled=!playing;
   cards.set(item.id,card);
+  const priorityFrame=stage.querySelector('[data-priority-preview]');
+  if(priorityFrame){
+    card.previewSrc=priorityFrame.getAttribute('src');
+    trackCardFrame(card,priorityFrame);
+  }
   nearObserver.observe(element);
   visibleObserver.observe(element);
   return card;
@@ -113,11 +128,12 @@ function renderCards(batch){
   insertBefore(null);
 }
 
-let visibleCards=[],rowFillers=new Set();
+let results=[],visibleCards=[],rowFillers=new Set();
 
 function fillWideRows(){
   const next=new Set();
-  if(!grid.hasAttribute('data-wide-only')&&visibleCards.some(({item})=>item.previewSize)){
+  const nextItem=results[visibleCards.length];
+  if(!grid.hasAttribute('data-wide-only')&&(nextItem?.previewSize||visibleCards.some(({item})=>item.previewSize))){
     const columns=Number(getComputedStyle(grid).getPropertyValue('--columns'));
     let used=0,previous;
     for(const {item,element} of visibleCards){
@@ -130,6 +146,7 @@ function fillWideRows(){
       used=(used+span)%columns;
       previous=element;
     }
+    if(previous&&nextItem?.previewSize&&used===columns-1)next.add(previous);
   }
   for(const element of rowFillers)if(!next.has(element))element.removeAttribute('data-fill-row');
   for(const element of next)if(!rowFillers.has(element))element.dataset.fillRow='';
@@ -190,9 +207,10 @@ function syncMotion(){
 }
 
 function watchPreview(frame,item,{ready,failed}){
-  let observer;
+  let observer,stopped=false;
   const timeout=setTimeout(fail,resourceTimeout);
   function stop(){
+    stopped=true;
     clearTimeout(timeout);
     observer?.disconnect();
     frame.removeEventListener('load',onLoad);
@@ -202,6 +220,7 @@ function watchPreview(frame,item,{ready,failed}){
     failed();
   }
   function onLoad(){
+    if(stopped)return;
     const doc=frame.contentDocument;
     if(doc?.URL==='about:blank')return;
     if(doc?.documentElement?.dataset.embedded!=='true'){
@@ -216,6 +235,9 @@ function watchPreview(frame,item,{ready,failed}){
           :doc.getElementById(item.id)?.querySelector('.stage');
       if(sample){
         stop();
+        // Multiple same-origin previews share the accessibility scan with the gallery.
+        const landmark=doc.querySelector('main:not([aria-label], [aria-labelledby])');
+        if(landmark&&frame.title)landmark.setAttribute('aria-label',frame.title);
         frame.dataset.loaded='';
         ready(doc);
       }else if(doc.querySelector('#sample > p[role="alert"]'))fail();
@@ -226,6 +248,8 @@ function watchPreview(frame,item,{ready,failed}){
     check();
   }
   frame.addEventListener('load',onLoad);
+  // A parser-started preview can finish before the gallery module arrives.
+  if(frame.contentDocument?.readyState==='complete')queueMicrotask(onLoad);
   return stop;
 }
 
@@ -257,13 +281,9 @@ function unmountFrame(card){
   }
 }
 
-function mountFrame(card){
-  const frame=document.createElement('iframe');
-  frame.title=t('{name} interactive preview',workHeading(card.item));
-  frame.allow='fullscreen; clipboard-write';
-  const url=embedUrl(card.item.demo,root.dataset.theme);
-  url.searchParams.set('paused','1');
-  if(card.item.library)url.searchParams.set('preview','card');
+function trackCardFrame(card,frame){
+  card.frame=frame;
+  mounted.add(card);
   card.stopFrame=watchPreview(frame,card.item,{
     ready(doc){
       card.stopFrame=null;
@@ -285,6 +305,16 @@ function mountFrame(card){
       paintFrameRetry(card);
     },
   });
+}
+
+function mountFrame(card){
+  const frame=document.createElement('iframe');
+  frame.title=t('{name} interactive preview',workHeading(card.item));
+  frame.allow='fullscreen; clipboard-write';
+  const url=card.previewSrc ? new URL(card.previewSrc,location.href) : embedUrl(card.item.demo,root.dataset.theme);
+  url.searchParams.set('paused','1');
+  if(card.item.library)url.searchParams.set('preview','card');
+  trackCardFrame(card,frame);
   loadingFrames++;
   card.releaseSlot=releaseSlot;
   const timeout=setTimeout(releaseSlot,2500);
@@ -296,10 +326,8 @@ function mountFrame(card){
     loadingFrames--;
     schedulePreviews();
   }
-  card.frame=frame;
   frame.src=url.href;
   card.stage.append(frame);
-  mounted.add(card);
 }
 
 function schedulePreviews(){
@@ -428,8 +456,41 @@ function localizeResults(){
     ?'No favorites yet.':'No components match these filters.');
 }
 
+// The sentinel follows the rendered prefix. Keyboard focus can extend the
+// prefix before Tab leaves its last card, even before the observer callback.
+const galleryObserver=new IntersectionObserver(([entry])=>{
+  if(entry.isIntersecting)appendCards();
+},{rootMargin:'480px 0px'});
+galleryObserver.observe(galleryEnd);
+grid.addEventListener('focusin',event=>{
+  if(visibleCards.at(-1)?.element.contains(event.target))appendCards();
+});
+
+function setCardVisibility(card,visible){
+  if(card.element.hidden===!visible)return;
+  card.element.hidden=!visible;
+  if(!visible&&opening?.card===card)cancelOpening();
+  updateCard(card);
+}
+
+function appendCards(){
+  const batch=results.slice(visibleCards.length,visibleCards.length+initialCardCount);
+  if(!batch.length)return;
+  renderCards(batch.filter(item=>!cards.has(item.id)));
+  for(const item of batch){
+    const card=cards.get(item.id);
+    visibleCards.push(card);
+    setCardVisibility(card,true);
+  }
+  galleryEnd.hidden=visibleCards.length===results.length;
+  if(!galleryEnd.hidden){
+    galleryObserver.unobserve(galleryEnd);
+    galleryObserver.observe(galleryEnd);
+  }
+  fillWideRows();
+}
+
 function filter(){
-  const revision=++renderRevision;
   const query=search.value;
   const inScope=items.filter(item=>
     matches(item,{query})&&(!favorites.only||favorites.has(item.id)));
@@ -443,37 +504,18 @@ function filter(){
     if(label.textContent!==count)label.textContent=count;
   }
   for(const button of shapeButtons.children)setPressed(button,button.dataset.shape===shape);
-  const results=inScope.filter(item=>(category==='all'||item.category===category)&&(shape==='all'||item.shape===shape));
-  const resultIds=new Set(results.map(item=>item.id));
-  for(const card of cards.values()){
-    const hidden=!resultIds.has(card.item.id);
-    if(card.element.hidden!==hidden){
-      card.element.hidden=hidden;
-      if(hidden){
-        if(opening?.card===card)cancelOpening();
-        updateCard(card);
-      }
-    }
-  }
+  results=inScope.filter(item=>(category==='all'||item.category===category)&&(shape==='all'||item.shape===shape));
+  const firstIds=new Set(results.slice(0,initialCardCount).map(item=>item.id));
+  for(const card of cards.values())setCardVisibility(card,firstIds.has(card.item.id));
+  visibleCards=[];
   resultCount=results.length;
   grid.toggleAttribute('data-wide-only',resultCount>0&&results.every(item=>item.previewSize));
   empty.hidden=resultCount!==0;
+  galleryEnd.hidden=resultCount<=initialCardCount;
   localizeResults();
-  const missing=results.filter(item=>!cards.has(item.id));
-  const batchSize=240;
-  const initial=missing.length>batchSize&&!document.hidden?initialCardCount:missing.length;
-  delete root.dataset.ready;
-  renderBatch(0,initial);
-
-  function renderBatch(start,size){
-    if(revision!==renderRevision)return;
-    if(size)renderCards(missing.slice(start,start+size));
-    visibleCards=results.map(item=>cards.get(item.id)).filter(Boolean);
-    fillWideRows();
-    const next=start+size;
-    if(next<missing.length)requestAnimationFrame(()=>setTimeout(()=>renderBatch(next,batchSize),0));
-    else root.dataset.ready='true';
-  }
+  appendCards();
+  if(!resultCount)fillWideRows();
+  root.dataset.ready='true';
 }
 
 function selectCategory(next){
@@ -649,9 +691,11 @@ function openComponent(item,button){
   replaceLocation('#'+item.id);
 }
 
-function localizeDetailButton(button){
+function localizeDetailButton({detail:button,item}){
   const state=button.dataset.detailState;
-  button.querySelector('.ui-detail-label').textContent=t(state==='loading'?'Loading details':state==='error'?'Retry details':'Details');
+  const label=t(state==='loading'?'Loading details':state==='error'?'Retry details':'Details');
+  button.querySelector('.ui-detail-label').textContent=label;
+  button.setAttribute('aria-label',`${label} ${workHeading(item).name}`);
 }
 
 function setDetailState(card,state){
@@ -670,7 +714,7 @@ function setDetailState(card,state){
     button.removeAttribute('aria-busy');
   }
   button.dataset.detailState=state;
-  localizeDetailButton(button);
+  localizeDetailButton(card);
 }
 
 function cancelOpening(){
@@ -683,21 +727,20 @@ async function openDetails(card){
   if(modalOpen()||closingForHash||opening?.card===card)return;
   cancelOpening();
   const {item,detail}=card;
-  if(!item.loader){
-    favorites.showFor(item.id);
-    openComponent(item,detail);
-    syncMotion();
-    return;
-  }
   const attempt={card};
   opening=attempt;
-  setDetailState(card,'loading');
+  if(item.loader||homeStylesReady)setDetailState(card,'loading');
   try{
-    const license=await fetchText('LICENSE');
+    const license=item.loader ? await fetchText('LICENSE') : null;
+    if(homeStylesReady)await homeStylesReady;
     if(opening!==attempt)return;
     favorites.showFor(item.id);
-    loaderItemId=item.id;
-    editor.open(item.loader,detail,license);
+    if(item.loader){
+      loaderItemId=item.id;
+      editor.open(item.loader,detail,license);
+    }else{
+      openComponent(item,detail);
+    }
     setDetailState(card,'ready');
     syncMotion();
   }catch{
@@ -847,7 +890,7 @@ function localizeCard(card){
   title.lang=heading.lang;
   title.textContent=heading.name;
   card.element.querySelector('.ui-caption p').textContent=kindLabel(item);
-  localizeDetailButton(card.detail);
+  localizeDetailButton(card);
   if(item.loader){
     card.stage.setAttribute('aria-label',t(card.failed?'Retry {name} preview':'Pause {name} preview',heading));
     if(card.failed)card.stage.firstElementChild.textContent=t('Preview failed. Click to retry.');

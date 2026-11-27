@@ -46,6 +46,19 @@ export async function startServer(t, {cacheAssets = false} = {}) {
   return `http://127.0.0.1:${server.address().port}${prefix}`;
 }
 
+// Exercise the same scroll path as a visitor, including results outside the first batch.
+export async function revealGalleryCards(page, id) {
+  const cards = page.locator('#ui-grid > article:not([hidden])');
+  const sentinel = page.locator('#gallery-end');
+  const target = id && page.locator(`[data-ui="${id}"]:not([hidden])`);
+  while ((!target || !await target.count()) && !await sentinel.evaluate(node => node.hidden)) {
+    const count = await cards.count();
+    await sentinel.evaluate(node => node.scrollIntoView({block: 'end'}));
+    await page.waitForFunction(previous =>
+      document.querySelectorAll('#ui-grid > article:not([hidden])').length > previous, count);
+  }
+}
+
 export function monitor(page, issues, base) {
   page.on('pageerror', error => issues.push(error.message));
   page.on('requestfailed', request => {

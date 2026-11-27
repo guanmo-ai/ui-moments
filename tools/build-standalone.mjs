@@ -97,7 +97,44 @@ ${indent(script, 6)}
 `;
 }
 
+function magnetGridPreview() {
+  const page = 'visual.html';
+  const style = ['theme', 'stage', 'widget', 'pad', 'magnet-grid-style', 'reduced-motion']
+    .map(name => section(page, name)).join('\n');
+  const script = ['helpers', 'magnet-grid-script'].map(name => section(page, name)).join('\n');
+  const embed = readFileSync(new URL('../assets/embed.js', import.meta.url), 'utf8');
+  return `<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Magnet Grid · UI Moments</title>
+<link rel="icon" href="data:,">
+<script>
+${embed}
+if (frameElement) document.documentElement.dataset.theme = parent.document.documentElement.dataset.theme;
+</script>
+<style>
+${style}
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; background: var(--surface); }
+.stage { height: 100dvh; border-radius: 0; }
+.caption { display: none; }
+:focus-visible { outline: 2px solid var(--accent); }
+[data-gallery-active="false"] * { transition-duration: 0s !important; transition-delay: 0s !important; }
+</style>
+<main aria-label="Magnet Grid preview">
+${section(page, 'magnet-grid', true)}
+</main>
+<script>
+${script}
+if (frameElement) frameElement.dataset.loaded = '';
+</script>
+</html>
+`;
+}
+
 const pages = samples.map(sample => [`${sample.id}.html`, standalone(sample)]);
 mkdirSync(destination, { recursive: true });
 for (const [name, html] of pages) writeFileSync(new URL(name, destination), html);
+writeFileSync(new URL('magnet-grid-preview.html', destination), magnetGridPreview());
 console.log(`已生成 ${pages.length} 个独立示例（gallery/originals/dist/）`);
