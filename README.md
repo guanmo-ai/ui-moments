@@ -32,7 +32,7 @@ UI Moments 是一个可以直接上手的界面交互与动效图鉴，由观默
 
 ## 本地运行
 
-从 Git 克隆项目后运行以下命令。需要 Node.js 22.12+ 或 24+、npm 和 Python 3。
+从 Git 克隆项目后运行以下命令。需要 Node.js 22.18+ 或 24.11+、npm 和 Python 3。
 
 ```bash
 npm run setup
@@ -50,6 +50,7 @@ python3 -m http.server 5173 --bind 127.0.0.1 --directory _site
 ```bash
 npx playwright install --only-shell chromium firefox webkit
 npm test
+npm run test:cards
 ```
 
 ## 维护与许可

@@ -79,6 +79,18 @@ test('图鉴首页默认黑色、收录 884 个示例，支持筛选、试玩和
   assert.deepEqual(errors, []);
 });
 
+test('Astryx 发布包记录实际打包的正式版和 canary 依赖', async () => {
+  for (const directory of ['astryx', 'astryx/experimental']) {
+    const notices = await readFile(new URL(`../_site/gallery/${directory}/dist/THIRD_PARTY_LICENSES.txt`, import.meta.url), 'utf8');
+    const packages = directory === 'astryx'
+      ? ['@astryxdesign/cli@0.7.17']
+      : ['charts', 'lab', 'vega'].map(name => `@astryxdesign/${name}@0.7.17-canary.g72f2d7c`);
+    packages.push('@astryxdesign/core@0.7.17', '@astryxdesign/theme-neutral@0.7.17', 'lucide-react@1.78.0');
+    const lines = new Set(notices.split('\n'));
+    for (const id of packages) assert.ok(lines.has(id), id);
+  }
+});
+
 test('原创控件和加载动效随图鉴切换语言，上游示例保留英文', {timeout: 35_000}, async t => {
   const window = {};
   runInNewContext(await readFile(new URL('../gallery/works.js', import.meta.url), 'utf8'), {window});

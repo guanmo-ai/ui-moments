@@ -3,6 +3,7 @@ import {dirname, join, relative, resolve, sep} from 'node:path';
 import {transformSync} from '@babel/core';
 import stylexPlugin from '@stylexjs/babel-plugin';
 import {build} from 'esbuild';
+import {fillTemplatePlaceholders} from '../node_modules/@astryxdesign/cli/foundation/discovery/template-placeholders.mjs';
 import {officialShowcases} from '../showcases.mjs';
 import {officialVariants} from '../variants.mjs';
 import {writeBundle} from './write-bundle.mjs';
@@ -70,6 +71,7 @@ const showcasePlugin = {
         .replace(/\/template-assets\/([a-z0-9-]+\.(?:png|jpg|mp4))/gi, (_, file) => localMedia(file))
         .replace(/(\bplaceholder="[^"\s@]+@)company\.com(?=")/g, '$1example.com')
         .replace(/^\s*icon: 'https:\/\/[^']*favicon[^']*',\s*$/gm, '');
+      contents = fillTemplatePlaceholders(contents).source;
       if (contents.includes("from '@stylexjs/stylex'")) {
         const compiled = transformSync(contents, {
           filename: path, babelrc: false, configFile: false, parserOpts: {plugins: ['jsx', 'typescript']},
@@ -106,7 +108,8 @@ const result = await build({
 await writeBundle({
   root, dist, result,
   fallbackLicenses: new Map([
-    ['@astryxdesign/core@0.7.16', 'vendor/astryx/LICENSE'],
+    ['@astryxdesign/core@0.7.17', 'vendor/astryx/LICENSE'],
+    ['@astryxdesign/theme-neutral@0.7.17', 'vendor/astryx/LICENSE'],
     ['@stylexjs/stylex@0.19.2', 'vendor/stylex/LICENSE'],
   ]),
   extraCss: stylexPlugin.processStylexRules([...styleRules].sort().flatMap(([, rules]) => rules), false),

@@ -3,7 +3,7 @@ import {officialVariants} from './variants.mjs';
 import {canary, canaryCommit, canaryStories} from './experimental/stories.mjs';
 
 const source = 'gallery/astryx';
-const upstream = 'https://github.com/meta/astryx/blob/3fcee8b8a559c41735064b2560fc9d358c99919b/packages/cli/assets/templates/blocks/components';
+const upstream = 'https://github.com/meta/astryx/blob/0b48882df9c0bf8e49c8f7306737b6972c8dcd15/packages/cli/assets/templates/blocks/components';
 const library = {id: 'astryx', name: 'Astryx'};
 // 同一上游组件的展示和变体继承同一用途。开发工具仍可在全库中搜索。
 const familiesByTask = {
@@ -51,7 +51,7 @@ const credit = {
   name: 'Astryx · Meta Platforms, Inc.',
   url: 'https://github.com/meta/astryx',
   licensePath: `${source}/vendor/astryx/LICENSE`,
-  note: 'MIT components from Astryx 0.7.16. Demo content, gallery integration, and theming by UI Moments.',
+  note: 'MIT components from Astryx 0.7.17. Demo content, gallery integration, and theming by UI Moments.',
 };
 
 const adapted = [
@@ -123,7 +123,7 @@ const coreWorks = [...officialShowcases, ...officialVariants].map(([key, rawTitl
     sourceAdapter: `${source}/tools/build.mjs`,
     library,
     fitPreview: true,
-    credit: {...credit, url: sourceHref, note: 'Official Astryx 0.7.16 example, embedded by UI Moments. MIT.'},
+    credit: {...credit, url: sourceHref, note: 'Official Astryx 0.7.17 example, embedded by UI Moments. MIT.'},
   };
 });
 

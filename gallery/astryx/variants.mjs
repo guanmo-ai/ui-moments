@@ -1,4 +1,4 @@
-// Ready non-primary examples from @astryxdesign/cli@0.7.16.
+// Ready non-primary examples from @astryxdesign/cli@0.7.17.
 export const officialVariants = [
   ["variant-alert-dialog-alert-dialog-async-action","Alert Dialog · AlertDialog — Loading","AlertDialog/AlertDialogAsyncAction.tsx","A confirmation dialog that shows a spinner while the action runs."],
   ["variant-app-shell-app-shell-content-only","App Shell · AppShell — Content Only","AppShell/AppShellContentOnly.tsx","Minimal shell with no navigation, useful for full-bleed pages, auth screens, or embedded views."],

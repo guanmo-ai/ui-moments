@@ -3,7 +3,7 @@ import {dirname, join, resolve, sep} from 'node:path';
 import {transformSync} from '@babel/core';
 import stylexPlugin from '@stylexjs/babel-plugin';
 import {build} from 'esbuild';
-import {canary, canaryStories} from '../experimental/stories.mjs';
+import {canaryStories} from '../experimental/stories.mjs';
 import {writeBundle} from './write-bundle.mjs';
 
 const root = resolve(import.meta.dirname, '../experimental');
@@ -103,7 +103,8 @@ const result = await build({
 await writeBundle({
   root, dist, result,
   fallbackLicenses: new Map([
-    [`@astryxdesign/core@${canary}`, 'vendor/astryx/LICENSE'],
+    ['@astryxdesign/core@0.7.17', 'vendor/astryx/LICENSE'],
+    ['@astryxdesign/theme-neutral@0.7.17', 'vendor/astryx/LICENSE'],
     ['@stylexjs/stylex@0.19.2', '../vendor/stylex/LICENSE'],
   ]),
   extraCss: stylexPlugin.processStylexRules([...styleRules].sort().flatMap(([, rules]) => rules), false),

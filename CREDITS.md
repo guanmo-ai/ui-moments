@@ -4,7 +4,7 @@
 | --- | --- | --- |
 | UI Moments 原创控件、加载动效、站点与集成示例<br>Original controls, loaders, site, and integration examples | 观默 (Guanmo) | [MIT](LICENSE) |
 | Fluent UI React | Microsoft，锁定 `@fluentui/react-components@9.75.2`。示例采用系统字体。<br>Microsoft, pinned to `@fluentui/react-components@9.75.2`. The examples use system fonts. | [发行包许可 / Package license](gallery/fluent-ui/vendor/LICENSE) · [上游许可 / Upstream license](gallery/fluent-ui/vendor/UPSTREAM-LICENSE) |
-| Meta Astryx | Meta Platforms, Inc.，主示例和变体固定为 0.7.16，图表和实验示例固定为 0.7.17-canary.g72f2d7c。<br>Meta Platforms, Inc., pinned to 0.7.16 for main examples and variants and 0.7.17-canary.g72f2d7c for charts and experimental examples. | [MIT](gallery/astryx/vendor/astryx/LICENSE) · [版本与来源 / Versions and sources](gallery/astryx/README.md) |
+| Meta Astryx | Meta Platforms, Inc.，Core、Neutral 主题和 CLI 固定为 0.7.17。Charts、Lab 和 Vega 沿用 0.7.17-canary.g72f2d7c。<br>Meta Platforms, Inc. Core, the Neutral theme, and the CLI are pinned to 0.7.17. Charts, Lab, and Vega retain 0.7.17-canary.g72f2d7c. | [MIT](gallery/astryx/vendor/astryx/LICENSE) · [版本与来源 / Versions and sources](gallery/astryx/README.md) |
 | Geist / Geist Mono | Vercel，随项目提供 Latin 可变字体。<br>Vercel, bundled Latin variable fonts. | [Geist OFL 1.1](assets/fonts/OFL-Geist.txt) · [Geist Mono OFL 1.1](assets/fonts/OFL-GeistMono.txt) · [上游 / Upstream](https://github.com/vercel/geist-font) |
 | [行为准则 / Code of Conduct](CODE_OF_CONDUCT.md) | Contributor Covenant 2.1 官方英文与简体中文文本，填入项目举报渠道。<br>Official English and Simplified Chinese Contributor Covenant 2.1 texts with project reporting instructions. | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
 

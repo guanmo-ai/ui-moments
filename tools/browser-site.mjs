@@ -17,7 +17,7 @@ const types = {
   '.woff2': 'font/woff2',
 };
 
-export async function startServer(t) {
+export async function startServer(t, {cacheAssets = false} = {}) {
   const server = createServer(async (req, res) => {
     const path = new URL(req.url, 'http://127.0.0.1').pathname;
     const relative = path.slice(prefix.length);
@@ -32,7 +32,11 @@ export async function startServer(t) {
     const file = path.endsWith('/') ? relative + 'index.html' : relative;
     try {
       const data = await readFile(new URL(file, site));
-      res.writeHead(200, {'Content-Type': types[extname(file)] ?? 'text/plain'}).end(data);
+      const headers = {'Content-Type': types[extname(file)] ?? 'text/plain'};
+      if (cacheAssets && /\/(?:dist|media)\//.test(file) && !file.endsWith('.html')) {
+        headers['Cache-Control'] = 'public, max-age=3600';
+      }
+      res.writeHead(200, headers).end(data);
     } catch {
       res.writeHead(404).end();
     }

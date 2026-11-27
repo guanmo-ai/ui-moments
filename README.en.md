@@ -32,7 +32,7 @@ Open a card's details and select **Copy prompt** for its link, exact source file
 
 ## Run locally
 
-Clone the Git repository. You need Node.js 22.12+ or 24+, npm, and Python 3.
+Clone the Git repository. You need Node.js 22.18+ or 24.11+, npm, and Python 3.
 
 ```sh
 npm run setup
@@ -50,6 +50,7 @@ For a fork or another branch, set `UI_MOMENTS_REPOSITORY` to the full GitHub rep
 ```sh
 npx playwright install --only-shell chromium firefox webkit
 npm test
+npm run test:cards
 ```
 
 ## Maintenance and license

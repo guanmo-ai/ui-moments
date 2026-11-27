@@ -18,7 +18,7 @@
   },
   "type": "module",
   "engines": {
-    "node": "^22.12.0 || >=24"
+    "node": "^22.18.0 || >=24.11.0"
   },
   "scripts": {
     "setup": "npm ci --ignore-scripts && npm ci --ignore-scripts --prefix gallery/fluent-ui && npm ci --ignore-scripts --prefix gallery/astryx && npm ci --ignore-scripts --prefix gallery/astryx/experimental",
@@ -26,10 +26,11 @@
     "predev": "npm run build",
     "dev": "python3 -m http.server 5173 --bind 127.0.0.1",
     "package:site": "node tools/package-site.mjs",
-    "test": "node --test tools/standalone.test.mjs tools/release-browser.test.mjs tools/card-previews.test.mjs tools/performance.test.mjs",
+    "test": "node --test tools/standalone.test.mjs tools/release-browser.test.mjs tools/performance.test.mjs",
     "test:browser": "node --test tools/release-browser.test.mjs tools/card-previews.test.mjs",
     "test:performance": "node --test tools/performance.test.mjs",
-    "test:standalone": "node --test tools/standalone.test.mjs"
+    "test:standalone": "node --test tools/standalone.test.mjs",
+    "test:cards": "node --test tools/card-previews.test.mjs"
   },
   "devDependencies": {
     "playwright": "1.65.1",

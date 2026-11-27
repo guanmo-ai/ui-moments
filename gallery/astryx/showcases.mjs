@@ -1,4 +1,4 @@
-// Published examples from @astryxdesign/cli@0.7.16. See the integration README.
+// Published examples from @astryxdesign/cli@0.7.17. See the integration README.
 export const officialShowcases = [
   ["alert-dialog","Alert Dialog","AlertDialog/AlertDialogDeleteConfirmation.tsx","A delete button that asks the user to confirm before deleting."],
   ["app-shell","App Shell","AppShell/AppShellShowcase.tsx","A basic app shell with content padding."],

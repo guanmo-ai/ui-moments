@@ -1,4 +1,4 @@
-// Published packages and original Storybook examples at the same canary commit.
+// Storybook sources and the pinned Charts, Lab, and Vega packages share this canary commit.
 export const canary = '0.7.17-canary.g72f2d7c';
 export const canaryCommit = '72f2d7caa92427a619a2ee2472d8606f0208ef06';
 

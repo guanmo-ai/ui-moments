@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import {availableParallelism} from 'node:os';
+import {performance} from 'node:perf_hooks';
 import {test} from 'node:test';
 import {chromium} from 'playwright';
 import {astryxWorks} from '../gallery/astryx/catalog.mjs';
@@ -33,9 +35,12 @@ async function measureCardStages(context, base, width, columns) {
 }
 
 test('1440 五列和 390 两列的 830 张上游卡片全部渲染且没有横向溢出', {timeout: 900_000}, async t => {
+  const start = performance.now();
+  const concurrency = availableParallelism();
+  t.after(() => t.diagnostic(`卡片检查用时 ${((performance.now() - start) / 1000).toFixed(1)} 秒，并发页数 ${concurrency}`));
   assert.equal(astryxWorks.length, 779);
   assert.equal(fluentWorks.length, 51);
-  const base = await startServer(t);
+  const base = await startServer(t, {cacheAssets: true});
   const browser = await chromium.launch();
   t.after(() => browser.close());
   const context = await browser.newContext({reducedMotion: 'reduce'});
@@ -53,7 +58,7 @@ test('1440 五列和 390 两列的 830 张上游卡片全部渲染且没有横�
   const failures = [];
   let checked = 0;
   try {
-    await Promise.all(Array.from({length: 8}, async () => {
+    await Promise.all(Array.from({length: concurrency}, async () => {
       const page = await context.newPage();
       const errors = [];
       await page.goto(base + 'card-preview-test');
@@ -68,17 +73,17 @@ test('1440 五列和 390 两列的 830 张上游卡片全部渲染且没有横�
               node.style.width = bounds.width + 'px';
               node.style.height = bounds.height + 'px';
             }, size);
-            await frame.goto(previewUrl(item, base), {waitUntil: 'domcontentloaded', timeout: 15_000});
+            await frame.goto(previewUrl(item, base), {waitUntil: 'commit', timeout: 15_000});
             const content = frame.locator(item.library.id === 'astryx'
               ? '#sample .stage > :not(.showcase, output), #sample .showcase > *'
               : '#demo .demo-stage > *');
             await content.first().waitFor({timeout: 12_000});
-            await frame.locator('img').evaluateAll(images => Promise.all(images.map(image => image.decode())));
             if (item.type === 'Data visualization') {
               await frame.locator('.showcase :is(svg, canvas)').first().waitFor({timeout: 6_000});
             }
 
-            const dimensions = await frame.evaluate(() => {
+            const dimensions = await frame.evaluate(async () => {
+              await Promise.all([...document.images].map(image => image.decode()));
               const root = document.documentElement;
               const viewport = root.clientWidth;
               const panel = document.querySelector('.showcase');
