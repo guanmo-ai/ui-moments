@@ -72,9 +72,18 @@
         node.removeAttribute('data-zh');
       }
     };
-    const observer = new MutationObserver(paint);
+    // Streamed shadow templates can arrive in separate mutation batches.
+    // Apply saved preferences once before each paint.
+    let frame = 0;
+    const observer = new MutationObserver(() => {
+      if (!frame) frame = requestAnimationFrame(() => { frame = 0; paint(); });
+    });
     observer.observe(root, {childList: true, subtree: true});
-    document.addEventListener('DOMContentLoaded', () => { observer.disconnect(); paint(); }, {once: true});
+    document.addEventListener('DOMContentLoaded', () => {
+      observer.disconnect();
+      cancelAnimationFrame(frame);
+      paint();
+    }, {once: true});
   })();
 </script>
 <link rel="stylesheet" href="assets/site.css">
@@ -87,11 +96,8 @@
 
 <main class="wrap" aria-labelledby="gallery-title">
   <section class="hero">
-    <div>
-      <h1 id="gallery-title" data-i18n="text">Interactive UI Gallery</h1>
-      <p id="gallery-intro">Explore <span data-stat="total"></span> live UI examples.</p>
-    </div>
-    <a class="hero-demo" href="#jelly-pad"><span>Try Jelly Cube</span> <span aria-hidden="true">→</span></a>
+    <h1 id="gallery-title" data-i18n="text">Interactive UI Gallery</h1>
+    <p id="gallery-intro">Explore <span data-stat="total"></span> live UI examples.</p>
   </section>
   <section id="works" aria-label="UI components" data-i18n="aria-label">
     <div class="gallery-toolbar">

@@ -9,7 +9,7 @@ import {chromium, webkit} from 'playwright';
 import {fluentWorks} from '../gallery/fluent-ui/catalog.mjs';
 import {astryxWorks} from '../gallery/astryx/catalog.mjs';
 import {originalLoaders} from '../gallery/loaders/originals.mjs';
-import {buildCatalog, initialCardCount, usesTextEntry} from '../assets/catalog.mjs';
+import {buildCatalog, categories, initialCardCount, usesTextEntry} from '../assets/catalog.mjs';
 import {remainingScenarios} from '../gallery/fluent-ui/tools/browser-scenarios.mjs';
 import {monitor, revealGalleryCards, startServer} from './browser-site.mjs';
 
@@ -520,7 +520,7 @@ test('声明式模板未被解析时，脚本采用同一份静态控件', {time
   assert.ok(await host.locator('i').evaluateAll(dots => dots.some(dot => Number(dot.style.getPropertyValue('--p')) > 0)));
 });
 
-test('全部按直接操作、文字输入、彩色控件和自动动效排序，初始只挂载近屏卡片', {timeout: 45_000}, async t => {
+test('全部按点按、拖动、输入、彩色和加载动效分组，初始只挂载近屏卡片', {timeout: 45_000}, async t => {
   const site = await startServer(t);
   const browser = await chromium.launch();
   t.after(() => browser.close());
@@ -528,29 +528,40 @@ test('全部按直接操作、文字输入、彩色控件和自动动效排序�
   await page.goto(site);
   await page.locator('html[data-ready="true"]').waitFor();
   const cards = page.locator('#ui-grid > article:not([hidden])');
+  const headings = page.locator('[data-group-heading]:not([hidden])');
   assert.equal(await cards.count(), initialCardCount);
   assert.equal(await page.locator('#ui-count[aria-live="polite"]').textContent(), '884 components');
   await revealGalleryCards(page);
+  const all = await fullCatalog();
+  const groups = categories.slice(1).map(({id}) => id);
   const order = await cards.evaluateAll(rows => rows.map(row => row.dataset.category));
-  assert.deepEqual(order, [
-    ...Array(863).fill('input'), ...Array(3).fill('color'), ...Array(18).fill('loading'),
-  ]);
-  const items = new Map((await fullCatalog()).map(item => [item.id, item]));
-  const interactive = (await cards.evaluateAll(rows => rows.map(row => row.dataset.ui))).slice(0, 863);
-  const textEntries = interactive.map(id => usesTextEntry(items.get(id)));
-  const boundary = textEntries.indexOf(true);
-  assert.ok(boundary > 0);
-  assert.ok(textEntries.slice(boundary).every(Boolean));
-  for (const id of ['code-shake', 'chip-input', 'strength-meter', 'fluent-input', 'fluent-searchbox',
-    'fluent-combobox', 'astryx-date-range', 'astryx-text-area', 'astryx-variant-hooks-use-input-container-hook-usage',
-    'astryx-variant-multi-selector-multi-selector-searchable-multi-selector']) {
-    assert.ok(interactive.indexOf(id) >= boundary, `${id} 属于文字输入段`);
+  assert.equal(order.length, 884);
+  assert.deepEqual(order, groups.flatMap(id => Array(all.filter(item => item.category === id).length).fill(id)));
+  assert.deepEqual(await headings.evaluateAll(nodes => nodes.map(node => [node.dataset.groupHeading, node.nextElementSibling.dataset.category])),
+    groups.map(id => [id, id]));
+  assert.deepEqual(await page.locator('#categories .category-count').allTextContents(), ['884', '707', '23', '118', '6', '30']);
+  const items = new Map(all.map(item => [item.id, item]));
+  const fixtures = {
+    tap: ['plan-picker', 'magnet-grid', 'fluent-dropdown', 'astryx-calendar', 'astryx-selector',
+      'astryx-variant-hooks-use-typeahead-hook-usage'],
+    type: ['code-shake', 'chip-input', 'strength-meter', 'fluent-input', 'fluent-searchbox',
+      'fluent-combobox', 'astryx-date-range', 'astryx-text-area', 'astryx-variant-hooks-use-input-container-hook-usage',
+      'astryx-variant-multi-selector-multi-selector-searchable-multi-selector'],
+    drag: ['swipe-confirm', 'hold-confirm', 'elastic-string', 'fluent-slider', 'astryx-slider'],
+    color: ['hue-orbit', 'flip-coin', 'pull-cord'],
+    loading: ['paper-fold', 'astryx-spinner'],
+  };
+  for (const [group, ids] of Object.entries(fixtures)) {
+    for (const id of ids) assert.equal(items.get(id)?.category, group, id);
   }
-  for (const id of ['plan-picker', 'magnet-grid', 'fluent-dropdown', 'fluent-slider', 'astryx-calendar', 'astryx-selector',
-    'astryx-variant-hooks-use-typeahead-hook-usage']) {
-    const index = interactive.indexOf(id);
-    assert.ok(index >= 0 && index < boundary, `${id} 属于直接操作段`);
-  }
+  assert.ok(all.filter(item => item.category === 'type').every(usesTextEntry));
+  await page.getByRole('searchbox').fill('Swipe to Confirm');
+  assert.deepEqual(await headings.allTextContents(), ['Drag']);
+  await page.locator('#language').click();
+  assert.deepEqual(await headings.allTextContents(), ['拖动']);
+  await page.locator('#categories [data-category="drag"]').click();
+  assert.equal(await headings.count(), 0);
+  assert.ok(await cards.first().isVisible());
 });
 
 test('滚动目标暂时留在视口之外时，卡片检查仍能推进到下一个批次', {timeout: 15_000}, async t => {
@@ -656,6 +667,55 @@ test('宽卡片预览展开状态，详情仍能触发原交互', {timeout: 90_0
     await detail.getByRole('button', {name: trigger, exact: true}).click();
     await result(detail).waitFor();
     await page.locator('#component-close').click();
+  }
+});
+
+test('Teaching Popover 和 Toast 的宽卡片支持直接试玩', {timeout: 30_000}, async t => {
+  const site = await startServer(t);
+  for (const [engine, width, hasTouch] of [[chromium, 1440, false], [webkit, 390, true]]) {
+    const browser = await engine.launch();
+    t.after(() => browser.close());
+    const page = await browser.newPage({viewport: {width, height: 900}, hasTouch, reducedMotion: 'reduce'});
+    page.setDefaultTimeout(5_000);
+    await page.goto(site);
+    const search = page.getByRole('searchbox');
+    async function openCard(query, id) {
+      await search.fill(query);
+      const card = page.locator(`[data-ui="fluent-${id}"]`);
+      await card.scrollIntoViewIfNeeded();
+      return card.frameLocator('iframe[data-loaded]');
+    }
+    const activate = button => hasTouch ? button.tap() : button.click();
+
+    const popover = await openCard('Teaching Popover', 'teaching-popover');
+    const tip = popover.getByRole('group', {name: 'Quick search'});
+    const dismiss = tip.getByRole('button', {name: 'Got it'});
+    const show = popover.getByRole('button', {name: 'Show tip'});
+    await tip.waitFor();
+    assert.ok(await search.evaluate(node => document.activeElement === node));
+    await activate(dismiss);
+    await tip.waitFor({state: 'hidden'});
+    assert.ok(await show.evaluate(node => document.activeElement === node));
+    if (hasTouch) await show.tap();
+    else await show.press('Space');
+    await tip.waitFor();
+    assert.ok(await tip.evaluate(node => node.getBoundingClientRect().bottom <= innerHeight));
+    await dismiss.press('Enter');
+    await tip.waitFor({state: 'hidden'});
+
+    const toast = await openCard('Toast', 'toast');
+    const save = toast.getByRole('button', {name: 'Save project'});
+    const notifications = toast.locator('.fui-Toast');
+    if (hasTouch) await save.tap();
+    else await save.press('Enter');
+    await activate(save);
+    await notifications.getByText('Saved · 1', {exact: true}).waitFor();
+    await notifications.getByText('Saved · 2', {exact: true}).waitFor();
+    await notifications.first().waitFor({state: 'hidden'});
+    assert.equal(await notifications.count(), 0);
+    await activate(save);
+    await notifications.getByText('Saved · 3', {exact: true}).waitFor();
+    assert.equal(await page.locator('#component-detail[open]').count(), 0);
   }
 });
 
@@ -857,4 +917,60 @@ test('从内联原创卡片的详情下载单文件，断网后仍能操作', {t
   const ink = offline.getByRole('switch', {name: 'Ink Switch'});
   await ink.press('Space');
   assert.equal(await ink.getAttribute('aria-checked'), 'true');
+});
+
+test('详情只响应遮罩点按，关闭后清理深链并还原焦点', {timeout: 35_000}, async t => {
+  const site = await startServer(t);
+  for (const engine of [chromium, webkit]) {
+    const browser = await engine.launch();
+    t.after(() => browser.close());
+    const page = await browser.newPage({viewport: {width: 1440, height: 900}, hasTouch: true, reducedMotion: 'reduce'});
+    await page.goto(site);
+    await page.locator('html[data-ready="true"]').waitFor();
+    for (const [id, query, selector] of [
+      ['fluent-teaching-popover', 'Teaching Popover', '#component-detail'],
+      ['paper-fold', 'Paper Fold', '#detail'],
+    ]) {
+      const label = `${engine.name()} ${id}`;
+      await page.getByRole('searchbox').fill(query);
+      const trigger = page.locator(`[data-ui="${id}"] [data-detail]`);
+      const dialog = page.locator(selector);
+      const open = async () => {
+        await trigger.click();
+        await dialog.waitFor();
+        assert.equal(new URL(page.url()).hash, `#${id}`, label);
+      };
+      const assertClosed = async () => {
+        await dialog.waitFor({state: 'hidden'});
+        await page.waitForFunction(() => document.body.style.overflow === '');
+        await page.locator(`[data-ui="${id}"] [data-detail]:focus`).waitFor();
+        assert.equal(new URL(page.url()).hash, '', label);
+      };
+      await open();
+      const {x, y} = await dialog.boundingBox();
+      const innerX = Math.round(x + 20);
+      const testY = Math.round(y + 24);
+      await page.mouse.click(innerX, testY);
+      await page.mouse.click(12, testY, {button: 'right'});
+      assert.ok(await dialog.isVisible(), label);
+      for (const [from, to] of [[innerX, 12], [12, innerX]]) {
+        await page.mouse.move(from, testY);
+        await page.mouse.down();
+        await page.mouse.move(to, testY, {steps: 5});
+        await page.mouse.up();
+        assert.ok(await dialog.isVisible(), label);
+      }
+      await page.mouse.click(12, testY);
+      await assertClosed();
+
+      await open();
+      await page.touchscreen.tap(12, testY);
+      await assertClosed();
+
+      await open();
+      await page.keyboard.press('Escape');
+      await assertClosed();
+    }
+    await page.close();
+  }
 });

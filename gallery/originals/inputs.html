@@ -17,6 +17,7 @@
       root.dataset.theme = theme || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
     })();
   </script>
+  <link rel="stylesheet" href="interaction.css">
   <style>
     @font-face { font-family: Geist; src: url('../../assets/fonts/Geist-latin-wght.woff2') format('woff2'); font-weight: 100 900; font-display: swap; }
 
@@ -154,9 +155,9 @@
     .notch-track { position: relative; height: 34px; border-radius: 17px; background: var(--rail); }
     .notch-track i { position: absolute; top: 50%; width: 4px; height: 4px; margin: -2px; border-radius: 50%; background: var(--muted); opacity: .5; left: calc(20px + var(--n) * (100% - 40px) / 4); }
     .notch-thumb { position: absolute; top: 3px; height: 28px; width: 34px; border-radius: 14px; left: calc(var(--v) * (100% - 40px) / 4 + 3px); background: var(--raised); box-shadow: var(--shadow); transition: left .45s var(--spring), width .3s var(--spring), margin .3s var(--spring); }
-    .notch[data-drag] .notch-thumb { width: 44px; margin-left: -5px; }
+    .notch[data-drag] .notch-thumb { width: 44px; margin-left: -5px; scale: .96; }
     .notch-fill { position: absolute; inset: 0 auto 0 0; width: calc(var(--v) * (100% - 40px) / 4 + 37px); border-radius: 17px; background: var(--accent-soft); transition: width .45s var(--spring); }
-    .notch input { position: absolute; inset: 26px 0 0; width: 100%; height: 34px; margin: 0; opacity: 0; cursor: pointer; z-index: 1; }
+    .notch input { position: absolute; inset: 26px 0 0; width: 100%; height: 34px; margin: 0; opacity: 0; cursor: grab; touch-action: pan-y; z-index: 1; }
     .notch input:focus-visible ~ .notch-track { outline: 2px solid var(--accent); outline-offset: 3px; }
 
     /* Strength Meter */
@@ -328,7 +329,9 @@
     <footer class="credit">Designed and built by UI Moments. Released under the <a href="../../LICENSE">MIT License</a>.</footer>
   </div>
 
-  <script>
+  <script type="module">
+    import { bindDrag, rubberBand, springValue, vibrateOnTouch } from "./interaction.mjs";
+
     const root = document.documentElement;
     const params = new URLSearchParams(location.search);
     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
@@ -384,8 +387,11 @@
         labels.forEach((label, index) => label.toggleAttribute('data-on', index === range.valueAsNumber));
         range.setAttribute('aria-valuetext', sizes[range.value]);
       });
-      range.addEventListener('pointerdown', () => { notch.dataset.drag = ''; });
-      for (const type of ['pointerup', 'pointercancel', 'blur']) range.addEventListener(type, () => delete notch.dataset.drag);
+      bindDrag(range, {
+        native: true,
+        start() { notch.dataset.drag = ''; },
+        end() { delete notch.dataset.drag; },
+      });
     }
 
     /* ---------- Strength Meter ---------- */

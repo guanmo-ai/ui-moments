@@ -17,6 +17,7 @@
       root.dataset.theme = theme || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
     })();
   </script>
+  <link rel="stylesheet" href="interaction.css">
   <style>
     @font-face { font-family: Geist; src: url('../../assets/fonts/Geist-latin-wght.woff2') format('woff2'); font-weight: 100 900; font-display: swap; }
 
@@ -179,12 +180,12 @@
       background: radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--raised) 100%, #fff 6%), var(--raised) 70%);
       box-shadow: var(--shadow), inset 0 0 0 1px var(--line);
       rotate: var(--turn, 0deg);
-      transition: rotate .5s var(--spring);
-      touch-action: none;
+      transition: scale 130ms var(--return-ease);
+      touch-action: pan-y;
       cursor: grab;
     }
     .dial-knob:focus-visible { outline-offset: 6px; outline-color: var(--accent); }
-    .dial[data-dragging] .dial-knob { transition: none; cursor: grabbing; }
+    .dial[data-dragging] .dial-knob { scale: .96; transition: scale var(--press-duration) var(--press-ease); cursor: grabbing; }
     .dial-notch { position: absolute; top: 7px; left: 50%; width: 4px; height: 14px; margin-left: -2px; border-radius: 2px; background: var(--accent); }
     .dial-value {
       position: absolute;
@@ -201,7 +202,7 @@
 
     /* Hold to Confirm */
     .hold-wrap { position: relative; }
-    .hold {
+    .hold { --active-cursor: pointer;
       position: relative;
       display: grid;
       place-items: center;
@@ -244,7 +245,7 @@
       background: var(--raised);
       box-shadow: var(--shadow);
     }
-    .step {
+    .step { --active-cursor: pointer;
       display: grid;
       place-items: center;
       width: 44px;
@@ -460,7 +461,7 @@
         <section class="sample" id="tide-progress" aria-labelledby="tide-title">
           <div class="stage">
             <div class="widget">
-              <button class="tide" type="button" aria-describedby="tide-hint"><canvas aria-hidden="true"></canvas></button>
+              <button class="tide" type="button" aria-label="Tide Progress 40%" aria-describedby="tide-hint"><canvas aria-hidden="true"></canvas></button>
               <p class="tide-hint" id="tide-hint">Tap to add 25%. Tap again when full to empty.</p>
             </div>
           </div>
@@ -471,7 +472,9 @@
     <footer class="credit">Designed and built by UI Moments. Released under the <a href="../../LICENSE">MIT License</a>.</footer>
   </div>
 
-  <script>
+  <script type="module">
+    import { bindDrag, rubberBand, springValue, vibrateOnTouch } from "./interaction.mjs";
+
     /* standalone:helpers */
     const root = document.documentElement;
     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
@@ -564,7 +567,7 @@
       const normalize = value => clamp(Math.round(value), min, max);
       const initialValue = Number(knob.getAttribute('aria-valuenow'));
       let value = Number.isFinite(initialValue) ? normalize(initialValue) : min;
-      let drag = null, pop;
+      let dragAngle, offset, pop;
 
       ticks.append(...Array.from({ length: max + 1 }, (_, index) => {
         const tick = document.createElement('i');
@@ -577,9 +580,9 @@
         tickList.forEach(tick => tick.getAnimations().forEach(animation => animation.cancel()));
       });
 
-      function render(turn = angleOf(value)) {
+      const position = springValue([angleOf(value)], ([turn]) => {
         dial.style.setProperty('--turn', turn + 'deg');
-      }
+      }, motionEnabled);
 
       function renderValue() {
         output.value = String(value);
@@ -592,7 +595,8 @@
         value = normalize(next);
         const detent = angleOf(value);
         const turn = pointerTurn !== undefined && motionEnabled() ? detent + (pointerTurn - detent) * .32 : detent;
-        render(turn);
+        if (pointerTurn === undefined) position.to([turn]);
+        else position.set([turn]);
         if (previous === value) return;
         renderValue();
         pop?.cancel();
@@ -610,37 +614,31 @@
         const box = dial.getBoundingClientRect();
         const dx = event.clientX - (box.left + box.width / 2);
         const dy = event.clientY - (box.top + box.height / 2);
-        if (Math.hypot(dx, dy) < box.width * .07) return drag.angle;
-        let angle = Math.atan2(dx, -dy) * 180 / Math.PI;
-        // Crossing the gap at the bottom sticks to the nearer end instead of jumping across.
-        if (Math.abs(angle) > sweep) angle = drag && drag.angle < 0 ? -sweep : sweep;
-        return angle;
+        if (Math.hypot(dx, dy) < box.width * .07) return dragAngle;
+        const angle = Math.atan2(dx, -dy) * 180 / Math.PI;
+        // Crossing the gap at the bottom keeps the current side.
+        return Math.abs(angle) > sweep ? (dragAngle < 0 ? -sweep : sweep) : angle;
       }
 
-      function follow(event) {
-        const angle = pointerAngle(event);
-        drag.angle = angle;
-        setValue((angle + sweep) / step, angle);
-      }
-
-      knob.addEventListener('pointerdown', event => {
-        if (event.button !== 0 || drag) return;
-        event.preventDefault();
-        knob.focus({ preventScroll: true });
-        knob.setPointerCapture(event.pointerId);
-        drag = { id: event.pointerId, angle: angleOf(value) };
-        dial.dataset.dragging = '';
-        follow(event);
-      });
-      knob.addEventListener('pointermove', event => { if (drag?.id === event.pointerId) follow(event); });
-      for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) {
-        knob.addEventListener(type, event => {
-          if (drag?.id !== event.pointerId) return;
-          drag = null;
+      bindDrag(knob, {
+        horizontal: true,
+        start(event) {
+          position.stop();
+          dragAngle = position.value[0];
+          offset = position.value[0] - pointerAngle(event);
+          dial.dataset.dragging = '';
+        },
+        move(event) {
+          const angle = pointerAngle(event);
+          dragAngle = angle;
+          const turn = rubberBand(angle + offset, -sweep, sweep, 22);
+          setValue((turn + sweep) / step, turn);
+        },
+        end() {
           delete dial.dataset.dragging;
-          render();
-        });
-      }
+          position.to([angleOf(value)]);
+        },
+      });
       knob.addEventListener('keydown', event => {
         const delta = { ArrowUp: 1, ArrowRight: 1, ArrowDown: -1, ArrowLeft: -1, PageUp: 2, PageDown: -2 }[event.key];
         let next = delta === undefined ? null : value + delta;
@@ -650,7 +648,7 @@
         event.preventDefault();
         setValue(next);
       });
-      render();
+      position.set(position.value);
       renderValue();
     }
     /* /standalone:detent-dial-script */
@@ -662,7 +660,10 @@
       const label = $('.hold-label', button);
       const hint = $('#hold-status');
       const duration = 1100;
-      let progress = null, tremble = null, started = 0, hintTimer, resetTimer;
+      let progress, tremble, started, hintTimer, resetTimer, holdTimer, pointer;
+      const fillLevel = springValue([0], ([value]) => {
+        fill.style.scale = clamp(value, 0, 1) + ' 1';
+      }, motionEnabled);
 
       function say(text) {
         clearTimeout(hintTimer);
@@ -672,56 +673,63 @@
       }
 
       function start() {
-        if (button.dataset.done !== undefined || progress?.playbackRate > 0) return;
+        if (button.hasAttribute('data-done') || button.hasAttribute('data-holding')) return false;
         started = performance.now();
         button.dataset.holding = '';
-        if (progress) progress.updatePlaybackRate(1);
-        else {
-          progress = fill.animate([{ scale: '0 1' }, { scale: '1 1' }], { duration, easing: 'cubic-bezier(.45,0,.6,1)', fill: 'forwards' });
-          progress.onfinish = finished;
-        }
-        progress.play();
+        fillLevel.stop();
         if (motionEnabled()) {
+          progress = fill.animate([{scale: fill.style.scale || '0 1'}, {scale: '1 1'}],
+            {duration, easing: 'cubic-bezier(.45,0,.6,1)', fill: 'forwards'});
           tremble = label.animate([
             { translate: '0 0' }, { translate: '-.6px 0' }, { translate: '.6px 0' }, { translate: '0 0' },
           ], { duration: 110, iterations: Infinity, delay: duration * .55 });
+        } else {
+          fillLevel.set([1]);
         }
+        holdTimer = setTimeout(finished, duration);
+        return true;
       }
 
       function release() {
-        if (!progress || progress.playbackRate < 0 || button.dataset.done !== undefined) return;
+        if (!button.hasAttribute('data-holding')) return;
         delete button.dataset.holding;
+        clearTimeout(holdTimer);
+        const amount = parseFloat(getComputedStyle(fill).scale) || 0;
+        progress?.cancel();
         tremble?.cancel();
+        fillLevel.set([amount]);
+        fillLevel.to([0]);
         if (performance.now() - started < 240) say('Keep holding to delete');
-        progress.updatePlaybackRate(motionEnabled() ? -3.2 : -100);
       }
 
       function finished() {
-        if (progress.playbackRate < 0) {
-          progress.cancel();
-          progress = null;
-          return;
-        }
+        if (!button.hasAttribute('data-holding')) return;
+        progress?.cancel();
         tremble?.cancel();
+        fillLevel.set([1]);
         delete button.dataset.holding;
         button.dataset.done = '';
         button.setAttribute('aria-label', 'Deleted');
         say('Deleted');
+        vibrateOnTouch(pointer);
         clearTimeout(resetTimer);
         resetTimer = setTimeout(() => {
           delete button.dataset.done;
           button.removeAttribute('aria-label');
-          progress.cancel();
-          progress = null;
+          fillLevel.to([0]);
         }, 1800);
       }
 
-      button.addEventListener('pointerdown', event => {
-        if (event.button !== 0) return;
-        button.setPointerCapture(event.pointerId);
-        start();
+      bindDrag(button, {
+        start(event) {
+          if (!start()) return false;
+          pointer = event;
+        },
+        end() {
+          pointer = null;
+          release();
+        },
       });
-      for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) button.addEventListener(type, release);
       button.addEventListener('contextmenu', event => event.preventDefault());
       button.addEventListener('keydown', event => {
         if (event.key !== ' ' && event.key !== 'Enter') return;
@@ -732,6 +740,8 @@
         if (event.key === ' ' || event.key === 'Enter') release();
       });
       button.addEventListener('blur', release);
+      button.ownerDocument.defaultView.addEventListener('blur', release);
+      button.ownerDocument.addEventListener('visibilitychange', release);
     }
 
     /* ---------- Odometer Stepper ---------- */
@@ -810,8 +820,7 @@
 
       for (const button of [minus, plus]) {
         const delta = Number(button.dataset.step);
-        button.addEventListener('pointerdown', event => {
-          if (event.button !== 0) return;
+        bindDrag(button, {start() {
           button.dataset.pressing = '';
           change(delta);
           let interval = 140;
@@ -821,8 +830,7 @@
             repeat = setTimeout(tick, interval);
           };
           repeatDelay = setTimeout(tick, 420);
-        });
-        for (const type of ['pointerup', 'pointerleave', 'pointercancel']) button.addEventListener(type, stop);
+        }, end: stop});
         button.addEventListener('click', event => { if (event.detail === 0) change(delta); });
         button.addEventListener('contextmenu', event => event.preventDefault());
       }

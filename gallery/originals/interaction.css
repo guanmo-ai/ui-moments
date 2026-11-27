@@ -1,0 +1,33 @@
+.stage, .caption {
+  -webkit-user-select: none;
+  user-select: none;
+}
+.stage :is(textarea, [contenteditable]:not([contenteditable="false"]), input:not([type=range],[type=radio],[type=checkbox],[type=button],[type=file])) {
+  -webkit-user-select: text;
+  user-select: text;
+}
+.stage {
+  --press-ease: cubic-bezier(.2,.8,.2,1);
+  --return-ease: cubic-bezier(.2,.9,.34,1.16);
+  --press-duration: 45ms;
+}
+.stage :where(button, label[for]) {
+  cursor: pointer;
+}
+.stage :where(button, label[for], [role=slider], [tabindex="0"]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .stage :where(button:not(:disabled,[aria-disabled=true]), label[for]):hover {
+    opacity: .91;
+  }
+}
+.stage :where(button:not(:disabled,[aria-disabled=true]), label[for]):active {
+  opacity: .78;
+  transition: opacity var(--press-duration) var(--press-ease);
+}
+.stage [data-pointer-active] { cursor: var(--active-cursor, grabbing); }
+@media (prefers-reduced-motion: reduce) {
+  .stage { --press-duration: 0s; }
+}

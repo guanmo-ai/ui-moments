@@ -17,6 +17,7 @@
       root.dataset.theme = theme || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
     })();
   </script>
+  <link rel="stylesheet" href="interaction.css">
   <style>
     @font-face { font-family: Geist; src: url('../../assets/fonts/Geist-latin-wght.woff2') format('woff2'); font-weight: 100 900; font-display: swap; }
 
@@ -117,26 +118,28 @@
 
     /* Swipe to Confirm */
     .swipe { position: relative; width: 220px; height: 52px; border-radius: 26px; background: var(--rail); overflow: hidden; touch-action: pan-y; }
-    .swipe::before { position: absolute; inset: 0 auto 0 0; width: calc(var(--x) * 1px + 50px); content: ''; border-radius: 26px; background: var(--accent-soft); }
-    .swipe-hint { position: absolute; inset: 0 0 0 64px; display: flex; align-items: center; justify-content: center; gap: 2px; color: var(--muted); transition: opacity .25s; }
+    .swipe::before { position: absolute; inset: 0; content: ''; border-radius: 26px; background: var(--accent-soft); transform: scaleX(calc(.23 + .77 * var(--progress, 0))); transform-origin: left; }
+    .swipe-hint { position: absolute; inset: 0 0 0 64px; display: flex; align-items: center; justify-content: center; gap: 3px; color: var(--muted); opacity: calc(1 - var(--progress, 0)); }
+    .swipe-hint span { margin-inline-end: 5px; font-size: 11px; font-weight: 570; white-space: nowrap; }
     .swipe-hint i { width: 8px; height: 8px; border-right: 2px solid currentColor; border-top: 2px solid currentColor; rotate: 45deg; animation: swipe-hint 1.6s ease-in-out calc(var(--n) * .16s) infinite; }
     @keyframes swipe-hint { 0%, 100% { opacity: .2; } 40% { opacity: 1; } }
-    .swipe[data-drag] .swipe-hint, .swipe[data-done] .swipe-hint { opacity: 0; }
-    .swipe-knob { position: absolute; top: 4px; left: 4px; display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%; background: var(--accent); color: var(--on-accent); transform: translateX(calc(var(--x) * 1px)); transition: transform .5s var(--spring); cursor: grab; touch-action: none; }
-    .swipe[data-drag] .swipe-knob { transition: none; cursor: grabbing; }
+    .swipe[data-drag] .swipe-hint i { animation: none; opacity: clamp(.2, calc(.35 + var(--progress, 0) * 2 - var(--n) * .38), 1); }
+    .swipe-knob { position: absolute; top: 4px; left: 4px; display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%; background: var(--accent); color: var(--on-accent); transform: translateX(calc(var(--x, 0) * 1px)); transition: scale 130ms var(--return-ease); cursor: grab; touch-action: pan-y; }
+    .swipe[data-drag] .swipe-knob { scale: .96; transition: scale var(--press-duration) var(--press-ease); cursor: grabbing; }
+    .swipe-knob:focus-visible { outline-offset: -4px; outline-color: var(--on-accent); }
     .swipe-knob svg { grid-area: 1 / 1; transition: opacity .2s, scale .3s var(--spring); }
     .swipe-knob .done { opacity: 0; scale: .4; }
     .swipe[data-done] .swipe-knob .go { opacity: 0; scale: .4; }
     .swipe[data-done] .swipe-knob .done { opacity: 1; scale: 1; }
 
     /* Pull to Refresh */
-    .pull { position: relative; width: 196px; height: 138px; border-radius: 16px; background: var(--raised); box-shadow: inset 0 0 0 1px var(--line); overflow: hidden; cursor: grab; touch-action: none; }
+    .pull { position: relative; width: 196px; height: 138px; border-radius: 16px; background: var(--raised); box-shadow: inset 0 0 0 1px var(--line); overflow: hidden; cursor: grab; touch-action: pan-x; }
     .pull-spin { position: absolute; top: 10px; left: 50%; width: 22px; height: 22px; margin-left: -11px; opacity: var(--o, 0); rotate: calc(var(--p, 0) * 270deg); }
     .pull-spin circle { fill: none; stroke: var(--ink); stroke-width: 2.4; stroke-linecap: round; stroke-dasharray: 50; stroke-dashoffset: calc(50 - var(--p, 0) * 38); }
     .pull[data-state="loading"] .pull-spin { opacity: 1; animation: pull-spin .7s linear infinite; }
     @keyframes pull-spin { to { rotate: 1turn; } }
-    .pull-list { display: grid; gap: 8px; padding: 14px; transform: translateY(calc(var(--y, 0) * 1px)); transition: transform .5s var(--spring); }
-    .pull[data-drag] .pull-list { transition: none; }
+    .pull-list { display: grid; gap: 8px; padding: 14px; transform: translateY(calc(var(--y, 0) * 1px)); transition: scale 130ms var(--return-ease); }
+    .pull[data-drag] .pull-list { scale: .96; }
     .pull-row { display: grid; grid-template-columns: 20px 1fr; align-items: center; gap: 8px; }
     .pull-row b { width: 20px; height: 20px; border-radius: 50%; background: var(--rail); }
     .pull-row span { height: 6px; border-radius: 3px; background: var(--rail); width: var(--w); }
@@ -145,8 +148,9 @@
     @keyframes pull-new { from { opacity: 0; translate: 0 -10px; } }
 
     /* Elastic String */
-    .string { width: 220px; height: 120px; cursor: grab; touch-action: none; }
+    .string { width: 220px; height: 120px; cursor: grab; touch-action: pan-x; }
     .string svg { width: 100%; height: 100%; overflow: visible; }
+    .string[data-pointer-active] svg, .wave-bars[data-pointer-active] { scale: .96; }
     .string path { fill: none; stroke: var(--ink); stroke-width: 2.4; stroke-linecap: round; }
     .string circle { fill: var(--ink); }
 
@@ -168,15 +172,15 @@
     .wave-play svg { width: 14px; height: 14px; fill: currentColor; }
     .wave-play .pause, .wave-play[aria-pressed="true"] .play { display: none; }
     .wave-play[aria-pressed="true"] .pause { display: block; }
-    .wave-bars { position: relative; display: flex; align-items: center; gap: 2px; height: 48px; cursor: pointer; touch-action: none; border-radius: 6px; }
+    .wave-bars { position: relative; display: flex; align-items: center; gap: 2px; height: 48px; cursor: grab; touch-action: pan-y; border-radius: 6px; }
     .wave-bars i { width: 3px; height: var(--h); border-radius: 2px; background: var(--rail); transition: background .15s; }
     .wave-bars i[data-on] { background: var(--ink); }
 
     /* Snap Grid */
     .snap { position: relative; display: grid; grid-template-columns: repeat(3, 40px); gap: 6px; padding: 6px; border-radius: 14px; background: var(--rail); outline-offset: 4px; }
     .snap i { height: 40px; border-radius: 9px; border: 1.5px dashed color-mix(in srgb, var(--ink) 18%, transparent); }
-    .snap-tile { position: absolute; top: 6px; left: 6px; width: 40px; height: 40px; border-radius: 9px; background: var(--accent); box-shadow: var(--shadow); transform: translate(var(--tx), var(--ty)); transition: transform .45s var(--spring), scale .2s; cursor: grab; touch-action: none; }
-    .snap[data-drag] .snap-tile { transition: scale .2s; scale: 1.08; cursor: grabbing; }
+    .snap-tile { position: absolute; top: 6px; left: 6px; width: 40px; height: 40px; border-radius: 9px; background: var(--accent); box-shadow: var(--shadow); transform: translate(var(--tx), var(--ty)); transition: scale 130ms var(--return-ease); cursor: grab; touch-action: none; }
+    .snap[data-drag] .snap-tile { transition: scale var(--press-duration) var(--press-ease); scale: .96; cursor: grabbing; }
 
     /* Radial Menu */
     .radial { position: relative; display: grid; place-items: center; width: 180px; height: 130px; }
@@ -251,7 +255,7 @@
       <div class="samples">
         <section class="sample" id="swipe-confirm" aria-labelledby="swipe-title">
           <div class="stage"><div class="widget"><div class="swipe" style="--x:0">
-            <span class="swipe-hint" aria-hidden="true"><i style="--n:0"></i><i style="--n:1"></i><i style="--n:2"></i></span>
+            <span class="swipe-hint" aria-hidden="true"><span>Slide to confirm</span><i style="--n:0"></i><i style="--n:1"></i><i style="--n:2"></i></span>
             <button class="swipe-knob" type="button" aria-labelledby="swipe-title" aria-describedby="swipe-status"><svg class="icon go" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12m-4-4 4 4-4 4"/></svg><svg class="icon done" viewBox="0 0 20 20" aria-hidden="true"><path d="M4.5 10.5l3.5 3.5 7.5-8"/></svg></button>
             <span class="sr-only" id="swipe-status" aria-live="polite"></span>
           </div></div></div>
@@ -334,7 +338,9 @@
     <footer class="credit">Designed and built by UI Moments. Released under the <a href="../../LICENSE">MIT License</a>.</footer>
   </div>
 
-  <script>
+  <script type="module">
+    import { bindDrag, rubberBand, springValue, vibrateOnTouch } from "./interaction.mjs";
+
     const root = document.documentElement;
     const params = new URLSearchParams(location.search);
     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
@@ -361,51 +367,59 @@
       try { localStorage.setItem('ui-moments-theme', root.dataset.theme); } catch {}
     });
 
-    const localX = (element, event) => {
-      const box = element.getBoundingClientRect(), scale = box.width / element.offsetWidth || 1;
-      return [(event.clientX - box.left) / scale, (event.clientY - box.top) / scale];
-    };
-    function springLoop(step) {
-      let frame = 0, last = 0;
-      const tick = now => {
-        const dt = Math.min(.032, (now - last) / 1000 || .016);
-        last = now;
-        frame = step(dt) ? requestAnimationFrame(tick) : 0;
-      };
-      return () => { if (!frame) { last = performance.now(); frame = requestAnimationFrame(tick); } };
-    }
-
     /* ---------- Swipe to Confirm ---------- */
     {
       const track = $('.swipe');
       const knob = $('.swipe-knob', track);
       const status = $('#swipe-status');
       const max = () => track.offsetWidth - 52;
-      let drag = null, timer;
-      const set = x => track.style.setProperty('--x', x);
-      function confirm() {
-        set(max());
+      let origin, scale, timer, completion;
+      const position = springValue([0], ([x]) => {
+        track.style.setProperty('--x', x);
+        track.style.setProperty('--progress', clamp(x / max(), 0, 1));
+      }, motionEnabled);
+      function confirm(event) {
+        position.to([max()]);
         track.dataset.done = '';
         status.textContent = 'Confirmed';
+        if (motionEnabled()) completion = knob.animate(
+          [{scale: '.96'}, {scale: '1.06'}, {scale: '1'}],
+          {duration: 260, easing: 'cubic-bezier(.2,.9,.34,1.16)'},
+        );
+        vibrateOnTouch(event);
         clearTimeout(timer);
-        timer = setTimeout(() => { delete track.dataset.done; set(0); status.textContent = ''; }, 1600);
+        timer = setTimeout(() => {
+          delete track.dataset.done;
+          status.textContent = '';
+          position.to([0]);
+        }, 1600);
       }
-      knob.addEventListener('pointerdown', event => {
-        if (track.dataset.done !== undefined || event.button !== 0) return;
-        knob.setPointerCapture(event.pointerId);
-        drag = { id: event.pointerId, start: event.clientX };
-        track.dataset.drag = '';
-      });
-      knob.addEventListener('pointermove', event => {
-        if (drag?.id !== event.pointerId) return;
-        const scale = track.getBoundingClientRect().width / track.offsetWidth || 1;
-        set(clamp((event.clientX - drag.start) / scale, 0, max()));
-      });
-      for (const type of ['pointerup', 'pointercancel']) knob.addEventListener(type, event => {
-        if (drag?.id !== event.pointerId) return;
-        drag = null;
-        delete track.dataset.drag;
-        if (Number(track.style.getPropertyValue('--x')) > max() * .88) confirm(); else set(0);
+      reducedMotion.addEventListener('change', () => completion?.cancel());
+      bindDrag(knob, {
+        horizontal: true,
+        start(event) {
+          if (track.hasAttribute('data-done')) return false;
+          position.stop();
+          scale = track.getBoundingClientRect().width / track.offsetWidth || 1;
+          origin = event.clientX / scale - position.value[0];
+          track.dataset.drag = '';
+        },
+        move(event) {
+          const extent = max();
+          const x = event.clientX / scale - origin;
+          const snap = extent - 12;
+          position.set([rubberBand(x > snap && x < extent ? snap + Math.sqrt((x - snap) / 12) * 12 : x, 0, extent, 20)]);
+        },
+        end(event, {released, vx}) {
+          delete track.dataset.drag;
+          const x = position.value[0];
+          const velocity = vx / scale;
+          if (released && (x >= max() * .88 || (x > max() * .32 && velocity > 450 && x + velocity * .12 >= max()))) {
+            confirm(event);
+          } else {
+            position.to([0], [velocity * .4]);
+          }
+        },
       });
       knob.addEventListener('click', event => { if (event.detail === 0 && track.dataset.done === undefined) confirm(); });
     }
@@ -417,7 +431,7 @@
       const spin = $('.pull-spin', pull);
       const status = $('#pull-status');
       const widths = ['70%', '52%', '84%', '60%', '76%', '46%'];
-      let count = 0, drag = null;
+      let count = 0, origin = 0, scale = 1;
       function row(fresh) {
         const item = document.createElement('div');
         item.className = 'pull-row';
@@ -428,39 +442,43 @@
       list.append(row(), row(), row(), row());
       const set = y => {
         pull.style.setProperty('--y', y);
-        spin.style.setProperty('--p', Math.min(1, y / 56).toFixed(3));
-        spin.style.setProperty('--o', Math.min(1, y / 30).toFixed(3));
+        spin.style.setProperty('--p', clamp(y / 56, 0, 1).toFixed(3));
+        spin.style.setProperty('--o', clamp(y / 30, 0, 1).toFixed(3));
       };
-      function refresh() {
+      const position = springValue([0], ([y]) => set(y), motionEnabled);
+      function refresh(event) {
         if (pull.dataset.state) return;
         pull.dataset.state = 'loading';
         status.textContent = 'Refreshing';
-        set(44);
+        position.to([44]);
+        vibrateOnTouch(event);
         setTimeout(() => {
           $$('[data-new]', list).forEach(item => delete item.dataset.new);
           list.prepend(row(true));
           list.lastElementChild.remove();
           delete pull.dataset.state;
           status.textContent = 'Updated';
-          set(0);
+          position.to([0]);
         }, 1100);
       }
-      pull.addEventListener('pointerdown', event => {
-        if (pull.dataset.state) return;
-        pull.setPointerCapture(event.pointerId);
-        drag = { id: event.pointerId, y: localX(pull, event)[1] };
-        pull.dataset.drag = '';
-      });
-      pull.addEventListener('pointermove', event => {
-        if (drag?.id !== event.pointerId) return;
-        const distance = Math.max(0, localX(pull, event)[1] - drag.y);
-        set(Math.round(70 * (1 - Math.exp(-distance / 70))));
-      });
-      for (const type of ['pointerup', 'pointercancel']) pull.addEventListener(type, event => {
-        if (drag?.id !== event.pointerId) return;
-        drag = null;
-        delete pull.dataset.drag;
-        if (Number(pull.style.getPropertyValue('--y')) > 40) refresh(); else set(0);
+      bindDrag(pull, {
+        start(event) {
+          if (pull.dataset.state) return false;
+          position.stop();
+          scale = pull.getBoundingClientRect().width / pull.offsetWidth || 1;
+          origin = event.clientY / scale - position.value[0];
+          pull.dataset.drag = '';
+        },
+        move(event) {
+          const distance = event.clientY / scale - origin;
+          position.set([rubberBand(distance <= 0 ? distance * .35 : distance, 0, 46, 22)]);
+        },
+        end(event, {released, vy}) {
+          delete pull.dataset.drag;
+          const y = position.value[0];
+          if (released && (y > 45 || (y > 28 && vy / scale > 420))) refresh(event);
+          else position.to([0], [vy / scale * .25]);
+        },
       });
       pull.addEventListener('keydown', event => {
         if (event.key !== 'Enter' && event.key !== ' ') return;
@@ -474,36 +492,30 @@
       const box = $('.string');
       const path = $('path', box);
       const svg = $('svg', box);
-      const state = { y: 0, x: 110, v: 0 };
-      let dragging = false;
-      const draw = () => path.setAttribute('d', `M14 60 Q${state.x.toFixed(1)} ${(60 + state.y * 2).toFixed(1)} 206 60`);
-      const ring = springLoop(dt => {
-        if (dragging) return false;
-        state.v += (-420 * state.y - 3.2 * state.v) * dt;
-        state.y += state.v * dt;
-        draw();
-        const moving = Math.abs(state.y) > .05 || Math.abs(state.v) > .5;
-        if (!moving) { state.y = 0; draw(); }
-        return moving;
+      let x = 110, origin, units;
+      const position = springValue([0], ([y]) => {
+        path.setAttribute('d', `M14 60 Q${x.toFixed(1)} ${(60 + y * 2).toFixed(1)} 206 60`);
+      }, motionEnabled);
+      const toSvg = event => new DOMPoint(event.clientX, event.clientY).matrixTransform(svg.getScreenCTM().inverse());
+      bindDrag(box, {
+        start(event) {
+          position.stop();
+          origin = toSvg(event).y / 2 - position.value[0];
+          units = 1 / Math.abs(svg.getScreenCTM().d);
+        },
+        move(event) {
+          const point = toSvg(event);
+          x = clamp(point.x, 40, 180);
+          position.set([rubberBand(point.y / 2 - origin, -24, 24, 14)]);
+        },
+        end(_event, {vy}) { position.to([0], [vy * units * .23]); },
       });
-      function release() {
-        if (!motionEnabled()) { state.y = 0; state.v = 0; draw(); return; }
-        ring();
-      }
-      function follow(event) {
-        const point = new DOMPoint(event.clientX, event.clientY).matrixTransform(svg.getScreenCTM().inverse());
-        state.x = clamp(point.x, 40, 180);
-        state.y = clamp((point.y - 60) / 2, -24, 24);
-        draw();
-      }
-      box.addEventListener('pointerdown', event => { dragging = true; box.setPointerCapture(event.pointerId); follow(event); });
-      box.addEventListener('pointermove', event => { if (dragging) follow(event); });
-      for (const type of ['pointerup', 'pointercancel']) box.addEventListener(type, () => { if (!dragging) return; dragging = false; state.v = 0; release(); });
       box.addEventListener('keydown', event => {
         if (event.key !== ' ' && event.key !== 'Enter') return;
         event.preventDefault();
-        state.x = 110; state.y = 20; state.v = 0;
-        release();
+        x = 110;
+        position.set([motionEnabled() ? 20 : 0]);
+        position.to([0]);
       });
     }
 
@@ -548,19 +560,35 @@
       }
       play.addEventListener('click', () => {
         if (frame) return stop();
+        position.stop();
         play.setAttribute('aria-pressed', 'true');
         play.setAttribute('aria-label', 'Pause');
         run(performance.now());
       });
-      let dragging = false;
-      const fromPointer = event => set(localX(bars, event)[0] / bars.offsetWidth * 100);
-      bars.addEventListener('pointerdown', event => { dragging = true; bars.setPointerCapture(event.pointerId); fromPointer(event); });
-      bars.addEventListener('pointermove', event => { if (dragging) fromPointer(event); });
-      for (const type of ['pointerup', 'pointercancel']) bars.addEventListener(type, () => { dragging = false; });
+      let box;
+      const position = springValue([value], ([next]) => set(next), motionEnabled);
+      function fromPointer(event) {
+        position.set([(event.clientX - box.left) / box.width * 100]);
+      }
+      bindDrag(bars, {
+        horizontal: true,
+        start(event) {
+          if (frame) stop();
+          position.stop();
+          box = bars.getBoundingClientRect();
+          fromPointer(event);
+        },
+        move: fromPointer,
+        end(_event, {released, vx}) {
+          const velocity = vx / box.width * 100;
+          position.to([clamp(value + (released ? velocity * .07 : 0), 0, 100)], [velocity * .3]);
+        },
+      });
       bars.addEventListener('keydown', event => {
         const delta = { ArrowRight: 5, ArrowUp: 5, ArrowLeft: -5, ArrowDown: -5 }[event.key];
         if (event.key === 'Home') set(0); else if (event.key === 'End') set(100); else if (delta !== undefined) set(value + delta); else return;
         event.preventDefault();
+        position.stop();
       });
       set(value);
     }
@@ -571,30 +599,34 @@
       const tile = $('.snap-tile', grid);
       const status = $('#snap-status');
       const pitch = 46;
-      let cell = [1, 1], drag = null;
-      function place(col, row, announce = true) {
+      let cell = [1, 1], origin, scale;
+      const position = springValue([pitch, pitch], ([x, y]) => {
+        tile.style.setProperty('--tx', x + 'px');
+        tile.style.setProperty('--ty', y + 'px');
+      }, motionEnabled);
+      function place(col, row, velocity) {
         cell = [clamp(col, 0, 2), clamp(row, 0, 2)];
-        tile.style.setProperty('--tx', cell[0] * pitch + 'px');
-        tile.style.setProperty('--ty', cell[1] * pitch + 'px');
-        if (announce) status.textContent = `Row ${cell[1] + 1}, column ${cell[0] + 1}`;
+        position.to(cell.map(value => value * pitch), velocity);
+        status.textContent = `Row ${cell[1] + 1}, column ${cell[0] + 1}`;
       }
-      tile.addEventListener('pointerdown', event => {
-        tile.setPointerCapture(event.pointerId);
-        const [x, y] = localX(grid, event);
-        drag = { id: event.pointerId, dx: x - cell[0] * pitch, dy: y - cell[1] * pitch };
-        grid.dataset.drag = '';
-      });
-      tile.addEventListener('pointermove', event => {
-        if (drag?.id !== event.pointerId) return;
-        const [x, y] = localX(grid, event);
-        tile.style.setProperty('--tx', clamp(x - drag.dx, -6, 2 * pitch + 6) + 'px');
-        tile.style.setProperty('--ty', clamp(y - drag.dy, -6, 2 * pitch + 6) + 'px');
-      });
-      for (const type of ['pointerup', 'pointercancel']) tile.addEventListener(type, event => {
-        if (drag?.id !== event.pointerId) return;
-        drag = null;
-        delete grid.dataset.drag;
-        place(Math.round(parseFloat(tile.style.getPropertyValue('--tx')) / pitch), Math.round(parseFloat(tile.style.getPropertyValue('--ty')) / pitch));
+      bindDrag(tile, {
+        start(event) {
+          position.stop();
+          scale = grid.getBoundingClientRect().width / grid.offsetWidth || 1;
+          origin = [event.clientX / scale - position.value[0], event.clientY / scale - position.value[1]];
+          grid.dataset.drag = '';
+        },
+        move(event) {
+          const point = [event.clientX / scale, event.clientY / scale];
+          position.set(point.map((value, axis) => rubberBand(value - origin[axis], 0, 2 * pitch, 12)));
+        },
+        end(event, {released, vx, vy}) {
+          delete grid.dataset.drag;
+          const velocity = [vx / scale, vy / scale];
+          const [col, row] = position.value.map((value, axis) => Math.round((value + clamp(velocity[axis] * .06, -pitch, pitch)) / pitch));
+          place(col, row, velocity.map(value => value * .25));
+          if (released) vibrateOnTouch(event);
+        },
       });
       grid.addEventListener('keydown', event => {
         const move = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[event.key];
@@ -602,7 +634,7 @@
         event.preventDefault();
         place(cell[0] + move[0], cell[1] + move[1]);
       });
-      place(1, 1, false);
+      position.set(position.value);
     }
 
     /* ---------- Radial Menu: actions fan out along an arc ---------- */

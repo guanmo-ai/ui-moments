@@ -1,8 +1,10 @@
-import first, {wide} from '../gallery/originals/dist/cards-first.mjs';
+import first, {interactionCss, wide} from '../gallery/originals/dist/cards-first.mjs';
 
 const mounted = new WeakMap();
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const sheets = new Map();
+const interactionSheet = new CSSStyleSheet();
+interactionSheet.replaceSync(interactionCss);
 let later, wider;
 
 function loadWide() {
@@ -29,6 +31,7 @@ function mount(stage, definition, theme, active) {
     host.style.cssText = 'position:absolute;inset:0;container:original-card / size';
   }
   const shadow = host.shadowRoot ?? host.attachShadow({mode: 'open'});
+  shadow.adoptedStyleSheets = [interactionSheet];
   const template = host.querySelector('template[shadowrootmode]');
   if (template) {
     shadow.append(template.content);
@@ -55,7 +58,7 @@ function mount(stage, definition, theme, active) {
   root.dataset.galleryActive = String(active);
   if (!existing) stage.append(host);
   try {
-    definition.init({
+    if (!host[Symbol.for('ui-moments.early-preview')]) definition.init({
       root,
       reducedMotion,
       motionEnabled: () => !reducedMotion.matches && root.dataset.galleryActive !== 'false',
@@ -101,7 +104,7 @@ function start() {
   const theme = document.documentElement.dataset.theme;
   const canPlay = !document.hidden && !reducedMotion.matches;
   const wideScreen = matchMedia('(min-width:760px), (min-height:1000px)').matches;
-  const initial = [...document.querySelectorAll('#ui-grid > [data-ui]')];
+  const initialSelector = '#ui-grid > [data-ui]';
   const inView = element => {
     const {top, bottom} = element.getBoundingClientRect();
     return top < innerHeight && bottom > 0;
@@ -111,25 +114,25 @@ function start() {
       // The gallery can offer a retry if initialization fails.
     });
   }
-  // Bind the leading static control without a layout read; leave its motion paused until visibility is measured.
-  const lead = initial.find(element => Object.hasOwn(first, element.dataset.ui));
-  if (lead) hydrate(lead, false);
-  requestAnimationFrame(() => {
-    const visible = initial.filter(element => element !== lead &&
-      (Object.hasOwn(first, element.dataset.ui) || (wideScreen && wide.has(element.dataset.ui))) && inView(element));
+  // With a static first screen, the lead binds before paint. The remaining
+  // visible previews already have markup, so hydrate after a frame can paint.
+  const lead = document.querySelector(initialSelector);
+  const leadingId = lead?.dataset.ui;
+  if (Object.hasOwn(first, leadingId)) hydrate(lead, false);
+  const galleryEntry = document.querySelector('template[data-gallery-entry]');
+  requestAnimationFrame(() => requestAnimationFrame(() => {
     const leadingRoot = lead && OriginalCard.get(lead.firstElementChild);
     if (leadingRoot && canPlay && inView(lead)) leadingRoot.dataset.galleryActive = 'true';
+    const visible = [...document.querySelectorAll(initialSelector)].filter(element =>
+      element !== lead && (Object.hasOwn(first, element.dataset.ui) ||
+        (wideScreen && wide.has(element.dataset.ui))) && inView(element));
     for (const element of visible) hydrate(element);
-  });
-
-  // The packaged homepage gives the in-view controls the first render. The
-  // remaining gallery modules can now download without slowing that batch.
-  const galleryEntry = document.querySelector('template[data-gallery-entry]');
-  if (galleryEntry) requestAnimationFrame(() => setTimeout(() => {
-    for (const sheet of document.querySelectorAll('link[data-home-href]')) sheet.href = sheet.dataset.homeHref;
-    document.head.append(galleryEntry.content.cloneNode(true));
-    void import(new URL(galleryEntry.dataset.galleryEntry, document.baseURI).href);
-  }, 0));
+    if (galleryEntry) setTimeout(() => {
+      for (const sheet of document.querySelectorAll('link[data-home-href]')) sheet.href = sheet.dataset.homeHref;
+      document.head.append(galleryEntry.content.cloneNode(true));
+      void import(new URL(galleryEntry.dataset.galleryEntry, document.baseURI).href);
+    }, 0);
+  }));
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, {once: true});

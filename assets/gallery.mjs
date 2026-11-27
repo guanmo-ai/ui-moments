@@ -1,7 +1,7 @@
 import '../gallery/works.js';
 import {setupSite,setupGalleryFavorites,showLoadingAccent,foreground,embedUrl} from './site.mjs';
 import {localizedText,onLanguageChange,translate as t} from './locale.mjs';
-import {buildCatalog,cardMarkup,categories,categoryMarkup,getCategoryFilters,initialCardCount,matches,standaloneExamplePath,workHeading,kindLabel} from './catalog.mjs';
+import {buildCatalog,cardMarkup,categories,categoryMarkup,groupHeading,getCategoryFilters,initialCardCount,matches,standaloneExamplePath,workHeading,kindLabel} from './catalog.mjs';
 import {previewProps} from '../gallery/loaders/catalog.mjs';
 import {escapeHtml as esc} from '../gallery/loaders/snippets.mjs';
 import {createLoaderPreview,setPreviewPlaying} from '../gallery/loaders/preview.mjs';
@@ -19,6 +19,7 @@ let homeStylesReady=pendingSheets.length ? Promise.all(pendingSheets.map(link=>n
 
 const $=selector=>document.querySelector(selector);
 const root=document.documentElement,grid=$('#ui-grid');
+const headings=new Map([...grid.querySelectorAll('[data-group-heading]')].map(heading=>[heading.dataset.groupHeading,heading]));
 const OriginalCard=customElements.get('ui-original-card');
 const galleryEnd=$('#gallery-end');
 const loaderDialog=$('#detail'),componentDialog=$('#component-detail'),componentFrame=$('#component-frame');
@@ -81,6 +82,34 @@ function restoreDetailFocus(button){
   else button.focus({preventScroll:true});
 }
 
+function dismissOnBackdrop(dialog){
+  let start,canDismiss=false;
+  function onBackdrop(event){
+    if(event.target!==dialog)return false;
+    const {left,top,right,bottom}=dialog.getBoundingClientRect();
+    return event.clientX<left||event.clientX>=right||event.clientY<top||event.clientY>=bottom;
+  }
+  function reset(){start=undefined;canDismiss=false;}
+  dialog.addEventListener('pointerdown',event=>{
+    if(!event.isPrimary)return;
+    reset();
+    if(event.button===0&&onBackdrop(event))start=event;
+  });
+  dialog.addEventListener('pointerup',event=>{
+    if(event.pointerId!==start?.pointerId)return;
+    canDismiss=onBackdrop(event)&&Math.hypot(event.clientX-start.clientX,event.clientY-start.clientY)<8;
+    start=undefined;
+  });
+  dialog.addEventListener('pointercancel',reset);
+  dialog.addEventListener('close',reset);
+  dialog.addEventListener('click',event=>{
+    if(canDismiss&&event.detail>0&&onBackdrop(event))dialog.close();
+    reset();
+  });
+}
+dismissOnBackdrop(loaderDialog);
+dismissOnBackdrop(componentDialog);
+
 let editor,componentSourceHref,refreshComponentPrompt,detailModules;
 function loadDetailModules(){
   detailModules??=import('../gallery/loaders/editor.mjs').then(
@@ -141,6 +170,7 @@ function renderCards(batch){
 let results=[],visibleCards=[],rowFillers=new Set();
 
 function fillWideRows(){
+  lightBounds=undefined;
   const next=new Set();
   const nextItem=results[visibleCards.length];
   if(!grid.hasAttribute('data-wide-only')&&(nextItem?.previewSize||visibleCards.some(({item})=>item.previewSize))){
@@ -148,15 +178,17 @@ function fillWideRows(){
     let used=0,previous;
     for(const {item,element} of visibleCards){
       const span=item.previewSize?2:1;
+      if(category==='all'&&item.category!==previous?.item.category)used=0;
       // Fill a spare column before a wide card without changing reading order.
       if(span===2&&used===columns-1){
-        next.add(previous);
+        next.add(previous.element);
         used=0;
       }
       used=(used+span)%columns;
-      previous=element;
+      previous={item,element};
     }
-    if(previous&&nextItem?.previewSize&&used===columns-1)next.add(previous);
+    if(previous&&nextItem?.previewSize&&used===columns-1&&
+      (category!=='all'||nextItem.category===previous.item.category))next.add(previous.element);
   }
   for(const element of rowFillers)if(!next.has(element))element.removeAttribute('data-fill-row');
   for(const element of next)if(!rowFillers.has(element))element.dataset.fillRow='';
@@ -171,7 +203,6 @@ function localizeIntro(){
   const [before,after]=t('Explore {count} live UI examples.').split('{count}');
   intro.firstChild.textContent=before;
   intro.lastChild.textContent=after;
-  $('.hero-demo span').textContent=t('Try {name}',{name:workHeading(itemsById.get('jelly-pad')).name});
 }
 localizeIntro();
 
@@ -179,7 +210,8 @@ if(!categoryButtons.firstElementChild)categoryButtons.innerHTML=categoryMarkup(i
 else if(root.lang!=='en')localizeCategories();
 
 function localizeCategories(){
-  for(const {id,name} of categories)categoryButtons.querySelector(`[data-category="${id}"] .category-label`).textContent=t(name);
+  for(const {id} of categories)categoryButtons.querySelector(`[data-category="${id}"] .category-label`).textContent=groupHeading(id);
+  for(const [id,heading] of headings)heading.textContent=groupHeading(id);
 }
 
 
@@ -301,6 +333,15 @@ function trackCardFrame(card,frame){
   card.stopFrame=watchPreview(frame,card.item,{
     ready(doc){
       card.stopFrame=null;
+      const selection=doc.createElement('style');
+      selection.textContent=`body{-webkit-user-select:none;user-select:none}
+        :is(textarea,[contenteditable]:not([contenteditable=false]),input:not([type=range],[type=radio],[type=checkbox],[type=button],[type=file])){-webkit-user-select:text;user-select:text}`;
+      doc.head.append(selection);
+      // Same-origin document boundaries stop pointer events. Feed mouse
+      // coordinates from the embedded preview to the same pending paint.
+      doc.addEventListener('mousemove',event=>{
+        if(canTrackLight.matches)queueLight({card:card.element,frame,x:event.clientX,y:event.clientY});
+      },{passive:true});
       const events=['click','keydown','input'];
       function rememberInteraction(event){
         if(!event.isTrusted)return;
@@ -518,6 +559,62 @@ function setCardVisibility(card,visible){
   updateCard(card);
 }
 
+function syncHeadings(){
+  const visible=new Set();
+  if(category==='all'){
+    for(const {item,element} of visibleCards){
+      const id=item.category;
+      if(visible.has(id))continue;
+      visible.add(id);
+      if(!headings.has(id)){
+        const heading=document.createElement('h2');
+        heading.className='ui-group-heading';
+        heading.dataset.groupHeading=id;
+        heading.textContent=groupHeading(id);
+        headings.set(id,heading);
+      }
+      const heading=headings.get(id);
+      if(heading.nextElementSibling!==element)grid.insertBefore(heading,element);
+    }
+  }
+  for(const [id,heading] of headings)heading.hidden=!visible.has(id);
+}
+
+const canTrackLight=matchMedia('(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)');
+let litCard, lightFrame, lightPoint, lightBounds;
+function updateLight(){
+  lightFrame=0;
+  const next=canTrackLight.matches?lightPoint?.card:null;
+  if(next){
+    const {frame}=lightPoint;
+    if(lightBounds?.card!==next||lightBounds.frame!==frame){
+      const box=next.getBoundingClientRect();
+      const frameBox=frame?.getBoundingClientRect();
+      lightBounds={card:next,frame,x:(frameBox?.x??0)-box.x,y:(frameBox?.y??0)-box.y,
+        style:next.querySelector('.ui-card-light').style};
+    }
+    const {style,x,y}=lightBounds;
+    style.setProperty('--light-x',`${lightPoint.x+x}px`);
+    style.setProperty('--light-y',`${lightPoint.y+y}px`);
+  }
+  if(litCard!==next){
+    litCard?.removeAttribute('data-card-lit');
+    litCard=next;
+    litCard?.setAttribute('data-card-lit','');
+  }
+}
+function queueLight(point){
+  lightPoint=point;
+  if(!lightFrame)lightFrame=requestAnimationFrame(updateLight);
+}
+grid.addEventListener('pointermove',event=>{
+  if(!canTrackLight.matches||event.pointerType!=='mouse')return;
+  const card=event.target.closest('.ui-item');
+  queueLight(card?{card,x:event.clientX,y:event.clientY}:null);
+},{passive:true});
+grid.addEventListener('pointerleave',()=>queueLight(null));
+canTrackLight.addEventListener('change',()=>queueLight(null));
+
 function appendCards(){
   const batch=results.slice(visibleCards.length,visibleCards.length+initialCardCount);
   if(!batch.length)return;
@@ -532,6 +629,7 @@ function appendCards(){
     galleryObserver.unobserve(galleryEnd);
     galleryObserver.observe(galleryEnd);
   }
+  syncHeadings();
   fillWideRows();
 }
 
@@ -559,7 +657,7 @@ function filter(){
   galleryEnd.hidden=resultCount<=initialCardCount;
   localizeResults();
   appendCards();
-  if(!resultCount)fillWideRows();
+  if(!resultCount){syncHeadings();fillWideRows();}
   root.dataset.ready='true';
 }
 
@@ -632,6 +730,7 @@ motionButton.addEventListener('click',()=>setPlaying(!playing));
 reduced.addEventListener('change',event=>setPlaying(!event.matches));
 document.addEventListener('visibilitychange',syncMotion);
 addEventListener('scroll',()=>{
+  lightBounds=undefined;
   const now=performance.now(),y=scrollY;
   const elapsed=Math.max(8,Math.min(32,now-lastScrollTime));
   const fast=Math.abs(y-lastScrollY)/elapsed>.8;
@@ -668,8 +767,7 @@ function localizeComponent(){
   const description=$('#component-description');
   description.lang=summary.lang;
   description.textContent=summary.text;
-  const categoryName=categories.find(item=>item.id===category).name;
-  $('#component-kind').textContent=`${t(categoryName)} / ${t(type)}`;
+  $('#component-kind').textContent=`${groupHeading(category)} / ${t(type)}`;
   componentFrame.title=t('{name} enlarged preview',heading);
   componentCopy.textContent=t(componentCopy.hasAttribute('data-error')?'Retry loading':'Copy HTML');
   setComponentPreviewState(componentPreviewState);
@@ -878,6 +976,14 @@ componentCopy.addEventListener('click',async()=>{
         const target=new URL(path,url);
         return `href="${target.pathname===url.pathname?target.hash||'#':target.href}"`;
       });
+    if(page.includes('href="interaction.css"')){
+      const css=await fetchText('gallery/originals/interaction.css');
+      code=code.replace('<link rel="stylesheet" href="interaction.css">',()=>`<style>${css}</style>`);
+    }
+    if(page.includes('from "./interaction.mjs"')){
+      const script=await fetchText('gallery/originals/interaction.mjs');
+      code=code.replace(/^    import .* from "\.\/interaction\.mjs";$/m,()=>script);
+    }
     const notices=[license.trim()];
     const font='assets/fonts/Geist-latin-wght.woff2';
     if(code.includes(`../../${font}`)){
@@ -955,7 +1061,7 @@ onLanguageChange(()=>{
 
 renderShapes();
 // Register the initial cards printed in the published HTML.
-for(const element of grid.children){
+for(const element of grid.querySelectorAll(':scope > [data-ui]')){
   const card=registerCard(itemsById.get(element.dataset.ui),element);
   if(root.lang!=='en')localizeCard(card);
 }

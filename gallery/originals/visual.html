@@ -17,6 +17,7 @@
       root.dataset.theme = theme || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
     })();
   </script>
+  <link rel="stylesheet" href="interaction.css">
   <style>
     @font-face { font-family: Geist; src: url('../../assets/fonts/Geist-latin-wght.woff2') format('woff2'); font-weight: 100 900; font-display: swap; }
 
@@ -120,7 +121,7 @@
     [data-embedded] .sets { display: none; }
     :root { --glow: var(--page); }
     /* standalone:pad */
-    .pad { position: relative; width: 210px; height: 140px; border-radius: 18px; touch-action: none; }
+    .pad { position: relative; width: 210px; height: 140px; border-radius: 18px; touch-action: pan-y; }
     .pad:focus-visible { outline-offset: 2px; }
     /* /standalone:pad */
 
@@ -133,17 +134,30 @@
     /* standalone:jelly-pad-style */
     .jelly { display: grid; place-items: center; padding: 0; border: 0; background: none; cursor: grab; }
     .jelly[data-drag] { cursor: grabbing; }
-    .jelly-cube { width: 62px; height: 62px; border-radius: 18px; background: linear-gradient(145deg, color-mix(in srgb, var(--accent) 85%, #fff), var(--accent)); box-shadow: inset 0 -6px 12px rgb(0 0 0 / .12), var(--shadow); will-change: transform; }
-    .jelly-cube::after { display: block; width: 18px; height: 9px; margin: 11px 0 0 12px; content: ''; border-radius: 50%; background: rgb(255 255 255 / .55); rotate: -18deg; }
+    .jelly[data-drag] .jelly-cube { scale: .96; }
+    .jelly-cube { width: 62px; height: 62px; will-change: transform; transition: scale var(--press-duration) var(--press-ease); }
+    .jelly-surface {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border-radius: 18px;
+      background: linear-gradient(145deg, color-mix(in srgb, var(--accent) 85%, #fff), var(--accent));
+      box-shadow: inset 0 -6px 12px rgb(0 0 0 / .12), var(--shadow);
+      transform: rotate(var(--angle, 0deg)) scale(calc(1 + var(--stretch, 0)), calc(1 - var(--stretch, 0) * .6)) rotate(calc(-1 * var(--angle, 0deg)));
+    }
+    .jelly-surface::after { display: block; width: 18px; height: 9px; margin: 11px 0 0 12px; content: ''; border-radius: 50%; background: rgb(255 255 255 / .55); rotate: -18deg; }
     /* /standalone:jelly-pad-style */
 
     /* Merge Drops */
     .drops { cursor: grab; }
     .drops svg { width: 100%; height: 100%; overflow: visible; }
+    .drops .small { transform-box: fill-box; transform-origin: center; }
+    .drops[data-pointer-active] .small { scale: .96; }
     .drops circle { fill: var(--accent); }
 
     /* Ripple Pad */
-    .ripples { overflow: hidden; background: color-mix(in srgb, var(--accent) 7%, transparent); box-shadow: inset 0 0 0 1px var(--line); cursor: pointer; }
+    .ripples { --active-cursor: pointer; overflow: hidden; background: color-mix(in srgb, var(--accent) 7%, transparent); box-shadow: inset 0 0 0 1px var(--line); cursor: pointer; }
+    .ripples[data-pointer-active] { cursor: pointer; }
     .ripples b { position: absolute; width: var(--d); height: var(--d); margin: calc(var(--d) / -2); border: 2px solid var(--accent); border-radius: 50%; pointer-events: none; }
     .ripples .seed { position: absolute; width: 10px; height: 10px; margin: -5px; border-radius: 50%; background: var(--accent); pointer-events: none; scale: var(--grow, 1); transition: scale .1s linear; }
 
@@ -208,7 +222,7 @@
           <div class="stage">
             <div class="widget">
               <button class="pad jelly" type="button" aria-labelledby="jelly-title" aria-describedby="jelly-help" aria-keyshortcuts="ArrowLeft ArrowRight ArrowUp ArrowDown">
-                <span class="jelly-cube" aria-hidden="true"></span>
+                <span class="jelly-cube" aria-hidden="true"><span class="jelly-surface"></span></span>
               </button>
             </div>
           </div>
@@ -240,7 +254,9 @@
     <footer class="credit">Designed and built by UI Moments. Released under the <a href="../../LICENSE">MIT License</a>.</footer>
   </div>
 
-  <script>
+  <script type="module">
+    import { bindDrag, rubberBand, springValue, vibrateOnTouch } from "./interaction.mjs";
+
     /* standalone:helpers */
     const root = document.documentElement;
     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
@@ -269,54 +285,49 @@
       try { localStorage.setItem('ui-moments-theme', root.dataset.theme); } catch {}
     });
 
-    /* standalone:spring */
-    // Spring loop: requests frames only while moving and stops once at rest.
-    function spring({ k = 170, c = 13, onFrame, isAtRest }) {
-      let frame = 0, last = 0;
-      function step(now) {
-        if (isAtRest()) { frame = 0; return; }
-        if (!motionEnabled()) { frame = 0; onFrame(1, k, c, true); return; }
-        const dt = Math.min(.032, (now - last) / 1000 || .016);
-        last = now;
-        onFrame(dt, k, c);
-        frame = isAtRest() ? 0 : requestAnimationFrame(step);
-      }
-      return () => {
-        if (frame) return;
-        if (!motionEnabled()) { onFrame(1, k, c, true); return; }
-        last = performance.now();
-        frame = requestAnimationFrame(step);
-      };
-    }
-    /* /standalone:spring */
-
     /* standalone:magnet-grid-script */
     /* ---------- Magnet Grid ---------- */
     {
       const pad = $('.magnet');
       const dots = Array.from({ length: 40 }, () => pad.appendChild(document.createElement('i')));
-      let cursor = null;
+      let cursor, centers, width, height, frame = 0, point;
       function attract(x, y) {
-        const box = pad.getBoundingClientRect();
-        const scale = box.width / pad.offsetWidth || 1;
-        for (const dot of dots) {
-          const rect = dot.getBoundingClientRect();
-          const dx = x - (rect.left + rect.width / 2 - box.left) / scale + (parseFloat(dot.style.getPropertyValue('--x')) || 0);
-          const dy = y - (rect.top + rect.height / 2 - box.top) / scale + (parseFloat(dot.style.getPropertyValue('--y')) || 0);
+        if (pad.offsetWidth !== width || pad.offsetHeight !== height) {
+          width = pad.offsetWidth;
+          height = pad.offsetHeight;
+          centers = dots.map(dot => [dot.offsetLeft + dot.offsetWidth / 2, dot.offsetTop + dot.offsetHeight / 2]);
+        }
+        dots.forEach((dot, index) => {
+          const [cx, cy] = centers[index];
+          const dx = x - cx, dy = y - cy;
           const distance = Math.hypot(dx, dy);
           const pull = Math.max(0, 1 - distance / 80);
           dot.style.setProperty('--x', (dx / (distance || 1)) * pull * 11 + 'px');
           dot.style.setProperty('--y', (dy / (distance || 1)) * pull * 11 + 'px');
           dot.style.setProperty('--p', pull.toFixed(3));
+        });
+      }
+      function release() {
+        cancelAnimationFrame(frame);
+        frame = 0;
+        cursor = null;
+        for (const dot of dots) {
+          dot.style.setProperty('--x', '0px');
+          dot.style.setProperty('--y', '0px');
+          dot.style.setProperty('--p', 0);
         }
       }
-      function release() { cursor = null; for (const dot of dots) { dot.style.setProperty('--x', '0px'); dot.style.setProperty('--y', '0px'); dot.style.setProperty('--p', 0); } }
-      pad.addEventListener('pointermove', event => {
+      function follow(event) {
         const box = pad.getBoundingClientRect();
         const scale = box.width / pad.offsetWidth || 1;
         cursor = { x: (event.clientX - box.left) / scale, y: (event.clientY - box.top) / scale };
         attract(cursor.x, cursor.y);
-      });
+      }
+      pad.addEventListener('pointermove', event => {
+        point = event;
+        if (!frame) frame = requestAnimationFrame(() => { frame = 0; follow(point); });
+      }, {passive: true});
+      pad.addEventListener('pointerdown', event => { if (event.isPrimary && event.button === 0) follow(event); });
       pad.addEventListener('pointerleave', release);
       pad.addEventListener('blur', release);
       pad.addEventListener('keydown', event => {
@@ -336,76 +347,41 @@
     {
       const pad = $('.jelly');
       const cube = $('.jelly-cube', pad);
-      const state = { x: 0, y: 0, vx: 0, vy: 0 };
-      let drag = null, resetTimer = 0;
-      function paint() {
-        const position = `translate(${state.x}px, ${state.y}px)`;
-        const stretch = motionEnabled() ? Math.min(.38, Math.hypot(state.vx, state.vy) / 2200) : 0;
-        if (stretch === 0) {
-          cube.style.transform = position;
-          return;
-        }
-        const angle = Math.atan2(state.vy, state.vx) * 180 / Math.PI;
-        cube.style.transform = `${position} rotate(${angle}deg) scale(${1 + stretch}, ${1 - stretch * .6}) rotate(${-angle}deg)`;
-      }
-      function reset() {
-        Object.assign(state, { x: 0, y: 0, vx: 0, vy: 0 });
-        paint();
-      }
-      const atCenter = () => Math.abs(state.x) + Math.abs(state.y) < .2 && Math.hypot(state.vx, state.vy) < 2;
-      const settle = spring({
-        k: 210, c: 11,
-        onFrame(dt, k, c, instant) {
-          if (instant) return reset();
-          state.vx += (-k * state.x - c * state.vx) * dt;
-          state.vy += (-k * state.y - c * state.vy) * dt;
-          state.x += state.vx * dt;
-          state.y += state.vy * dt;
-          if (atCenter()) reset();
-          else paint();
+      let origin, scale, resetTimer;
+      const position = springValue([0, 0], ([x, y]) => {
+        cube.style.transform = `translate(${x}px, ${y}px)`;
+        // Keep the tension visible during a slow pull or while held away from center.
+        const stretch = motionEnabled() ? Math.min(.18, Math.hypot(x, y) / 280) : 0;
+        cube.style.setProperty('--stretch', stretch);
+        cube.style.setProperty('--angle', Math.atan2(y, x) + 'rad');
+      }, motionEnabled);
+      bindDrag(pad, {
+        horizontal: true,
+        start(event) {
+          clearTimeout(resetTimer);
+          position.stop();
+          scale = pad.getBoundingClientRect().width / pad.offsetWidth || 1;
+          origin = [event.clientX / scale - position.value[0], event.clientY / scale - position.value[1]];
+          pad.dataset.drag = '';
         },
-        isAtRest: () => drag || atCenter(),
-      });
-      reducedMotion.addEventListener('change', () => { if (drag) paint(); });
-      pad.addEventListener('pointerdown', event => {
-        if (event.button !== 0 || drag) return;
-        clearTimeout(resetTimer);
-        pad.setPointerCapture(event.pointerId);
-        pad.dataset.drag = '';
-        const scale = pad.getBoundingClientRect().width / pad.offsetWidth || 1;
-        const px = event.clientX / scale, py = event.clientY / scale;
-        drag = { id: event.pointerId, scale, x: px - state.x, y: py - state.y, t: performance.now(), px, py };
-      });
-      pad.addEventListener('pointermove', event => {
-        if (drag?.id !== event.pointerId) return;
-        const now = performance.now(), dt = Math.max(8, now - drag.t) / 1000;
-        const px = event.clientX / drag.scale, py = event.clientY / drag.scale;
-        const limitX = pad.offsetWidth / 2 - 30, limitY = pad.offsetHeight / 2 - 30;
-        state.vx = state.vx * .5 + (px - drag.px) / dt * .5;
-        state.vy = state.vy * .5 + (py - drag.py) / dt * .5;
-        state.x = clamp(px - drag.x, -limitX, limitX);
-        state.y = clamp(py - drag.y, -limitY, limitY);
-        Object.assign(drag, { t: now, px, py });
-        paint();
-      });
-      for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) pad.addEventListener(type, event => {
-        if (drag?.id !== event.pointerId) return;
-        drag = null;
-        delete pad.dataset.drag;
-        settle();
+        move(event) {
+          const limits = [pad.offsetWidth / 2 - 30, pad.offsetHeight / 2 - 30];
+          position.set([event.clientX, event.clientY].map((value, axis) => {
+            const limit = limits[axis];
+            return rubberBand(value / scale - origin[axis], -limit, limit, 18);
+          }));
+        },
+        end(_event, {vx, vy}) {
+          delete pad.dataset.drag;
+          position.to([0, 0], [vx / scale * .35, vy / scale * .35]);
+        },
       });
       function nudge(x, y) {
-        if (drag) return;
+        if (pad.hasAttribute('data-pointer-active')) return;
         clearTimeout(resetTimer);
-        if (!motionEnabled()) {
-          Object.assign(state, { x: x * 14, y: y * 14, vx: 0, vy: 0 });
-          paint();
-          resetTimer = setTimeout(reset, 150);
-          return;
-        }
-        state.vx += x * 700;
-        state.vy += y * 700;
-        settle();
+        position.set([x * 14, y * 14]);
+        if (motionEnabled()) position.to([0, 0], [x * 300, y * 300]);
+        else resetTimer = setTimeout(() => position.set([0, 0]), 150);
       }
       pad.addEventListener('keydown', event => {
         const push = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[event.key];
@@ -422,40 +398,44 @@
       const pad = $('.drops');
       const svg = $('svg', pad);
       const small = $('.small', pad);
-      const home = { x: 150, y: 70 };
-      const state = { x: home.x, y: home.y, vx: 0, vy: 0 };
-      let dragging = false;
-      function paint() { small.setAttribute('cx', state.x.toFixed(1)); small.setAttribute('cy', state.y.toFixed(1)); }
-      const settle = spring({
-        k: 120, c: 9,
-        onFrame(dt, k, c, instant) {
-          if (instant) { Object.assign(state, { ...home, vx: 0, vy: 0 }); return paint(); }
-          state.vx += (-k * (state.x - home.x) - c * state.vx) * dt;
-          state.vy += (-k * (state.y - home.y) - c * state.vy) * dt;
-          state.x += state.vx * dt;
-          state.y += state.vy * dt;
-          paint();
-        },
-        isAtRest: () => dragging || (Math.hypot(state.x - home.x, state.y - home.y) < .2 && Math.hypot(state.vx, state.vy) < 1),
-      });
+      const home = [150, 70];
+      let origin, units, keyTimer, merged;
+      const position = springValue(home, ([x, y]) => {
+        small.setAttribute('cx', x.toFixed(1));
+        small.setAttribute('cy', y.toFixed(1));
+      }, motionEnabled);
       function toSvg(event) {
         const point = new DOMPoint(event.clientX, event.clientY).matrixTransform(svg.getScreenCTM().inverse());
-        return { x: clamp(point.x, 18, 192), y: clamp(point.y, 18, 122) };
+        return [point.x, point.y];
       }
-      pad.addEventListener('pointerdown', event => { dragging = true; pad.setPointerCapture(event.pointerId); Object.assign(state, toSvg(event)); paint(); });
-      pad.addEventListener('pointermove', event => { if (dragging) { Object.assign(state, toSvg(event)); paint(); } });
-      for (const type of ['pointerup', 'pointercancel']) pad.addEventListener(type, () => { if (!dragging) return; dragging = false; settle(); });
+      bindDrag(pad, {
+        horizontal: true,
+        start(event) {
+          clearTimeout(keyTimer);
+          position.stop();
+          units = 1 / Math.abs(svg.getScreenCTM().a);
+          const point = toSvg(event);
+          origin = point.map((value, axis) => value - position.value[axis]);
+          merged = false;
+        },
+        move(event) {
+          const [x, y] = toSvg(event).map((value, axis) => value - origin[axis]);
+          position.set([rubberBand(x, 18, 192, 16), rubberBand(y, 18, 122, 12)]);
+          const touching = Math.hypot(x - 75, y - 70) < 23;
+          if (touching && !merged) vibrateOnTouch(event);
+          merged = touching;
+        },
+        end(_event, {vx, vy}) { position.to(home, [vx * units * .3, vy * units * .3]); },
+      });
       pad.addEventListener('keydown', event => {
         const move = { ArrowLeft: [-12, 0], ArrowRight: [12, 0], ArrowUp: [0, -12], ArrowDown: [0, 12] }[event.key];
-        if (event.key === ' ' || event.key === 'Enter') { event.preventDefault(); settle(); return; }
+        if (event.key === ' ' || event.key === 'Enter') { event.preventDefault(); position.to(home); return; }
         if (!move) return;
         event.preventDefault();
-        dragging = true;
-        state.x = clamp(state.x + move[0], 18, 192);
-        state.y = clamp(state.y + move[1], 18, 122);
-        paint();
-        clearTimeout(pad.keyTimer);
-        pad.keyTimer = setTimeout(() => { dragging = false; settle(); }, 900);
+        clearTimeout(keyTimer);
+        const [x, y] = position.value;
+        position.set([clamp(x + move[0], 18, 192), clamp(y + move[1], 18, 122)]);
+        keyTimer = setTimeout(() => position.to(home), 900);
       });
     }
 
@@ -479,27 +459,27 @@
         const box = pad.getBoundingClientRect(), scale = box.width / pad.offsetWidth || 1;
         return [(event.clientX - box.left) / scale, (event.clientY - box.top) / scale];
       }
-      pad.addEventListener('pointerdown', event => {
-        const [x, y] = local(event);
-        const seed = document.createElement('span');
-        seed.className = 'seed';
-        seed.style.cssText = `left:${x}px;top:${y}px`;
-        pad.append(seed);
-        hold = { x, y, start: performance.now(), seed, id: event.pointerId };
-        pad.setPointerCapture(event.pointerId);
-        const grow = () => {
-          if (!hold) return;
-          seed.style.setProperty('--grow', 1 + Math.min(1, (performance.now() - hold.start) / 1200) * 2.4);
-          hold.frame = requestAnimationFrame(grow);
-        };
-        grow();
-      });
-      for (const type of ['pointerup', 'pointercancel']) pad.addEventListener(type, () => {
-        if (!hold) return;
-        cancelAnimationFrame(hold.frame);
-        hold.seed.remove();
-        drop(hold.x, hold.y, Math.min(1, (performance.now() - hold.start) / 1200));
-        hold = null;
+      bindDrag(pad, {
+        start(event) {
+          const [x, y] = local(event);
+          const seed = document.createElement('span');
+          seed.className = 'seed';
+          seed.style.cssText = `left:${x}px;top:${y}px`;
+          pad.append(seed);
+          hold = {x, y, start: performance.now(), seed, frame: 0};
+          const grow = () => {
+            if (!motionEnabled()) return;
+            seed.style.setProperty('--grow', 1 + Math.min(1, (performance.now() - hold.start) / 1200) * 2.4);
+            hold.frame = requestAnimationFrame(grow);
+          };
+          grow();
+        },
+        end(_event, {released}) {
+          cancelAnimationFrame(hold.frame);
+          hold.seed.remove();
+          if (released) drop(hold.x, hold.y, Math.min(1, (performance.now() - hold.start) / 1200));
+          hold = null;
+        },
       });
       pad.addEventListener('keydown', event => {
         if (event.key !== ' ' && event.key !== 'Enter') return;

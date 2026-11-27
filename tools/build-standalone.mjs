@@ -1,7 +1,11 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { transform } from 'esbuild';
 
 const gallery = new URL('../gallery/originals/', import.meta.url);
 const destination = new URL('dist/', gallery);
+const interactionCss = readFileSync(new URL('interaction.css', gallery), 'utf8');
+const interactionJs = readFileSync(new URL('interaction.mjs', gallery), 'utf8')
+  .replace(/^export /gm, '');
 const license = readFileSync(new URL('../LICENSE', import.meta.url), 'utf8').trimEnd();
 const sourcePages = new Map(['index.html', 'visual.html'].map(name => [
   name, readFileSync(new URL(name, gallery), 'utf8').replaceAll('\r\n', '\n'),
@@ -9,7 +13,7 @@ const sourcePages = new Map(['index.html', 'visual.html'].map(name => [
 const samples = [
   { id: 'ink-switch', title: 'Ink Switch', page: 'index.html' },
   { id: 'detent-dial', title: 'Detent Dial', page: 'index.html' },
-  { id: 'jelly-pad', title: 'Jelly Cube', page: 'visual.html', css: ['pad'], js: ['spring'] },
+  { id: 'jelly-pad', title: 'Jelly Cube', page: 'visual.html', css: ['pad'] },
 ];
 
 // Whole-line comments delimit the parts shared by the gallery and each downloadable page.
@@ -32,11 +36,13 @@ function indent(source, spaces) {
   return source.split('\n').map(line => line ? ' '.repeat(spaces) + line : line).join('\n');
 }
 
-function standalone({ id, title, page, css = [], js = [] }) {
+async function standalone({ id, title, page, css = [] }) {
   const style = ['theme', 'stage', 'widget', ...css, `${id}-style`, 'reduced-motion']
     .map(name => section(page, name)).join('\n\n');
-  const script = ['helpers', ...js, `${id}-script`]
+  const script = ['helpers', `${id}-script`]
     .map(name => section(page, name)).join('\n\n');
+  const sharedScript = id === 'ink-switch' ? '' : (await transform(interactionJs, {minify: true, loader: 'js'})).code;
+  const sharedStyle = (await transform(interactionCss, {minify: true, loader: 'css'})).code;
   return `<!doctype html>
 <!--
 Generated from gallery/originals/${page} by tools/build-standalone.mjs.
@@ -51,6 +57,7 @@ ${license}
   <link rel="icon" href="data:,">
   <style>
 ${indent(style, 4)}
+${indent(sharedStyle.trimEnd(), 4)}
 
     *, *::before, *::after { box-sizing: border-box; }
     body { min-height: 100vh; min-height: 100svh; display: grid; place-items: center; margin: 0; background: var(--page); color: var(--ink); font: 400 14px/1.6 system-ui, sans-serif; }
@@ -75,6 +82,7 @@ ${indent(section(page, id, true), 4)}
   </main>
   <script>
     (() => {
+${indent(sharedScript.trimEnd(), 6)}
 ${indent(script, 6)}
 
       const theme = $('#theme');
@@ -115,6 +123,7 @@ if (frameElement) document.documentElement.dataset.theme = parent.document.docum
 </script>
 <style>
 ${style}
+${interactionCss}
 *, *::before, *::after { box-sizing: border-box; }
 body { margin: 0; background: var(--surface); }
 .stage { height: 100dvh; border-radius: 0; }
@@ -133,7 +142,7 @@ if (frameElement) frameElement.dataset.loaded = '';
 `;
 }
 
-const pages = samples.map(sample => [`${sample.id}.html`, standalone(sample)]);
+const pages = await Promise.all(samples.map(async sample => [`${sample.id}.html`, await standalone(sample)]));
 mkdirSync(destination, { recursive: true });
 for (const [name, html] of pages) writeFileSync(new URL(name, destination), html);
 writeFileSync(new URL('magnet-grid-preview.html', destination), magnetGridPreview());

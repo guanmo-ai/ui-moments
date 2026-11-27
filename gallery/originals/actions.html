@@ -17,6 +17,7 @@
       root.dataset.theme = theme || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
     })();
   </script>
+  <link rel="stylesheet" href="interaction.css">
   <style>
     @font-face { font-family: Geist; src: url('../../assets/fonts/Geist-latin-wght.woff2') format('woff2'); font-weight: 100 900; font-display: swap; }
 
@@ -289,9 +290,9 @@
 
         <section class="sample" id="bell-toggle" aria-labelledby="bell-title">
           <div class="stage"><div class="widget bell-wrap">
-            <button class="bell" type="button" aria-pressed="true" aria-labelledby="bell-title">
+            <button class="bell" type="button" aria-pressed="true" aria-labelledby="bell-title bell-count">
               <svg viewBox="0 0 24 24" aria-hidden="true"><g class="body"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15l1.5-2Z"/><path d="M12 3v2"/></g><path class="clapper" d="M10 20.5a2 2 0 0 0 4 0"/><path class="slash" d="M4 4l16 16"/></svg>
-              <span class="bell-badge" aria-hidden="true">3</span>
+              <span class="bell-badge" id="bell-count" aria-hidden="true">3</span>
             </button>
             <p class="bell-state" aria-live="polite">Notifications on</p>
           </div></div>

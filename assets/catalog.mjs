@@ -6,11 +6,13 @@ import {escapeHtml as escape} from '../gallery/loaders/snippets.mjs';
 
 export const categories = [
   {id: 'all', name: 'All'},
-  {id: 'input', name: 'Controls'},
-  {id: 'loading', name: 'Loading'},
-  // 色彩鲜艳的作品单独放在最后，图鉴首屏保持单色。
+  {id: 'tap', name: 'Tap'},
+  {id: 'drag', name: 'Drag'},
+  {id: 'type', name: 'Type'},
   {id: 'color', name: 'Color'},
+  {id: 'loading', name: 'Loading'},
 ];
+const groupOrder = categories.slice(1);
 const categoryNames = new Map(categories.map(({id, name}) => [id, name]));
 const searchIndex = new WeakMap();
 
@@ -70,6 +72,30 @@ export function usesTextEntry(item) {
   return textEntryTypes.has(item.type) || textEntryFamilies.has(item.family) || textEntryExamples.has(item.id);
 }
 
+// 按预览的主要玩法分组。独立色彩作品与颜色选择归彩色，独立加载示例归加载动效。
+// 必须拖、拨或长按才能体验的示例归拖动，需要键入的归输入；
+// 单击即可触发、只挑选现成选项或无需输入即可查看的示例归点按。
+const dragTypes = new Set(['Drag', 'Dial', 'Slider']);
+const dragFamilies = new Set(['Slider', 'Resizable', 'createDragToSnapPoints', 'useDragToSnapPoints', 'usePanGesture']);
+const dragExamples = new Set([
+  'swipe-confirm', 'hold-confirm', 'pull-refresh', 'scrub-wave',
+  'astryx-variant-table-column-resize-hook-usage',
+]);
+const loadingFamilies = new Set(['Skeleton', 'Spinner', 'ChatReasoning']);
+
+function playCategory(item) {
+  if (item.vivid || ['Color', 'Color picker'].includes(item.type) || item.id === 'astryx-variant-hooks-use-grid-focus-hook-usage') return 'color';
+  if (item.loader || item.type === 'Loading state' || loadingFamilies.has(item.family) ||
+    item.id === 'astryx-variant-aspect-ratio-aspect-ratio-with-skeleton') return 'loading';
+  if (dragExamples.has(item.id) || dragTypes.has(item.type) || dragFamilies.has(item.family)) return 'drag';
+  return usesTextEntry(item) ? 'type' : 'tap';
+}
+
+export function groupHeading(id, t = translate) {
+  const label = categoryNames.get(id);
+  return id === 'color' ? t('Color examples').replace(/^Color examples$/, 'Color') : t(label);
+}
+
 const searchAliases = [
   [/\b(?:calendar|date (?:input|picker|range|time))\b/, 'calendar date picker date range 日历 日期选择 日期选择器'],
   [/\b(?:switch|toggle)\b/, 'toggle switch 开关 切换'],
@@ -89,12 +115,12 @@ const shapeFilters = {
 
 const firstExamples = [
   'magnet-grid', 'ink-switch', 'swipe-confirm', 'jelly-pad', 'paper-fold',
-  'elastic-string', 'detent-dial', 'merge-drops', 'radial-menu', 'tide-ring',
-  'rocker-switch', 'bloom-toggle', 'domino-row', 'like-burst', 'pixel-snake',
-  'scrub-wave', 'download-ring', 'snap-grid', 'breath-orb', 'pull-refresh',
+  'elastic-string', 'detent-dial', 'merge-drops', 'tide-ring',
+  'rocker-switch', 'bloom-toggle', 'domino-row', 'tide-progress', 'radial-menu', 'copy-morph', 'ripple-pad', 'like-burst', 'pixel-snake',
+  'scrub-wave', 'download-ring', 'snap-grid', 'pull-refresh',
   'step-track', 'orbit-pair', 'fluent-drawer', 'astryx-date-range',
-  'odometer-stepper', 'ripple-pad', 'leaf-tabs', 'tide-progress', 'bell-toggle',
-  'hold-confirm', 'pebble-rating', 'paper-plane', 'copy-morph', 'signal-return',
+  'odometer-stepper', 'leaf-tabs', 'bell-toggle',
+  'hold-confirm', 'pebble-rating', 'paper-plane', 'stroke-checklist', 'plan-picker', 'breath-orb', 'signal-return',
 ];
 
 export const initialCardCount = 24;
@@ -104,9 +130,9 @@ export function standaloneExamplePath(item) {
 }
 
 export function categoryMarkup(items) {
-  return categories.map(({id,name}) => {
+  return categories.map(({id}) => {
     const count = id === 'all' ? items.length : items.filter(item => item.category === id).length;
-    return `<button type="button" data-category="${id}" aria-pressed="${id === 'all'}"><span class="category-label">${escape(translate(name))}</span><span class="category-count">${count}</span></button>`;
+    return `<button type="button" data-category="${id}" aria-pressed="${id === 'all'}"><span class="category-label">${escape(groupHeading(id))}</span><span class="category-count">${count}</span></button>`;
   }).join('');
 }
 
@@ -141,7 +167,7 @@ export function cardMarkup(item, t = translate) {
         <span class="ui-detail-label">${escape(details)}</span>
         <span class="ui-expand-icon" aria-hidden="true"></span>
       </button>
-    </div></article>`;
+    </div><span class="ui-card-light" aria-hidden="true"></span></article>`;
 }
 
 export function buildCatalog(works = []) {
@@ -151,15 +177,12 @@ export function buildCatalog(works = []) {
     tags: ['Original', 'loading'],
     loader,
   }));
-  const controls = works.map(work => ({
-    ...work, category: work.vivid ? 'color' : 'input',
-  }));
-  const typedControls = [...controls, ...fluentWorks].map(work => ({
+  const controls = [...works, ...fluentWorks].map(work => ({
     ...work, task: taskById[work.id] ?? taskByType.get(work.type) ?? null,
   }));
 
   // 目录开头先展示可操作的控件，并穿插不同用途的案例。
-  const byId = new Map([...typedControls, ...astryxWorks, ...effects].map(item => [item.id, item]));
+  const byId = new Map([...controls, ...astryxWorks, ...effects].map(item => [item.id, {...item, category: playCategory(item)}]));
   const result = [];
   for (const id of firstExamples) {
     if (!byId.has(id)) continue;
@@ -171,7 +194,7 @@ export function buildCatalog(works = []) {
   const groups = new Map();
   for (const item of byId.values()) {
     const {loader} = item;
-    const group = loader ? `${item.shape}` : item.category;
+    const group = loader ? item.shape : item.category;
     if (!groups.has(group)) groups.set(group, []);
     groups.get(group).push(item);
   }
@@ -181,13 +204,12 @@ export function buildCatalog(works = []) {
       if (group[index]) result.push(group[index]);
     }
   }
-  // 黑白控件先放点击、拖动或拨动即可操作的示例，再放文字输入。各段保留策展顺序。
-  const interactive = result.filter(item => item.category === 'input');
-  return [
-    ...interactive.filter(item => !usesTextEntry(item)),
-    ...interactive.filter(usesTextEntry),
-    ...['color', 'loading'].flatMap(id => result.filter(item => item.category === id)),
-  ];
+  // 分区内先展示策展后的原创例子，再保留组件库各示例的顺序。
+  return groupOrder.flatMap(({id}) => {
+    const group = result.filter(item => item.category === id);
+    if (id === 'loading') return [...group.filter(item => !item.loader), ...group.filter(item => item.loader)];
+    return [...group.filter(item => item.original), ...group.filter(item => !item.original)];
+  });
 }
 
 export function getCategoryFilters(items, category) {
@@ -227,7 +249,11 @@ export function matches(item, {task = 'all', category = 'all', shape = 'all', mo
       .filter(Boolean).map(normalizeSearch);
     const aliases = searchAliases.filter(([pattern]) => keywords.some(keyword => pattern.test(keyword)))
       .map(([, value]) => value);
-    const descriptions = [item.summary, item.summaryZh, item.library?.name, ...labels.map(label => translate(label, undefined, 'zh-CN'))]
+    const descriptions = [
+      item.summary, item.summaryZh, item.library?.name,
+      ...labels.map(label => translate(label, undefined, 'zh-CN')),
+      groupHeading(item.category, label => translate(label, undefined, 'zh-CN')),
+    ]
       .filter(Boolean).map(normalizeSearch);
     text = [...keywords, ...aliases, ...descriptions].join('\n');
     searchIndex.set(item, text);

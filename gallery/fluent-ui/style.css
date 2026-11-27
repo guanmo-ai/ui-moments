@@ -27,17 +27,44 @@ body { margin: 0; }
 .card-preview-snapshot h2 { margin: 0; font-size: 18px; line-height: 1.3; }
 .card-preview-snapshot p { margin: 9px 0 0; color: var(--colorNeutralForeground2); }
 .card-preview-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+.card-preview-title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.card-popover { display: grid; justify-items: center; gap: 6px; width: 100%; }
+.card-preview-teaching-popover { position: relative; }
+.card-preview-teaching-popover::before {
+  content: "";
+  position: absolute;
+  inset-block-start: -5px;
+  inset-inline-start: calc(50% - 5px);
+  width: 9px;
+  height: 9px;
+  border-top: 1px solid var(--colorNeutralStroke1);
+  border-left: 1px solid var(--colorNeutralStroke1);
+  background: var(--colorNeutralBackground1);
+  transform: rotate(45deg);
+}
 .card-preview-teaching-popover kbd { padding: 1px 5px; border: 1px solid var(--colorNeutralStroke1); border-radius: 4px; }
 .card-preview-toast {
   display: grid;
+  align-content: end;
+  justify-items: center;
   gap: 10px;
+  min-height: 194px;
   padding: 0;
   border: 0;
   background: transparent;
   box-shadow: none;
 }
+.card-preview-toast-stack { display: grid; gap: 10px; width: 100%; }
 .card-preview-toast article { padding: 15px 18px; }
 .card-preview-toast h2::before { content: '✓'; margin-inline-end: 10px; }
+.card-preview-toast-live {
+  position: absolute;
+  inset-block-start: 54px;
+  width: min(368px, calc(100% - 28px));
+  display: grid;
+  gap: 10px;
+  pointer-events: none;
+}
 
 .demo-drawer.fui-OverlayDrawer {
   --fui-Drawer--size: min(320px, calc(100vw - 12px));
@@ -51,6 +78,12 @@ body { margin: 0; }
 
 .demo-toaster.fui-Toaster {
   width: min(220px, calc(100vw - 16px));
+}
+
+@media (pointer: coarse) {
+  .card-popover-trigger.fui-Button,
+  .card-preview-teaching-popover .fui-Button,
+  .card-preview-toast > .fui-Button { min-height: 44px; }
 }
 
 .demo-toast.fui-Toast {

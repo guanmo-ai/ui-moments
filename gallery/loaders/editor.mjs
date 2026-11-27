@@ -91,7 +91,6 @@ function clearDetailHash(){
 function closeDetail(){clearDetailHash();detail.close();}
 $('#close').addEventListener('click',closeDetail);
 detail.addEventListener('cancel',clearDetailHash);
-detail.addEventListener('click',event=>{if(event.target===detail){const r=detail.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)closeDetail();}});
 detail.addEventListener('close',()=>{
   cancelAnimationFrame(previewFrame);
   clearTimeout(exportTimer);

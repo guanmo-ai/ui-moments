@@ -17,6 +17,7 @@
       root.dataset.theme = theme || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
     })();
   </script>
+  <link rel="stylesheet" href="interaction.css">
   <style>
     @font-face { font-family: Geist; src: url('../../assets/fonts/Geist-latin-wght.woff2') format('woff2'); font-weight: 100 900; font-display: swap; }
 
@@ -115,7 +116,8 @@
     :root { --glow: #f2b33d; --sun: #e09a2b; --moon: #6b74c9; }
     :root[data-theme="dark"] { --glow: #ffd27a; --sun: #ffc46b; --moon: #bcc4ff; }
     /* Hue Orbit */
-    .hue { position: relative; width: 150px; height: 150px; border-radius: 50%; cursor: pointer; touch-action: none; }
+    .hue { position: relative; width: 150px; height: 150px; border-radius: 50%; cursor: grab; touch-action: pan-y; }
+    .hue[data-pointer-active] .hue-core { scale: .96; }
     .hue i { position: absolute; top: 50%; left: 50%; width: 16px; height: 16px; margin: -8px; border-radius: 50%; background: oklch(.72 .15 var(--h)); transform: rotate(var(--h)) translateY(-62px) scale(var(--s, 1)); transition: transform .35s var(--spring), box-shadow .3s; }
     .hue i[data-on] { --s: 1.45; box-shadow: 0 0 0 3px var(--surface), 0 0 0 4.5px oklch(.72 .15 var(--h)); }
     .hue-core { position: absolute; inset: 40px; border-radius: 50%; background: oklch(.72 .15 var(--hue)); box-shadow: 0 10px 28px -6px oklch(.6 .17 var(--hue) / .7); transition: background .25s, box-shadow .25s; }
@@ -127,10 +129,10 @@
     .lamp-light { position: absolute; top: 40px; left: 50%; width: 150px; height: 120px; margin-left: -75px; background: radial-gradient(ellipse 50% 70% at 50% 0, color-mix(in srgb, var(--glow) 45%, transparent), transparent 70%); clip-path: polygon(38% 0, 62% 0, 100% 100%, 0 100%); opacity: 0; transition: opacity .35s; pointer-events: none; }
     .lamp[data-on] .lamp-bulb { background: var(--glow); box-shadow: 0 0 18px 6px color-mix(in srgb, var(--glow) 60%, transparent); }
     .lamp[data-on] .lamp-light { opacity: 1; }
-    .lamp-cord { position: absolute; top: 30px; left: calc(50% + 24px); width: 2px; height: calc(52px + var(--pull, 0px)); background: var(--muted); transition: height .6s var(--spring); }
-    .lamp-bead { position: absolute; top: calc(78px + var(--pull, 0px)); left: calc(50% + 25px); width: 16px; height: 20px; margin-left: -8px; padding: 0; border: 0; border-radius: 8px; background: var(--muted); cursor: grab; touch-action: none; transition: top .6s var(--spring), background .2s; }
+    .lamp-cord { position: absolute; top: 30px; left: calc(50% + 24px); width: 2px; height: 100px; background: var(--muted); transform: scaleY(var(--cord, .52)); transform-origin: top; }
+    .lamp-bead { position: absolute; top: 78px; translate: 0 var(--pull, 0px); left: calc(50% + 25px); width: 16px; height: 20px; margin-left: -8px; padding: 0; border: 0; border-radius: 8px; background: var(--muted); cursor: grab; touch-action: pan-x; transition: background .2s; }
     .lamp-bead:hover { background: var(--ink); }
-    .lamp[data-drag] .lamp-cord, .lamp[data-drag] .lamp-bead { transition: none; }
+    .lamp-bead[data-pointer-active] { scale: .96; }
     @container (max-height: 128px) { .widget:has(.lamp) { scale: .6; } }
 
     /* Flip Coin */
@@ -206,7 +208,9 @@
     <footer class="credit">Designed and built by UI Moments. Released under the <a href="../../LICENSE">MIT License</a>.</footer>
   </div>
 
-  <script>
+  <script type="module">
+    import { bindDrag, rubberBand, springValue, vibrateOnTouch } from "./interaction.mjs";
+
     const root = document.documentElement;
     const params = new URLSearchParams(location.search);
     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
@@ -242,7 +246,7 @@
         swatch.style.setProperty('--h', index * 30 + 'deg');
         return wheel.appendChild(swatch);
       });
-      let hue = 270, dragging = false;
+      let hue = 270;
       function set(next, pulse = true) {
         next = ((Math.round(next / 30) * 30) % 360 + 360) % 360;
         const changed = next !== hue;
@@ -257,9 +261,7 @@
         const box = wheel.getBoundingClientRect();
         set(Math.atan2(event.clientX - (box.left + box.width / 2), -(event.clientY - (box.top + box.height / 2))) * 180 / Math.PI);
       }
-      wheel.addEventListener('pointerdown', event => { dragging = true; wheel.setPointerCapture(event.pointerId); fromPointer(event); });
-      wheel.addEventListener('pointermove', event => { if (dragging) fromPointer(event); });
-      for (const type of ['pointerup', 'pointercancel']) wheel.addEventListener(type, () => { dragging = false; });
+      bindDrag(wheel, {horizontal: true, start: fromPointer, move: fromPointer});
       wheel.addEventListener('keydown', event => {
         const delta = { ArrowRight: 30, ArrowUp: 30, ArrowLeft: -30, ArrowDown: -30 }[event.key];
         if (delta === undefined) return;
@@ -273,40 +275,42 @@
     {
       const lamp = $('.lamp');
       const bead = $('.lamp-bead', lamp);
-      let drag = null;
+      let origin, scale, pressedAt;
       function toggle() {
         const on = bead.getAttribute('aria-checked') !== 'true';
         bead.setAttribute('aria-checked', String(on));
         lamp.toggleAttribute('data-on', on);
       }
-      function pull(px) { lamp.style.setProperty('--pull', px + 'px'); }
-      bead.addEventListener('pointerdown', event => {
-        if (event.button !== 0) return;
-        event.preventDefault();
-        bead.setPointerCapture(event.pointerId);
-        lamp.dataset.drag = '';
-        drag = { id: event.pointerId, y: event.clientY, moved: 0 };
-      });
-      bead.addEventListener('pointermove', event => {
-        if (drag?.id !== event.pointerId) return;
-        drag.moved = clamp(event.clientY - drag.y, 0, 46);
-        pull(drag.moved);
-      });
-      for (const type of ['pointerup', 'pointercancel']) bead.addEventListener(type, event => {
-        if (drag?.id !== event.pointerId) return;
-        const far = drag.moved > 18 || (type === 'pointerup' && drag.moved < 3);
-        drag = null;
-        delete lamp.dataset.drag;
-        pull(0);
-        if (far) toggle();
+      const position = springValue([0], ([px]) => {
+        lamp.style.setProperty('--pull', px + 'px');
+        lamp.style.setProperty('--cord', (52 + px) / 100);
+      }, motionEnabled);
+      bindDrag(bead, {
+        start(event) {
+          position.stop();
+          scale = lamp.getBoundingClientRect().width / lamp.offsetWidth || 1;
+          pressedAt = event.clientY / scale;
+          origin = pressedAt - position.value[0];
+        },
+        move(event) {
+          position.set([rubberBand(event.clientY / scale - origin, 0, 40, 16)]);
+        },
+        end(event, {released, vy}) {
+          const moved = event.clientY / scale - pressedAt;
+          if (released && (position.value[0] > 18 || (moved > 8 && vy / scale > 300) || Math.abs(moved) < 3)) {
+            toggle();
+            vibrateOnTouch(event);
+          }
+          position.to([0], [vy / scale * .3]);
+        },
       });
       bead.addEventListener('click', event => {
         if (event.detail !== 0) return;
         toggle();
-        if (!motionEnabled()) return;
-        lamp.dataset.drag = '';
-        pull(30);
-        requestAnimationFrame(() => requestAnimationFrame(() => { delete lamp.dataset.drag; pull(0); }));
+        if (motionEnabled()) {
+          position.set([22]);
+          position.to([0]);
+        }
       });
     }
 

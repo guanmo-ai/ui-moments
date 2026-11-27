@@ -16,6 +16,9 @@ const wide = new Set(initialIds.slice(phoneCards));
 const regular = new Set(window.WORKS.map(({id}) => id).filter(id => !first.has(id) && !wide.has(id)));
 const batches = [['cards-first', first], ['cards-wide', wide], ['cards-later', regular]];
 const pages = new Map();
+const interactionCss = (await transform(readFileSync(new URL('interaction.css', directory), 'utf8'),
+  {loader: 'css', minify: true})).code;
+const interactionHelpers = ['bindDrag', 'rubberBand', 'springValue', 'vibrateOnTouch'];
 // The existing demo sheets label their control rules. Keep shared tokens
 // and embedded states, and include only the control rules needed by a batch.
 const styleSections = {
@@ -32,6 +35,10 @@ const styleSections = {
     ['swipe-confirm', 'Swipe to Confirm'], ['pull-refresh', 'Pull to Refresh'], ['elastic-string', 'Elastic String'],
     ['domino-row', 'Domino Row'], ['rocker-switch', 'Rocker Switch'], ['scrub-wave', 'Scrub Wave'],
     ['snap-grid', 'Snap Grid'], ['radial-menu', 'Radial Menu'], ['step-track', 'Step Track'], ['breath-orb', 'Breath Orb'],
+  ],
+  'inputs.html': [
+    ['stroke-checklist', 'Stroke Checklist'], ['pebble-rating', 'Pebble Rating'], ['notch-slider', 'Notch Slider'],
+    ['strength-meter', 'Strength Meter'], ['chip-input', 'Chip Input'], ['plan-picker', 'Plan Picker'],
   ],
   'actions.html': [
     ['copy-morph', 'Copy Button'], ['like-burst', 'Like Burst'], ['paper-plane', 'Paper Plane'],
@@ -104,7 +111,7 @@ function reuseInitialNodes(id, source) {
 async function readPage(path) {
   const page = readFileSync(new URL(path, directory), 'utf8').replaceAll('\r\n', '\n');
   const markup = [...page.matchAll(/<section class="sample" id="([^"]+)"[\s\S]*?<\/section>/g)];
-  const script = [...page.matchAll(/<script>([\s\S]*?)<\/script>/g)].at(-1)[1];
+  const script = [...page.matchAll(/<script(?: type="module")?>([\s\S]*?)<\/script>/g)].at(-1)[1];
   // The standalone harness ends at its theme button. Top-level blocks after
   // the shared helpers bind one example each, in the same order as the HTML.
   const themeEnd = script.indexOf('\n    });', script.indexOf("$('#theme').addEventListener"));
@@ -125,7 +132,8 @@ async function readPage(path) {
     .replace(/:root/g, '.original-root')
     .replaceAll('height: 100dvh;', 'height: 100%;');
   const clean = text => text
-    .replace(/^[ \t]*(?:html|body|\[data-single\][^{}]*|(?:\[data-embedded\] )?\.sets[^{}]*) \{[^}]+\}/gm, '');
+    .replace(/^[ \t]*(?:html|body|\[data-single\][^{}]*|(?:\[data-embedded\] )?\.sets[^{}]*) \{[^}]+\}/gm, '')
+    .replace(/^[ \t]*@media [^{}]+\{ \.samples \{[^}]+\} \}/gm, '');
   const minify = async text => (await transform(clean(text), {loader: 'css', minify: true})).code;
   const {base, sections, tail} = splitStyles(css, path);
   const palette = [...base.matchAll(/(?<selector>\.original-root(?:\[data-theme="dark"\])?)\s*\{([^}]+)\}/g)].slice(0, 2);
@@ -176,6 +184,7 @@ for (const {demo} of window.WORKS) {
 for (const [name, batch] of batches) {
   const styles = new Map();
   const controls = [];
+  const helpers = new Set();
   for (const {demo, id} of window.WORKS.filter(({id}) => batch.has(id))) {
     const path = demo.split('/').at(-1).split('#')[0];
     const {shell, styles: pageStyles, controls: examples} = pages.get(path);
@@ -184,6 +193,9 @@ for (const [name, batch] of batches) {
     if (!styles.has(path)) {
       const css = shell[0] + pageStyles.get(name) + shell[1];
       styles.set(path, {css, variable: `style${styles.size}`});
+    }
+    for (const helper of interactionHelpers) {
+      if (control.js.includes(helper + '(')) helpers.add(helper);
     }
     const fields = `{style:${styles.get(path).variable},html:${JSON.stringify(control.html)}}`;
     controls.push(`${JSON.stringify(id)}: {
@@ -196,12 +208,40 @@ for (const [name, batch] of batches) {
   }
   const source = [
     '// Generated from gallery/originals by tools/build-original-cards.mjs.',
-    ...(name === 'cards-first' ? [`export const wide = new Set(${JSON.stringify([...wide])});`] : []),
+    ...(name === 'cards-first' ? [
+      `export const wide = new Set(${JSON.stringify([...wide])});`,
+      `export const interactionCss = ${JSON.stringify(interactionCss)};`,
+    ] : []),
+    ...(helpers.size ? [`import {${[...helpers].join(', ')}} from '../interaction.mjs';`] : []),
     ...[...styles.values()].map(({css, variable}) => `const ${variable} = ${JSON.stringify(css)};`),
     `export default {\n${controls.join(',\n')}\n};\n`,
   ].join('\n');
   writeFileSync(new URL(`dist/${name}.mjs`, directory), source);
 }
+
+// The first control can already receive pointer and keyboard input as it
+// streams in. Reuse its normal initializer for this small inline entry; other
+// controls keep the regular lazy-loaded runtime.
+const leadingId = initialIds[0];
+const lead = pages.get('visual.html').controls.get(leadingId);
+const leadingScript = (await transform(`(() => {
+  const observer = new MutationObserver(bind);
+  observer.observe(document.documentElement, {childList: true, subtree: true});
+  function bind() {
+    const article = document.querySelector('[data-ui="${leadingId}"]');
+    if (!article?.querySelector('.ui-caption')) return;
+    observer.disconnect();
+    const host = article.querySelector('ui-original-card');
+    const shadow = host?.shadowRoot;
+    if (!shadow) return;
+    const $ = selector => shadow.querySelector(selector);
+    const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+    ${reuseInitialNodes(leadingId, lead.js)}
+    host[Symbol.for('ui-moments.early-preview')] = true;
+    host.dataset.hydrated = '';
+  }
+  document.addEventListener('DOMContentLoaded', () => observer.disconnect(), {once: true});
+})();`, {loader: 'js', minify: true})).code;
 
 const staticCards = {};
 const palettes = new Map();
@@ -217,7 +257,8 @@ for (const [name, batch] of [['first', first], ['wide', wide]]) {
       .replace(/(<div class="caption"><h2[^>]*>[^<]+<\/h2>)<p>[^<]*<\/p>/g, '$1')
       .replace(/>\s+</g, '><');
     const firstPaint = staticBase + staticStyles.get(id) + shell[1];
-    staticCards[id] = {page: path, html, wide: name === 'wide', style: firstPaint};
+    staticCards[id] = {page: path, html, wide: name === 'wide', style: firstPaint,
+      ...(id === leadingId && {leadingScript})};
   }
 }
 const colorRules = [...palettes].map(([key, paths]) => {

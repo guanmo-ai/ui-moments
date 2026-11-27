@@ -4,7 +4,7 @@ import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { runInNewContext } from 'node:vm';
 import { build, transform } from 'esbuild';
-import { buildCatalog, cardMarkup, categoryMarkup, initialCardCount, kindLabel, standaloneExamplePath } from '../assets/catalog.mjs';
+import { buildCatalog, cardMarkup, categoryMarkup, groupHeading, initialCardCount, kindLabel, standaloneExamplePath } from '../assets/catalog.mjs';
 import {translate} from '../assets/locale.mjs';
 import {themeIcons} from '../assets/site.mjs';
 import {escapeHtml as esc} from '../gallery/loaders/snippets.mjs';
@@ -69,10 +69,10 @@ const staticCards = JSON.parse(readFileSync(join(root, 'gallery/originals/dist/c
 const originalPalette = readFileSync(join(root, 'gallery/originals/dist/cards-static-theme.css'), 'utf8');
 const wideMedia = '(min-width:760px), (min-height:1000px)';
 const staticItems = items.filter(({id}) => Object.hasOwn(staticCards, id));
-const lastPhoneCard = staticItems.filter(({id}) => !staticCards[id].wide).at(-1).id;
-const lastWideCard = staticItems.at(-1).id;
-// A streamed response may expose the title one frame before the card HTML.
-// These selectors wait only for the visible batch's end marker in the HTML.
+// Reveal the title and first complete row together. More static rows still
+// stream in order so the first interaction does not wait on lower previews.
+const lastPhoneCard = staticItems[1].id;
+const lastWideCard = staticItems[4].id;
 const firstPaintCss = `html:not([data-ready],:has([data-phone-ready])) body{visibility:hidden}
 @media ${wideMedia}{html:not([data-ready],:has([data-wide-ready])) body{visibility:hidden}}`;
 
@@ -124,7 +124,7 @@ function initialToolbar(source) {
   }).join('');
   return source
     .replace('<button class="language-btn" id="language" type="button" hidden><span></span></button>',
-      `<button class="language-btn" id="language" type="button" aria-label="Switch to Simplified Chinese" data-zh-aria-label="${esc(zh('Switch to English'))}"><span lang="zh-CN" data-zh="EN">中文</span></button>`)
+      `<button class="language-btn" id="language" type="button" aria-label="中文 · Switch to Simplified Chinese" data-zh-aria-label="EN · ${esc(zh('Switch to English'))}"><span lang="zh-CN" data-zh="EN">中文</span></button>`)
     .replace('<button class="theme-btn" id="theme" type="button" aria-label="Switch to light mode"></button>',
       `<button class="theme-btn" id="theme" type="button" aria-label="Switch to light mode">${icons}<i hidden></i></button>`)
     .replace('id="motion" type="button"',
@@ -154,6 +154,7 @@ async function pageHtml({html, entries}) {
   const hints = priority => [...preload].filter(([, value]) => value === priority)
     .map(([path]) => `<link rel="modulepreload" href="${href(path)}">`).join('\n');
   const head = [
+    `<script>${staticCards[staticItems[0].id].leadingScript}</script>`,
     `<script type="module" src="${href(originals)}" fetchpriority="high"></script>`,
     `<style data-home-critical>${criticalCss.code.replaceAll('./fonts/', 'assets/fonts/')}ui-original-card{position:absolute;inset:0;container:original-card / size}${originalPalette}${firstPaintCss}</style>`,
     hints('high'),
@@ -167,15 +168,22 @@ async function pageHtml({html, entries}) {
     .replace(/<meta name="viewport"[^>]+>/,
     viewport => viewport + '<script>' + boot.code + '</script>' + head.join('\n'));
   if (html !== 'index.html') return page;
-  const cards = items.slice(0, initialCardCount).map(item => staticCard(item).replace(/>\s+</g, '><')).join('');
+  let group;
+  const cards = items.slice(0, initialCardCount).map(item => {
+    let heading = '';
+    if (group !== item.category) {
+      group = item.category;
+      const title = groupHeading(group);
+      heading = `<h2 class="ui-group-heading" data-group-heading="${group}"${zhAttr(title, groupHeading(group, zh))}>${esc(title)}</h2>`;
+    }
+    return heading + staticCard(item).replace(/>\s+</g, '><');
+  }).join('');
   const [introStart, introEnd] = zh('Explore {count} live UI examples.').split('{count}');
-  const heroName = items.find(item => item.id === 'jelly-pad').title;
   return initialToolbar(homeStyles(page).replace(dialogs, '')).replace('<!-- initial gallery cards -->', () => cards)
     .replace('<!-- gallery categories -->', () => categoryMarkup(items)
-      .replace(/<span class="category-label">([^<]+)/g, (_tag, text) => `<span class="category-label"${zhAttr(text, zh(text))}>${text}`))
+      .replace(/data-category="([^"]+)"([^>]+)><span class="category-label">([^<]+)/g, (_tag, id, attrs, text) => `data-category="${id}"${attrs}><span class="category-label"${zhAttr(text, groupHeading(id, zh))}>${text}`))
     .replace('Explore <span data-stat="total"></span> live UI examples.', () =>
       `<span data-zh="${esc(introStart)}">Explore </span><span data-stat="total"></span><span data-zh="${esc(introEnd)}"> live UI examples.</span>`)
-    .replace('<span>Try Jelly Cube</span>', () => `<span data-zh="${esc(zh('Try {name}', {name: heroName}))}">Try Jelly Cube</span>`)
     .replace(/(<[a-z][^>]* data-i18n="text"[^>]*)(>)([^<]+)/g, (original, start, end, text) => {
       const attribute = zhAttr(text, zh(text));
       return attribute ? start + attribute + end + text : original;

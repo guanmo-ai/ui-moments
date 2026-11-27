@@ -18,7 +18,6 @@ const chinese = {
   'Interactive UI Gallery': '界面交互图鉴',
   'Explore': '浏览',
   'Explore {count} live UI examples.': '体验 {count} 个可直接操作的 UI 示例。',
-  'Try {name}': '试试{name}',
   'UI components': 'UI 组件',
   'Filter by category': '按组件类别筛选',
   'Search UI': '搜索 UI',
@@ -35,6 +34,9 @@ const chinese = {
   'All UI': '全部 UI',
   'All': '全部',
   'Controls': '交互控件',
+  'Tap': '点按',
+  'Type': '输入',
+  'Color examples': '彩色',
   'Component': '组件',
   'Component variant': '组件变体',
   'Experimental component': '实验组件',
@@ -221,7 +223,7 @@ export function setupLanguage() {
     label.lang = target;
     label.textContent = target === 'en' ? 'EN' : '中文';
     button.title = translate(target === 'en' ? 'Switch to English' : 'Switch to Simplified Chinese');
-    button.setAttribute('aria-label', button.title);
+    button.setAttribute('aria-label', `${label.textContent} · ${button.title}`);
     document.dispatchEvent(new Event(changeEvent));
   }
 
