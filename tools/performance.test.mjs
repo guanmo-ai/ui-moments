@@ -45,7 +45,10 @@ test('发布版首页从 HTML 显示首批卡片和完整数量', async () => {
   assert.equal(previews.length, 18);
   assert.equal(previews[0][1], 'magnet-grid');
   assert.equal([...html.matchAll(/shadowrootmode="open"><style data-first-paint>/g)].length, previews.length);
-  assert.match(html, /<span data-stat="total">884<\/span>/);
+  assert.match(html, /<span data-stat="total">325<\/span>/);
+  const other = html.match(/id="other-feedback" data-catalog="([^"]+)"/)?.[1];
+  assert.match(other, /other-catalog-[A-Z0-9]{8}\.mjs$/);
+  assert.ok(!(await readFile(new URL(other, site), 'utf8')).includes('astryx-variant-'));
   // 首屏原创卡片以声明式 Shadow DOM 写入 HTML。A/B 中模拟手机首屏由
   // 297 ms 降至 125 ms。18 KiB 给当前 16.22 KiB 留出余量，同时限制以后无意增加体积。
   assert.ok(gzipSync(html).length <= 18 * 1024, '带静态卡片的首页 HTML 压缩后不超过 18 KiB');

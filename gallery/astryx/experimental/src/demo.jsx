@@ -18,7 +18,11 @@ const embedded = params.get('embed') === 'ui';
 if (!embedded) addEventListener('hashchange', () => location.reload());
 const sample = embedded ? params.get('sample') : location.hash.slice(1);
 const compact = params.get('preview') === 'card';
-const selected = canaryStories.find(([id]) => id === sample) || canaryStories[0];
+let selected = canaryStories.find(([id]) => id === sample);
+if (!selected) {
+  const {otherStories} = await import('../../other.mjs');
+  selected = otherStories.find(([id]) => id === sample) ?? otherStories[0];
+}
 const systemTheme = matchMedia('(prefers-color-scheme: light)');
 const modeForPage = () => embedded ? root.dataset.theme : (systemTheme.matches ? 'light' : 'dark');
 if (compact) root.dataset.fitPreview = '';

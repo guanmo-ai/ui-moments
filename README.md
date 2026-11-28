@@ -2,7 +2,7 @@
 
 # UI Moments · Interactive UI Gallery
 
-UI Moments is a hands-on gallery of interactive UI and motion, maintained by 观默 (Guanmo). The first release has 884 examples, and every card is live.
+UI Moments is a hands-on gallery of interactive UI and motion, maintained by 观默 (Guanmo). The main gallery has 144 featured works. Find 181 more examples under **Other** or in search.
 
 ## What's in the gallery
 
@@ -15,7 +15,8 @@ UI Moments is a hands-on gallery of interactive UI and motion, maintained by 观
 | [Form inputs](gallery/originals/inputs.html) | Stroke Checklist, Pebble Rating, Notch Slider, Strength Meter, Chip Input, Plan Picker |
 | [Color controls](gallery/originals/color.html) | Hue Orbit, Pull Cord Lamp, Flip Coin |
 | Original loaders | Paper Fold, Signal Return, and 16 other loaders with adjustable parameters and HTML or JSX export |
-| Component examples | 830 live examples covering drawers, forms, menus, data grids, charts, schedules, code editors, and more |
+| Featured component examples | 90 live demos, including drawers, menus, data grids, charts, schedules, and code editors |
+| Other | 181 more component examples, loaded when opened or searched |
 
 ![UI Moments gallery in dark mode](docs/gallery-preview.png)
 

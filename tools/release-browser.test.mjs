@@ -7,13 +7,14 @@ import {test} from 'node:test';
 import {runInNewContext} from 'node:vm';
 import {chromium, webkit} from 'playwright';
 import {fluentWorks} from '../gallery/fluent-ui/catalog.mjs';
+import {otherFluentWorks} from '../gallery/fluent-ui/other.mjs';
 import {astryxWorks} from '../gallery/astryx/catalog.mjs';
 import {originalLoaders} from '../gallery/loaders/originals.mjs';
-import {buildCatalog, categories, initialCardCount, usesTextEntry} from '../assets/catalog.mjs';
+import {buildCatalog, categories, galleryHighlights, initialCardCount, usesTextEntry} from '../assets/catalog.mjs';
 import {remainingScenarios} from '../gallery/fluent-ui/tools/browser-scenarios.mjs';
 import {monitor, revealGalleryCards, startServer} from './browser-site.mjs';
 
-test('图鉴首页默认黑色、收录 884 个示例，支持筛选、试玩和导出', {timeout: 40_000}, async t => {
+test('图鉴首页默认黑色、收录 325 个示例，支持筛选、试玩和导出', {timeout: 40_000}, async t => {
   const site = await startServer(t);
   const browser = await chromium.launch();
   t.after(() => browser.close());
@@ -23,7 +24,7 @@ test('图鉴首页默认黑色、收录 884 个示例，支持筛选、试玩和
   await page.goto(site);
   await page.locator('html[data-ready="true"]').waitFor();
   assert.equal(await page.locator('html').getAttribute('data-theme'), 'dark');
-  assert.equal(await page.locator('[data-stat="total"]').textContent(), '884');
+  assert.equal(await page.locator('[data-stat="total"]').textContent(), '325');
   const card = id => page.locator(`[data-ui="${id}"]`);
   assert.ok(await card('magnet-grid').isVisible());
   const ink = card('ink-switch').locator('[data-original-card]').getByRole('switch', {name: 'Ink Switch'});
@@ -224,7 +225,7 @@ test('小屏能看到首批卡片，键盘能退出详情，空态能恢复浏�
   const reset = page.locator('#reset-filters');
   await reset.waitFor();
   await reset.click();
-  await page.waitForFunction(() => document.querySelector('#ui-count').textContent.includes('884'));
+  await page.waitForFunction(() => document.querySelector('#ui-count').textContent.includes('73'));
   assert.equal(await search.inputValue(), '');
   assert.equal(await search.evaluate(node => node === document.activeElement), true);
 
@@ -436,7 +437,7 @@ test('其余 48 个 Fluent UI 示例在手机卡片尺寸下可交互', { timeou
 
   const exercises = {...scenarios, ...remainingScenarios};
   const coveredInGallery = new Set(['drawer', 'teaching-popover', 'toast']);
-  const expected = fluentWorks.map(work => new URL(work.demo, site).searchParams.get('sample'))
+  const expected = [...fluentWorks, ...otherFluentWorks].map(work => new URL(work.demo, site).searchParams.get('sample'))
     .filter(sample => !coveredInGallery.has(sample));
   assert.deepEqual(new Set(Object.keys(exercises)), new Set(expected));
   for (const [sample, exercise] of Object.entries(exercises)) {
@@ -579,26 +580,26 @@ test('全部按点按、拖动、输入、彩色和加载动效分组，初始�
   const cards = page.locator('#ui-grid > article:not([hidden])');
   const headings = page.locator('[data-group-heading]:not([hidden])');
   assert.equal(await cards.count(), initialCardCount);
-  assert.equal(await page.locator('#ui-count[aria-live="polite"]').textContent(), '884 components');
+  assert.equal(await page.locator('#ui-count[aria-live="polite"]').textContent(), '73 components');
   await revealGalleryCards(page);
   const all = await fullCatalog();
-  const groups = categories.slice(1).map(({id}) => id);
-  const order = await cards.evaluateAll(rows => rows.map(row => row.dataset.category));
-  assert.equal(order.length, 884);
-  assert.deepEqual(order, groups.flatMap(id => Array(all.filter(item => item.category === id).length).fill(id)));
+  const groups = categories.slice(1, -1).map(({id}) => id);
+  const overviewIds = await cards.evaluateAll(rows => rows.map(row => row.dataset.ui));
+  assert.deepEqual(overviewIds, galleryHighlights(all).map(item => item.id));
+  assert.ok(!overviewIds.includes('astryx-command-palette'));
+  assert.ok(overviewIds.includes('astryx-date-time-input'));
   assert.deepEqual(await headings.evaluateAll(nodes => nodes.map(node => [node.dataset.groupHeading, node.nextElementSibling.dataset.category])),
     groups.map(id => [id, id]));
-  assert.deepEqual(await page.locator('#categories .category-count').allTextContents(), ['884', '707', '23', '118', '6', '30']);
+  assert.deepEqual(await page.locator('#categories .category-count').allTextContents(), ['144', '91', '12', '15', '5', '21', '181']);
+  assert.deepEqual(await page.locator('[data-view-all]').allTextContents(),
+    ['View all 91', 'View all 15']);
   const items = new Map(all.map(item => [item.id, item]));
   const fixtures = {
-    tap: ['plan-picker', 'magnet-grid', 'fluent-dropdown', 'astryx-calendar', 'astryx-selector',
-      'astryx-variant-hooks-use-typeahead-hook-usage'],
-    type: ['code-shake', 'chip-input', 'strength-meter', 'fluent-input', 'fluent-searchbox',
-      'fluent-combobox', 'astryx-date-range', 'astryx-text-area', 'astryx-variant-hooks-use-input-container-hook-usage',
-      'astryx-variant-multi-selector-multi-selector-searchable-multi-selector'],
-    drag: ['swipe-confirm', 'hold-confirm', 'elastic-string', 'fluent-slider', 'astryx-slider'],
+    tap: ['plan-picker', 'magnet-grid', 'fluent-dropdown', 'astryx-calendar'],
+    type: ['code-shake', 'chip-input', 'strength-meter', 'fluent-searchbox', 'fluent-combobox', 'astryx-date-range'],
+    drag: ['swipe-confirm', 'hold-confirm', 'elastic-string', 'fluent-slider', 'astryx-resizable'],
     color: ['hue-orbit', 'flip-coin', 'pull-cord'],
-    loading: ['paper-fold', 'astryx-spinner'],
+    loading: ['paper-fold', 'fluent-spinner'],
   };
   for (const [group, ids] of Object.entries(fixtures)) {
     for (const id of ids) assert.equal(items.get(id)?.category, group, id);
@@ -616,9 +617,10 @@ test('全部按点按、拖动、输入、彩色和加载动效分组，初始�
   await page.locator('#categories [data-category="loading"]').click();
   await revealGalleryCards(page);
   const loadingOrder = await cards.evaluateAll(rows => rows.map(row => row.dataset.ui));
-  assert.equal(loadingOrder.length, 30);
+  assert.equal(loadingOrder.length, 21);
   assert.deepEqual(loadingOrder.slice(0, 5), ['paper-fold', 'tide-ring', 'pixel-snake', 'orbit-pair', 'signal-return']);
-  assert.ok(loadingOrder.indexOf('astryx-spinner') < loadingOrder.indexOf('fluent-skeleton'));
+  assert.ok(loadingOrder.indexOf('fluent-spinner') < loadingOrder.indexOf('fluent-skeleton'));
+  assert.ok(loadingOrder.indexOf('fluent-skeleton') < loadingOrder.indexOf('draft-card'));
   assert.ok(loadingOrder.indexOf('draft-card') > loadingOrder.indexOf('flip-tile'));
   assert.equal(loadingOrder.at(-1), 'astryx-lab-reasoning');
   await page.locator('#shapes [data-shape="States"]').click();
@@ -642,10 +644,128 @@ test('滚动目标暂时留在视口之外时，卡片检查仍能推进到下�
   });
   await page.goto(site);
   await page.locator('html[data-ready="true"]').waitFor();
-  const next = (await fullCatalog())[initialCardCount];
+  const next = galleryHighlights(await fullCatalog())[initialCardCount];
   await revealGalleryCards(page, next.id);
   assert.equal(await page.evaluate(() => window.missedGalleryScroll), true);
   assert.equal(await page.locator(`[data-ui="${next.id}"]:not([hidden])`).count(), 1);
+});
+
+const otherCatalogRequest = /\/other-catalog-[A-Z0-9]{8}\.mjs(?:\?|$)/;
+
+test('查看全部、其他与跨分区搜索支持点击、键盘和触屏', {timeout: 45_000}, async t => {
+  const site = await startServer(t);
+  const browser = await chromium.launch();
+  t.after(() => browser.close());
+  for (const mode of ['click', 'keyboard', 'touch']) {
+    const touch = mode === 'touch';
+    const page = await browser.newPage({
+      locale: 'en-US', hasTouch: touch, isMobile: touch, reducedMotion: 'reduce',
+      viewport: touch ? {width: 390, height: 844} : {width: 1280, height: 900},
+    });
+    const requests = [];
+    page.on('request', request => {
+      if (otherCatalogRequest.test(request.url())) requests.push(request.url());
+    });
+    const activate = button => mode === 'keyboard' ? button.press('Enter') :
+      touch ? button.tap() : button.click();
+    try {
+      await page.goto(site);
+      await page.locator('html[data-ready="true"]').waitFor();
+      assert.equal(await page.locator('#categories [data-category="other"] .category-count').textContent(), '181');
+      if (touch) assert.ok(await page.locator('#categories').evaluate(node => node.scrollWidth <= node.clientWidth));
+      await revealGalleryCards(page);
+      assert.equal(requests.length, 0, mode);
+      assert.equal(await page.locator('#ui-grid [data-category="other"]').count(), 0, mode);
+
+      await activate(page.locator('[data-view-all="tap"]'));
+      assert.equal(await page.locator('#categories [data-category="tap"]').getAttribute('aria-pressed'), 'true');
+      assert.equal(await page.locator('[data-ui="magnet-grid"]').evaluate(node => node === document.activeElement), true);
+      const toolbar = await page.locator('.gallery-toolbar').boundingBox();
+      assert.ok(toolbar.y >= 0 && toolbar.y < 100, JSON.stringify(toolbar));
+      await revealGalleryCards(page);
+      assert.equal(await page.locator('#ui-grid article:not([hidden])').count(), 91);
+      assert.equal(await page.locator('[data-view-all]:visible').count(), 0);
+
+      const all = page.locator('#categories [data-category="all"]');
+      const other = page.locator('#categories [data-category="other"]');
+      const search = page.getByRole('searchbox');
+      const enterSearch = async () => {
+        if (touch) await search.tap();
+        else if (mode === 'keyboard') await page.keyboard.press('/');
+        else await search.click();
+        await page.keyboard.type('calendar');
+        await page.locator('[data-ui="astryx-date-input"]').waitFor();
+        const groups = await page.locator('#ui-grid > article:not([hidden])').evaluateAll(nodes => nodes.map(node => node.dataset.category));
+        assert.notEqual(groups[0], 'other');
+        assert.equal(groups.at(-1), 'other');
+        assert.equal(await page.locator('[data-view-all]:visible').count(), 0);
+      };
+      const openOther = async () => {
+        await activate(other);
+        await page.locator('[data-ui="fluent-input"]').waitFor();
+        assert.equal(await page.locator('#ui-grid article:not([hidden]):not([data-category="other"])').count(), 0);
+        await activate(all);
+        assert.equal(await page.locator('#ui-grid article[data-category="other"]:visible').count(), 0);
+      };
+      await activate(all);
+      if (mode === 'click') {
+        await enterSearch();
+        await search.clear();
+        await openOther();
+      } else {
+        await openOther();
+        await enterSearch();
+      }
+      assert.equal(requests.length, 1, mode);
+    } finally {
+      await page.close();
+    }
+  }
+});
+
+test('其他目录失败可重试，保留收藏和可用的直达链接', {timeout: 30_000}, async t => {
+  const site = await startServer(t);
+  const browser = await chromium.launch();
+  t.after(() => browser.close());
+  const page = await browser.newPage({locale: 'en-US', reducedMotion: 'reduce'});
+  const removed = 'astryx-variant-checkbox-list-checkbox-list-select-all-pattern';
+  const requests = [];
+  let unblock;
+  const hold = new Promise(resolve => { unblock = resolve; });
+  t.after(unblock);
+  await page.addInitScript(ids => localStorage.setItem('ui-moments-favorites', JSON.stringify(ids)),
+    [removed, 'fluent-input', 'magnet-grid']);
+  await page.route(otherCatalogRequest, async route => {
+    requests.push(route.request().url());
+    if (requests.length === 1) {
+      await hold;
+      await route.abort();
+    } else await route.continue();
+  });
+  await page.goto(site + '#' + removed);
+  await page.waitForURL(site);
+  assert.equal(await page.locator('dialog[open]').count(), 0);
+  assert.equal(requests.length, 0);
+
+  await page.locator('#gallery-favorites').click();
+  await page.getByText('Loading other components…').waitFor();
+  assert.equal(await page.locator('#ui-count').textContent(), '1 components');
+  unblock();
+  const retry = page.getByRole('button', {name: 'Retry loading'});
+  await retry.waitFor();
+  await retry.press('Enter');
+  await page.locator('[data-ui="fluent-input"]:visible').waitFor();
+  assert.equal(await page.locator('#ui-count').textContent(), '2 components');
+  assert.equal(await page.locator('[data-view-all]:visible').count(), 0);
+  assert.equal(requests.length, 2);
+  assert.notEqual(requests[0], requests[1]);
+  assert.equal(await page.locator('#other-feedback').isVisible(), false);
+
+  const direct = await browser.newPage({locale: 'en-US', reducedMotion: 'reduce'});
+  await direct.goto(site + '#fluent-input');
+  await direct.locator('#component-detail[open]').waitFor();
+  assert.equal(await direct.locator('#component-title').textContent(), 'Text Input');
+  assert.equal(await direct.locator('#ui-grid [data-category="other"]').count(), 0);
 });
 
 test('尚未挂载的加载动效可分享直达、搜索和收藏', {timeout: 30_000}, async t => {
@@ -780,7 +900,7 @@ test('Teaching Popover 和 Toast 的宽卡片支持直接试玩', {timeout: 30_0
   }
 });
 
-test('Astryx 新示例可全选表单、拖选图表和进入实验导航的下一层', { timeout: 30_000 }, async t => {
+test('Astryx 示例支持拖选图表和进入实验导航的下一层', { timeout: 30_000 }, async t => {
   const site = await startServer(t);
   const browser = await chromium.launch();
   t.after(() => browser.close());
@@ -792,11 +912,6 @@ test('Astryx 新示例可全选表单、拖选图表和进入实验导航的下�
     assert.ok(sample, key);
     return page.goto(new URL(sample.demo, site).href);
   };
-
-  await open('variant-checkbox-list-checkbox-list-select-all-pattern');
-  const all = page.getByRole('checkbox', {name: 'Select all'});
-  await all.press('Space');
-  assert.ok(await page.getByRole('checkbox', {name: 'Invoices'}).isChecked());
 
   await open('chart-brush-line');
   const brush = page.locator('svg rect[style*="crosshair"]');

@@ -11,8 +11,10 @@ export const categories = [
   {id: 'type', name: 'Type'},
   {id: 'color', name: 'Color'},
   {id: 'loading', name: 'Loading'},
+  {id: 'other', name: 'Other'},
 ];
-const groupOrder = categories.slice(1);
+const groupOrder = categories.slice(1, -1);
+export const otherCount = 181;
 const categoryNames = new Map(categories.map(({id, name}) => [id, name]));
 const searchIndex = new WeakMap();
 
@@ -53,23 +55,8 @@ const textEntryFamilies = new Set([
   'EmojiPicker', 'Field', 'FieldStatus', 'FormLayout', 'InputGroup', 'ListInput', 'NumberInput',
   'PowerSearch', 'TextArea', 'TextInput', 'TimeInput', 'Tokenizer', 'Typeahead',
 ]);
-// 同一家族有不同玩法时，只把实际带文字字段的演示移到文字段。
-const textEntryExamples = new Set([
-  'fluent-tag-picker',
-  'astryx-variant-complex-selector-complex-selector-tree-search',
-  'astryx-variant-dialog-dialog-form-dialog',
-  'astryx-variant-hooks-use-announce-hook-usage',
-  'astryx-variant-hooks-use-hotkeys-hook-usage',
-  'astryx-variant-hooks-use-input-container-hook-usage',
-  'astryx-variant-hooks-use-merged-refs-hook-usage',
-  'astryx-variant-multi-selector-multi-selector-column-visibility-selector',
-  'astryx-variant-multi-selector-multi-selector-searchable-multi-selector',
-  'astryx-variant-multi-selector-use-multi-combobox-hook-usage',
-  'astryx-variant-selector-use-combobox-hook-usage',
-]);
-
 export function usesTextEntry(item) {
-  return textEntryTypes.has(item.type) || textEntryFamilies.has(item.family) || textEntryExamples.has(item.id);
+  return textEntryTypes.has(item.type) || textEntryFamilies.has(item.family) || item.id === 'fluent-tag-picker';
 }
 
 // 按预览的主要玩法分组。独立色彩作品与颜色选择归彩色，独立加载示例归加载动效。
@@ -79,14 +66,12 @@ const dragTypes = new Set(['Drag', 'Dial', 'Slider']);
 const dragFamilies = new Set(['Slider', 'Resizable', 'createDragToSnapPoints', 'useDragToSnapPoints', 'usePanGesture']);
 const dragExamples = new Set([
   'swipe-confirm', 'hold-confirm', 'pull-refresh', 'scrub-wave',
-  'astryx-variant-table-column-resize-hook-usage',
 ]);
 const loadingFamilies = new Set(['Skeleton', 'Spinner', 'ChatReasoning']);
 
 function playCategory(item) {
-  if (item.vivid || ['Color', 'Color picker'].includes(item.type) || item.id === 'astryx-variant-hooks-use-grid-focus-hook-usage') return 'color';
-  if (item.loader || item.type === 'Loading state' || loadingFamilies.has(item.family) ||
-    item.id === 'astryx-variant-aspect-ratio-aspect-ratio-with-skeleton') return 'loading';
+  if (item.vivid || ['Color', 'Color picker'].includes(item.type)) return 'color';
+  if (item.loader || item.type === 'Loading state' || loadingFamilies.has(item.family)) return 'loading';
   if (dragExamples.has(item.id) || dragTypes.has(item.type) || dragFamilies.has(item.family)) return 'drag';
   return usesTextEntry(item) ? 'type' : 'tap';
 }
@@ -137,7 +122,7 @@ export function standaloneExamplePath(item) {
 
 export function categoryMarkup(items) {
   return categories.map(({id}) => {
-    const count = id === 'all' ? items.length : items.filter(item => item.category === id).length;
+    const count = id === 'all' ? items.length : id === 'other' ? otherCount : items.filter(item => item.category === id).length;
     return `<button type="button" data-category="${id}" aria-pressed="${id === 'all'}"><span class="category-label">${escape(groupHeading(id))}</span><span class="category-count">${count}</span></button>`;
   }).join('');
 }
@@ -153,7 +138,7 @@ function humanizeIdentifier(name = '') {
 }
 
 export function kindLabel(item, t = translate) {
-  const generic = /^(?:Component|Component variant|Experimental component)$/.test(item.type ?? '');
+  const generic = /^(?:Component|Experimental component)$/.test(item.type ?? '');
   const family = item.family && humanizeIdentifier(item.family);
   // 标题里已经有组件名时不再重复，改用类型。
   const repeats = family && item.en?.toLowerCase().startsWith(family.toLowerCase());
@@ -215,6 +200,20 @@ export function buildCatalog(works = []) {
     const group = result.filter(item => item.category === id);
     if (id === 'loading') return group.sort((a, b) => loadingPreviewOrder(a) - loadingPreviewOrder(b));
     return [...group.filter(item => item.original), ...group.filter(item => !item.original)];
+  });
+}
+
+const staticCardPreviews = new Set([
+  'astryx-bottom-sheet', 'astryx-bottom-sheet-switcher', 'astryx-command-palette', 'fluent-dialog',
+]);
+
+export function galleryHighlights(items) {
+  return groupOrder.flatMap(({id}) => {
+    const group = items.filter(item => item.category === id);
+    return [
+      ...group.filter(item => !item.library),
+      ...group.filter(item => item.library && !staticCardPreviews.has(item.id)).slice(0, 6),
+    ];
   });
 }
 

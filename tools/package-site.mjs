@@ -4,7 +4,7 @@ import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { runInNewContext } from 'node:vm';
 import { build, transform } from 'esbuild';
-import { buildCatalog, cardMarkup, categoryMarkup, groupHeading, initialCardCount, kindLabel, standaloneExamplePath } from '../assets/catalog.mjs';
+import { buildCatalog, cardMarkup, categoryMarkup, galleryHighlights, groupHeading, initialCardCount, kindLabel, otherCount, standaloneExamplePath } from '../assets/catalog.mjs';
 import {translate} from '../assets/locale.mjs';
 import {themeIcons} from '../assets/site.mjs';
 import {escapeHtml as esc} from '../gallery/loaders/snippets.mjs';
@@ -34,33 +34,38 @@ function projectLinks(html) {
 const publicFiles = new Set([
   'index.html', 'LICENSE', 'CREDITS.md', '.nojekyll',
 ]);
+const otherEntry = 'assets/other-catalog.mjs';
 const pages = [
   {html: 'index.html', entries: ['assets/original-cards.mjs', 'assets/gallery.mjs']},
 ];
 const homepage = projectLinks(readFileSync(join(root, 'index.html'), 'utf8'));
 const dialogs = /<!-- gallery dialogs -->([\s\S]*?)<!-- \/gallery dialogs -->/;
 if (!dialogs.test(homepage)) throw new Error('找不到图鉴详情模板');
-const scripts = await build({
+const bundleOptions = {
   absWorkingDir: root,
   define: {
     __UI_MOMENTS_DIALOGS__: JSON.stringify(homepage.match(dialogs)[1]),
     __PUBLISHED_PREVIEWS__: 'true',
   },
-  entryPoints: pages.flatMap(({entries}) => entries),
   outbase: root,
   outdir: output,
   outExtension: {'.js': '.mjs'},
   entryNames: '[dir]/[name]-[hash]',
   chunkNames: 'assets/modules/[name]-[hash]',
   bundle: true,
-  splitting: true,
   format: 'esm',
   target: 'es2022',
   minify: true,
   legalComments: 'inline',
   metafile: true,
   write: false,
-});
+};
+// Give the lazy catalog a self-contained file so it does not add a shared
+// dependency to the first screen and retry can fetch the entire module again.
+const [scripts, otherScript] = await Promise.all([
+  build({...bundleOptions, entryPoints: pages.flatMap(({entries}) => entries), splitting: true}),
+  build({...bundleOptions, entryPoints: [otherEntry]}),
+]);
 const moduleFiles = new Map(Object.entries(scripts.metafile.outputs));
 const window = {};
 runInNewContext(readFileSync(join(root, 'gallery/works.js'), 'utf8'), {window});
@@ -168,8 +173,9 @@ async function pageHtml({html, entries}) {
     .replace(/<meta name="viewport"[^>]+>/,
     viewport => viewport + '<script>' + boot.code + '</script>' + head.join('\n'));
   if (html !== 'index.html') return page;
+  const [other] = Object.keys(otherScript.metafile.outputs);
   let group;
-  const cards = items.slice(0, initialCardCount).map(item => {
+  const cards = galleryHighlights(items).slice(0, initialCardCount).map(item => {
     let heading = '';
     if (group !== item.category) {
       group = item.category;
@@ -180,6 +186,7 @@ async function pageHtml({html, entries}) {
   }).join('');
   const [introStart, introEnd] = zh('Explore {count} live UI examples.').split('{count}');
   return initialToolbar(homeStyles(page).replace(dialogs, '')).replace('<!-- initial gallery cards -->', () => cards)
+    .replace('id="other-feedback"', `id="other-feedback" data-catalog="${href(other)}"`)
     .replace('<!-- gallery categories -->', () => categoryMarkup(items)
       .replace(/data-category="([^"]+)"([^>]+)><span class="category-label">([^<]+)/g, (_tag, id, attrs, text) => `data-category="${id}"${attrs}><span class="category-label"${zhAttr(text, groupHeading(id, zh))}>${text}`))
     .replace('Explore <span data-stat="total"></span> live UI examples.', () =>
@@ -195,7 +202,7 @@ async function pageHtml({html, entries}) {
         ? `<${head} data-i18n="${field}" data-zh-${field}="${esc(translation)}"${tail}>`
         : tag;
     })
-    .replace('<span data-stat="total"></span>', `<span data-stat="total">${items.length}</span>`)
+    .replace('<span data-stat="total"></span>', `<span data-stat="total">${items.length + otherCount}</span>`)
     .replace(/<!--[^]*?-->/g, '').replace(/>[ \t]*\n[ \t\n]*</g, '><');
 }
 
@@ -237,7 +244,7 @@ function copy(path) {
 
 rmSync(output, {recursive: true, force: true});
 for (const path of [...siteFiles, ...generated]) copy(path);
-for (const file of scripts.outputFiles) {
+for (const file of [...scripts.outputFiles, ...otherScript.outputFiles]) {
   mkdirSync(dirname(file.path), {recursive: true});
   writeFileSync(file.path, file.contents);
 }

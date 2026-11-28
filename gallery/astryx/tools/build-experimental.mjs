@@ -4,6 +4,7 @@ import {transformSync} from '@babel/core';
 import stylexPlugin from '@stylexjs/babel-plugin';
 import {build} from 'esbuild';
 import {canaryStories} from '../experimental/stories.mjs';
+import {otherStories} from '../other.mjs';
 import {writeBundle} from './write-bundle.mjs';
 
 const root = resolve(import.meta.dirname, '../experimental');
@@ -45,7 +46,7 @@ const stories = {
   setup(builder) {
     builder.onResolve({filter: /^\.\/canary-stories$/}, () => ({path: 'canary-stories', namespace: 'astryx'}));
     builder.onLoad({filter: /.*/, namespace: 'astryx'}, () => ({
-      contents: `export default new Map([${canaryStories.map(([key, , file, story]) =>
+      contents: `export default new Map([${[...canaryStories, ...otherStories].map(([key, , file, story]) =>
         `[${JSON.stringify(key)}, () => import(${JSON.stringify(`./vendor/astryx/apps/storybook/stories/${file}.stories.tsx`)}).then(m => ({meta: m.default, story: m[${JSON.stringify(story)}]}))]`).join(',')}]);`,
       resolveDir: root,
     }));

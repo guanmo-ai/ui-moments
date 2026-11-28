@@ -89,11 +89,6 @@ body {
 }
 [data-fit-preview] .showcase:not([data-preview-fit="ready"]) { visibility: hidden; }
 /* 只缩放表格的滚动视口，横向滚动仍能访问虚拟化的列。 */
-[data-fit-preview] [data-sample="variant-table-columns-virtualization-hook-usage"] .showcase > * {
-  width: 100%;
-  min-width: 0;
-  max-height: 220px;
-}
 
 [data-gallery-active="false"] :where(*, *::before, *::after) {
   animation-duration: 0.01ms !important;

@@ -1,7 +1,7 @@
 import '../gallery/works.js';
 import {setupSite,setupGalleryFavorites,showLoadingAccent,foreground,embedUrl} from './site.mjs';
 import {localizedText,onLanguageChange,translate as t} from './locale.mjs';
-import {buildCatalog,cardMarkup,categories,categoryMarkup,groupHeading,getCategoryFilters,initialCardCount,matches,standaloneExamplePath,workHeading,kindLabel} from './catalog.mjs';
+import {buildCatalog,cardMarkup,categories,categoryMarkup,galleryHighlights,groupHeading,getCategoryFilters,initialCardCount,matches,otherCount,standaloneExamplePath,workHeading,kindLabel} from './catalog.mjs';
 import {previewProps} from '../gallery/loaders/catalog.mjs';
 import {escapeHtml as esc} from '../gallery/loaders/snippets.mjs';
 import {createLoaderPreview,setPreviewPlaying} from '../gallery/loaders/preview.mjs';
@@ -27,8 +27,15 @@ const componentPreviewFeedback=$('#component-preview-feedback'),componentPreview
 const componentRetry=$('#component-retry');
 const categoryButtons=$('#categories'),shapeButtons=$('#shapes');
 const motionButton=$('#motion'),empty=$('#empty');
-const items=buildCatalog(window.WORKS||[]);
+const otherFeedback=$('#other-feedback'),otherStatus=$('#other-status'),otherRetry=$('#other-retry');
+const featured=buildCatalog(window.WORKS||[]);
+const items=[...featured];
 const itemsById=new Map(items.map(item=>[item.id,item]));
+const highlights=galleryHighlights(featured);
+const truncatedGroups=new Set(featured.map(item=>item.category)
+  .filter(id=>highlights.filter(item=>item.category===id).length<featured.filter(item=>item.category===id).length));
+const viewAllButtons=new Map();
+let otherItems=[],otherState,otherHash,otherAttempts=0,showHighlights=false;
 const reduced=matchMedia('(prefers-reduced-motion:reduce)');
 const search=$('#work-search');
 const params=new URLSearchParams(location.search);
@@ -49,6 +56,50 @@ let browseUrlTimer;
 let lastScrollY=scrollY,lastScrollTime=performance.now();
 const favorites=setupGalleryFavorites(filter);
 const resourceLoads=new Map();
+
+function mayBeOther(id){
+  return /^(?:astryx|fluent)-/.test(id)&&!id.startsWith('astryx-variant-')&&!itemsById.has(id);
+}
+
+function localizeOtherFeedback(){
+  otherRetry.textContent=t('Retry loading');
+  otherStatus.textContent=t(otherState==='failed'?'Could not load other components.':'Loading other components…');
+}
+
+function updateOtherFeedback(needed){
+  otherFeedback.hidden=!needed||!otherState||otherState==='ready';
+  otherRetry.hidden=otherState!=='failed';
+  if(!otherFeedback.hidden)localizeOtherFeedback();
+}
+
+async function loadOther(){
+  const path=otherFeedback.dataset.catalog;
+  const url=new URL(path||'./other-catalog.mjs',path?document.baseURI:import.meta.url);
+  // A failed module fetch is cached by URL. Retry the same file with a fresh URL.
+  if(otherAttempts)url.searchParams.set('retry',otherAttempts);
+  otherAttempts++;
+  otherState='loading';
+  try{
+    ({otherWorks:otherItems}=await import(url.href));
+    for(const item of otherItems){
+      items.push(item);
+      itemsById.set(item.id,item);
+    }
+    otherState='ready';
+  }catch{
+    otherState='failed';
+  }
+  filter();
+  if(otherState==='ready'&&otherHash)fromHash();
+}
+
+otherRetry.addEventListener('click',()=>{
+  const target=search.value.trim()?search:categoryButtons.querySelector('[aria-pressed="true"]');
+  target.focus({preventScroll:true});
+  void loadOther();
+  updateOtherFeedback(true);
+});
+
 function loadOnce(key,load){
   if(!resourceLoads.has(key)){
     resourceLoads.set(key,load().catch(error=>{
@@ -198,7 +249,7 @@ function fillWideRows(){
 addEventListener('resize',fillWideRows);
 
 const intro=$('#gallery-intro');
-intro.querySelector('[data-stat="total"]').textContent=items.length;
+intro.querySelector('[data-stat="total"]').textContent=featured.length+otherCount;
 function localizeIntro(){
   const [before,after]=t('Explore {count} live UI examples.').split('{count}');
   intro.firstChild.textContent=before;
@@ -212,6 +263,7 @@ else if(root.lang!=='en')localizeCategories();
 function localizeCategories(){
   for(const {id} of categories)categoryButtons.querySelector(`[data-category="${id}"] .category-label`).textContent=groupHeading(id);
   for(const [id,heading] of headings)heading.textContent=groupHeading(id);
+  for(const button of viewAllButtons.values())localizeViewAll(button);
 }
 
 
@@ -559,6 +611,12 @@ function setCardVisibility(card,visible){
   updateCard(card);
 }
 
+function localizeViewAll(button){
+  const count=button.dataset.count;
+  button.textContent=t('View all {count}',{count});
+  button.setAttribute('aria-label',t('View all {count} · {category}',{count,category:groupHeading(button.dataset.viewAll)}));
+}
+
 function syncHeadings(){
   const visible=new Set();
   if(category==='all'){
@@ -578,6 +636,26 @@ function syncHeadings(){
     }
   }
   for(const [id,heading] of headings)heading.hidden=!visible.has(id);
+  const completed=new Set();
+  if(showHighlights){
+    for(const [index,{item,element}] of visibleCards.entries()){
+      const id=item.category;
+      // 分区已经全部展示时，不再提供只会重复当前内容的入口。
+      if(results[index+1]?.category===id||!truncatedGroups.has(id))continue;
+      let button=viewAllButtons.get(id);
+      if(!button){
+        button=document.createElement('button');
+        button.type='button';
+        button.dataset.viewAll=id;
+        button.dataset.count=categoryButtons.querySelector(`[data-category="${id}"] .category-count`).textContent;
+        localizeViewAll(button);
+        viewAllButtons.set(id,button);
+      }
+      completed.add(id);
+      if(element.nextElementSibling!==button)element.after(button);
+    }
+  }
+  for(const [id,button] of viewAllButtons)button.hidden=!completed.has(id);
 }
 
 const canTrackLight=matchMedia('(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)');
@@ -615,6 +693,21 @@ grid.addEventListener('pointermove',event=>{
 grid.addEventListener('pointerleave',()=>queueLight(null));
 canTrackLight.addEventListener('change',()=>queueLight(null));
 
+function syncLoaderOrder(){
+  // The overview moves loading states ahead of component previews.
+  // Move the original loader cards so any mounted component iframes stay in place.
+  for(const [index,{item,element}] of visibleCards.entries()){
+    if(!item.loader)continue;
+    const before=visibleCards[index-1]?.element;
+    const after=visibleCards[index+1]?.element;
+    if(after&&(element.compareDocumentPosition(after)&Node.DOCUMENT_POSITION_PRECEDING)){
+      after.before(element);
+    }else if(before&&(element.compareDocumentPosition(before)&Node.DOCUMENT_POSITION_FOLLOWING)){
+      before.after(element);
+    }
+  }
+}
+
 function appendCards(){
   const batch=results.slice(visibleCards.length,visibleCards.length+initialCardCount);
   if(!batch.length)return;
@@ -624,6 +717,7 @@ function appendCards(){
     visibleCards.push(card);
     setCardVisibility(card,true);
   }
+  syncLoaderOrder();
   galleryEnd.hidden=visibleCards.length===results.length;
   if(!galleryEnd.hidden){
     galleryObserver.unobserve(galleryEnd);
@@ -634,8 +728,14 @@ function appendCards(){
 }
 
 function filter(){
-  const query=search.value;
-  const inScope=items.filter(item=>
+  const query=search.value.trim();
+  const needsOther=category==='other'||Boolean(query)||Boolean(otherHash)||
+    (favorites.only&&favorites.some(mayBeOther));
+  if(needsOther&&!otherState)void loadOther();
+  updateOtherFeedback(needsOther);
+  const unfiltered=!query&&!favorites.only;
+  showHighlights=unfiltered&&category==='all';
+  const inScope=unfiltered?featured:items.filter(item=>
     matches(item,{query})&&(!favorites.only||favorites.has(item.id)));
   const counts=new Map();
   for(const {category:id} of inScope)counts.set(id,(counts.get(id)||0)+1);
@@ -643,17 +743,19 @@ function filter(){
     const id=button.dataset.category;
     setPressed(button,id===category);
     const label=button.querySelector('.category-count');
-    const count=String(id==='all'?inScope.length:counts.get(id)||0);
+    const count=String(id==='all'?inScope.length:id==='other'&&unfiltered?otherCount:counts.get(id)||0);
     if(label.textContent!==count)label.textContent=count;
   }
   for(const button of shapeButtons.children)setPressed(button,button.dataset.shape===shape);
-  results=inScope.filter(item=>(category==='all'||item.category===category)&&(shape==='all'||item.shape===shape));
+  if(showHighlights)results=highlights;
+  else if(unfiltered&&category==='other')results=otherItems;
+  else results=inScope.filter(item=>(category==='all'||item.category===category)&&(shape==='all'||item.shape===shape));
   const firstIds=new Set(results.slice(0,initialCardCount).map(item=>item.id));
   for(const card of cards.values())setCardVisibility(card,firstIds.has(card.item.id));
   visibleCards=[];
   resultCount=results.length;
   grid.toggleAttribute('data-wide-only',resultCount>0&&results.every(item=>item.previewSize));
-  empty.hidden=resultCount!==0;
+  empty.hidden=resultCount!==0||!otherFeedback.hidden;
   galleryEnd.hidden=resultCount<=initialCardCount;
   localizeResults();
   appendCards();
@@ -673,6 +775,17 @@ function selectCategory(next){
 categoryButtons.addEventListener('click',event=>{
   const button=event.target.closest('[data-category]');
   if(button)selectCategory(button.dataset.category);
+});
+grid.addEventListener('click',event=>{
+  const button=event.target.closest('[data-view-all]');
+  if(!button)return;
+  selectCategory(button.dataset.viewAll);
+  const first=visibleCards[0]?.element;
+  if(first){
+    first.tabIndex=-1;
+    first.focus({preventScroll:true});
+  }
+  $('#works').scrollIntoView({block:'start',behavior:'instant'});
 });
 shapeButtons.addEventListener('click',event=>{
   const button=event.target.closest('[data-shape]');
@@ -1021,14 +1134,36 @@ function fromHash(){
     current.close();
     return;
   }
+  if(otherHash&&otherHash!==id){
+    otherHash=null;
+    filter();
+  }
   if(id==='loaders'){
     cancelOpening();
     selectCategory('loading');
     return;
   }
   const item=itemsById.get(id);
-  if(item)void openDetails(cards.get(id)??{item,detail:null});
-  else cancelOpening();
+  if(item){
+    if(otherHash){
+      otherHash=null;
+      filter();
+    }
+    void openDetails(cards.get(id)??{item,detail:null});
+    return;
+  }
+  cancelOpening();
+  if(id.startsWith('astryx-variant-')){
+    replaceLocation(location.pathname+location.search);
+  }else if(id&&mayBeOther(id)){
+    if(otherState==='ready'){
+      otherHash=null;
+      replaceLocation(location.pathname+location.search);
+    }else{
+      otherHash=id;
+    }
+    filter();
+  }
 }
 addEventListener('hashchange',fromHash);
 
@@ -1054,6 +1189,7 @@ onLanguageChange(()=>{
   localizeCategories();
   renderShapes();
   localizeResults();
+  localizeOtherFeedback();
   motionButton.textContent=t(playing?'Pause motion':'Play motion');
   for(const card of cards.values())localizeCard(card);
   if(componentDialog.open)localizeComponent();

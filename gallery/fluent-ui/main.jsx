@@ -142,7 +142,9 @@ const groups = {
 const params = new URLSearchParams(location.search);
 const sample = params.get('sample') ?? 'drawer';
 const cardPreview = params.get('embed') === 'ui' && params.get('preview') === 'card';
-const entry = fluentWorks.find(work => work.id === `fluent-${sample}`);
+const id = `fluent-${sample}`;
+const entry = fluentWorks.find(work => work.id === id) ??
+  (await import('./other.mjs')).otherFluentWorks.find(work => work.id === id);
 const interactivePreviews = {'teaching-popover': TeachingPopoverCard, toast: ToastCard};
 const interactivePreview = cardPreview && Object.hasOwn(interactivePreviews, sample);
 const Demo = interactivePreview ? interactivePreviews[sample] : Object.hasOwn(demos, sample) ? demos[sample] : entry ? lazy(async () => {

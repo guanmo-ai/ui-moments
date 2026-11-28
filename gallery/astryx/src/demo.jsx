@@ -102,7 +102,9 @@ const params = new URLSearchParams(location.search);
 const embedded = params.get('embed') === 'ui';
 if (!embedded) addEventListener('hashchange', () => location.reload());
 const key = (embedded ? params.get('sample') : location.hash.slice(1)) || 'date-range';
-const work = astryxWorks.find(item => item.id === `astryx-${key}`) || astryxWorks[0];
+const id = `astryx-${key}`;
+const work = astryxWorks.find(item => item.id === id) ??
+  (await import('../other.mjs')).otherAstryxWorks.find(item => item.id === id) ?? astryxWorks[0];
 const isCard = embedded && params.get('preview') === 'card';
 const CardPreview = isCard && cardPreviews.get(key);
 const fitPreview = isCard && work.fitPreview && !CardPreview;

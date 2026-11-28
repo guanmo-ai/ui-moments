@@ -1,11 +1,10 @@
 import {officialShowcases} from './showcases.mjs';
-import {officialVariants} from './variants.mjs';
 import {canary, canaryCommit, canaryStories} from './experimental/stories.mjs';
 
 const source = 'gallery/astryx';
 const upstream = 'https://github.com/meta/astryx/blob/0b48882df9c0bf8e49c8f7306737b6972c8dcd15/packages/cli/assets/templates/blocks/components';
 const library = {id: 'astryx', name: 'Astryx'};
-// 同一上游组件的展示和变体继承同一用途。开发工具仍可在全库中搜索。
+// 同一上游组件的展示使用相同的用途分类。
 const familiesByTask = {
   input: [
     'BaseTypeahead', 'Calendar', 'ChatComposer', 'ChatComposerDrawer', 'ChatComposerInput',
@@ -90,31 +89,20 @@ const showcasePreviewSizes = {
   table: 'wide',
 };
 
-// 上游变体标题形如「Alert Dialog · AlertDialog — Loading」，卡片只保留组件名和变体名；
-// 原标题仍放进标签，搜索结果不变。
-function variantTitle(title) {
-  const rest = title.split(' · ').at(-1);
-  const [name, ...label] = rest.split(/\s+—\s+|:\s+/);
-  const display = /^use[A-Z]/.test(name) ? name : name.replace(/([a-z\d])([A-Z])/g, '$1 $2');
-  return label.length ? `${display} — ${label.join(' — ')}` : display;
-}
-
-const coreWorks = [...officialShowcases, ...officialVariants].map(([key, rawTitle, template, summary]) => {
+export function officialWork([key, title, template, summary]) {
   const [family] = template.split('/');
-  const variant = key.startsWith('variant-');
-  const title = variant ? variantTitle(rawTitle) : rawTitle;
   const sourceHref = `${upstream}/${template}`;
   return {
     id: `astryx-${key}`,
     title,
     en: title,
-    type: variant ? 'Component variant' : 'Component',
+    type: 'Component',
     family,
     task: taskByFamily.get(family) ?? null,
     category: 'input',
     previewSize: showcasePreviewSizes[key],
     summary,
-    tags: ['Astryx', 'Open-source integration', ...(variant ? ['Variant', rawTitle] : [])],
+    tags: ['Astryx', 'Open-source integration'],
     demo: `${source}/dist/index.html#${key}`,
     source,
     sourcePath: `${source}/node_modules/@astryxdesign/cli/assets/templates/blocks/components/${template}`,
@@ -125,10 +113,10 @@ const coreWorks = [...officialShowcases, ...officialVariants].map(([key, rawTitl
     fitPreview: true,
     credit: {...credit, url: sourceHref, note: 'Official Astryx 0.7.17 example, embedded by UI Moments. MIT.'},
   };
-});
+}
 
 const experimentalSource = `${source}/experimental`;
-const canaryWorks = canaryStories.map(([key, title, story, sourceEntry, kind]) => {
+export function storyWork([key, title, story, sourceEntry, kind]) {
   const family = story.split('/').at(-1);
   const storyPath = `apps/storybook/stories/${story}.stories.tsx`;
   return {
@@ -140,7 +128,7 @@ const canaryWorks = canaryStories.map(([key, title, story, sourceEntry, kind]) =
     task: kind === 'chart' ? 'data' : taskByFamily.get(family) ?? null,
     category: 'input',
     previewSize: key === 'lab-transfer-list' || key.startsWith('lab-schedule-') ? 'large' : 'wide',
-    summary: `Official Astryx Storybook example from the ${canary} release.`,
+    summary: 'Storybook example.',
     tags: ['Astryx', 'Open-source integration', kind === 'chart' ? 'Chart' : 'Experimental'],
     demo: `${experimentalSource}/dist/index.html#${key}`,
     source: experimentalSource,
@@ -156,6 +144,6 @@ const canaryWorks = canaryStories.map(([key, title, story, sourceEntry, kind]) =
       note: `Official Astryx ${canary} Storybook example, embedded by UI Moments. MIT.`,
     },
   };
-});
+}
 
-export const astryxWorks = [...adapted, ...coreWorks, ...canaryWorks];
+export const astryxWorks = [...adapted, ...officialShowcases.map(officialWork), ...canaryStories.map(storyWork)];

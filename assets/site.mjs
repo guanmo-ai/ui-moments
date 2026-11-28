@@ -135,6 +135,7 @@ export function setupGalleryFavorites(onChange){
 
   return {
     has:id=>saved.has(id),
+    some:predicate=>[...saved].some(predicate),
     get only(){return only;},
     showFor(id){selected=id;paint();},
   };

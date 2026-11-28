@@ -163,6 +163,18 @@
   line-height: 1.2;
 }
 .ui-group-heading:first-child { margin-top: 0; }
+/* home-deferred */
+[data-view-all] {
+  grid-column: 1 / -1;
+  justify-self: start;
+}
+.other-feedback {
+  margin-top: 16px;
+  color: var(--c-fg-2);
+  font-size: 14px;
+}
+.other-feedback p { margin: 0 0 8px; }
+/* /home-deferred */
 .ui-item {
   min-width: 0;
   contain: layout paint;
@@ -428,8 +440,8 @@ button.ui-playback:hover { background-color: var(--gallery-hover); }
 @media (max-width: 560px) {
   :root { --nav-h: 52px; }
   .gallery-page .hero { padding-top: calc(var(--nav-h) + 18px); padding-bottom: 12px; }
-  #categories { gap: clamp(6px, 2vw, 12px); }
-  #categories button { font-size: 12px; }
+  #categories { gap: clamp(4px, 1.25vw, 8px); }
+  #categories button { padding-inline: 1px; font-size: 12px; }
   .category-count { margin-inline-start: 3px; font-size: 9px; }
   .work-search kbd { display: none; }
   .work-search, .gallery-page #motion, #gallery-favorites { min-height: 44px; }

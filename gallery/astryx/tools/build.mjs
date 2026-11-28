@@ -5,7 +5,7 @@ import stylexPlugin from '@stylexjs/babel-plugin';
 import {build} from 'esbuild';
 import {fillTemplatePlaceholders} from '../node_modules/@astryxdesign/cli/foundation/discovery/template-placeholders.mjs';
 import {officialShowcases} from '../showcases.mjs';
-import {officialVariants} from '../variants.mjs';
+import {otherShowcases} from '../other.mjs';
 import {writeBundle} from './write-bundle.mjs';
 
 const root = resolve(import.meta.dirname, '..');
@@ -23,23 +23,15 @@ const localImages = new Map([
   ['building.png', 'magnet-grid.jpg'],
 ]);
 const posters = ['magnet-grid.jpg', 'tide-progress.jpg', 'jelly-pad.jpg', 'hue-orbit.jpg', 'magnet-grid.jpg'];
-const appShellCopy = new Map([
-  ['AppShellShowcase.tsx', ['Design library', 'Browse shared components, check their states, and see where each pattern is used.']],
-  ['AppShellContentOnly.tsx', ['Preview collection', 'Play with a control and open its details when you want to inspect the source.']],
-  ['AppShellSideNavOnly.tsx', ['Workspace files', 'Use the sidebar to switch between reports, documents, and the people who maintain them.']],
-  ['AppShellTopNavOnly.tsx', ['Release notes', 'See the latest changes to the gallery and the examples you can reuse.']],
-  ['AppShellTopNavWithSideNav.tsx', ['Component overview', 'Pick a category in the sidebar to compare related controls and interactions.']],
-  ['AppShellWithBanner.tsx', ['Workspace updates', 'Review new examples as your team adds them to the shared library.']],
-]);
+const appShellCopy = ['Design library', 'Browse shared components, check their states, and see where each pattern is used.'];
 
 function replaceAppShellCopy(contents, path) {
   const [folder, file] = relative(templateRoot, path).split(sep);
-  const copy = folder === 'AppShell' && appShellCopy.get(file);
-  if (!copy) return contents;
+  if (folder !== 'AppShell' || file !== 'AppShellShowcase.tsx') return contents;
   const placeholder = /(<Text type="body">)\s*Lorem ipsum[\s\S]*?(<\/Text>)/;
   if (!placeholder.test(contents)) throw new Error(`找不到 App Shell 的上游占位文案：${file}`);
-  return contents.replace('>Page Content</Heading>', `>${copy[0]}</Heading>`)
-    .replace(placeholder, (_match, open, close) => `${open}${copy[1]}${close}`);
+  return contents.replace('>Page Content</Heading>', `>${appShellCopy[0]}</Heading>`)
+    .replace(placeholder, (_match, open, close) => `${open}${appShellCopy[1]}${close}`);
 }
 
 function localMedia(file) {
@@ -60,7 +52,7 @@ const showcasePlugin = {
     builder.onResolve({filter: /^\.\/official-demos$/}, () => ({path: 'official-demos', namespace: 'astryx'}));
     builder.onResolve({filter: /^@astryx-docs\/demo-content$/}, () => ({path: join(root, 'src/template-support.jsx')}));
     builder.onLoad({filter: /.*/, namespace: 'astryx'}, () => ({
-      contents: `export default new Map([${[...officialShowcases, ...officialVariants].map(([key, , file]) =>
+      contents: `export default new Map([${[...officialShowcases, ...otherShowcases].map(([key, , file]) =>
         `[${JSON.stringify(key)}, () => import(${JSON.stringify(`./${templates}/${file}`)})]`).join(',')}]);`,
       resolveDir: root,
     }));
