@@ -138,14 +138,23 @@ function TooltipDemo() {
   );
 }
 
-function InlineDrawerDemo() {
+function InlineDrawerDemo({cardPreview, animate}) {
   const [open, setOpen] = useState(false);
+  const [animateToggle, setAnimateToggle] = useState(false);
+  function toggleDrawer() {
+    setAnimateToggle(animate);
+    setOpen(value => !value);
+  }
+  const drawer = (
+    <InlineDrawer open={open} position="end" className="inline-drawer"
+      surfaceMotion={cardPreview ? null : undefined} unmountOnClose={!cardPreview}>
+      <DrawerBody><span>Drafts</span></DrawerBody>
+    </InlineDrawer>
+  );
   return (
     <div className="control-sample inline-drawer-sample">
-      <Button aria-expanded={open} size="small" onClick={() => setOpen(!open)}>{open ? 'Hide' : 'Show'}</Button>
-      <InlineDrawer open={open} position="end" className="inline-drawer">
-        <DrawerBody><span>Drafts</span></DrawerBody>
-      </InlineDrawer>
+      <Button aria-expanded={open} size="small" onClick={toggleDrawer}>{open ? 'Hide' : 'Show'}</Button>
+      {cardPreview ? <div className="inline-drawer-track" data-animated={animateToggle || undefined}>{drawer}</div> : drawer}
     </div>
   );
 }

@@ -113,6 +113,12 @@ const shapeFilters = {
   loading: {label: 'All shapes', order: ['Rings', 'Dots', 'Lines', 'Geometry', 'Text', 'Characters', 'Icons', 'States']},
 };
 
+function loadingPreviewOrder(item) {
+  if (item.loader && item.shape !== 'States') return 0;
+  if (item.family === 'Spinner' || item.id === 'fluent-spinner') return 1;
+  return item.previewSize ? 3 : 2;
+}
+
 const firstExamples = [
   'magnet-grid', 'ink-switch', 'swipe-confirm', 'jelly-pad', 'paper-fold',
   'elastic-string', 'detent-dial', 'merge-drops', 'tide-ring',
@@ -207,7 +213,7 @@ export function buildCatalog(works = []) {
   // 分区内先展示策展后的原创例子，再保留组件库各示例的顺序。
   return groupOrder.flatMap(({id}) => {
     const group = result.filter(item => item.category === id);
-    if (id === 'loading') return [...group.filter(item => !item.loader), ...group.filter(item => item.loader)];
+    if (id === 'loading') return group.sort((a, b) => loadingPreviewOrder(a) - loadingPreviewOrder(b));
     return [...group.filter(item => item.original), ...group.filter(item => !item.original)];
   });
 }

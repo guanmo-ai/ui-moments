@@ -188,6 +188,24 @@ body { margin: 0; }
 }
 .inline-drawer .fui-DrawerBody { padding: 6px 8px; }
 
+/* Clip the moving panel to its card slot and let transitions reverse in place. */
+.inline-drawer-track {
+  flex: 0 1 80px;
+  min-width: 0;
+  overflow: clip;
+}
+.inline-drawer-track > .inline-drawer { width: 100%; }
+.inline-drawer-track > .inline-drawer[aria-hidden="true"] {
+  opacity: 0;
+  translate: 100%;
+  visibility: hidden;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .inline-drawer-track[data-animated] > .inline-drawer {
+    transition: translate 200ms ease-out, opacity 200ms ease-out, visibility 200ms;
+  }
+}
+
 :root[data-gallery-active="false"] .fui-Spinner__spinner,
 :root[data-gallery-active="false"] .fui-SkeletonItem::after {
   animation-play-state: paused;

@@ -185,7 +185,7 @@ function App() {
             <p>Move this project out of the active list.</p>
             <div className="card-preview-actions"><Button size="small">Cancel</Button><Button size="small" appearance="primary">Confirm</Button></div>
           </section>
-          : <Suspense><Demo /></Suspense>}
+          : <Suspense><Demo cardPreview={cardPreview} animate={settings.animate} /></Suspense>}
       </MotionBehaviourProvider>
     </FluentProvider>
   );

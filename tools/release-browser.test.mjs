@@ -82,6 +82,55 @@ test('图鉴首页默认黑色、收录 884 个示例，支持筛选、试玩和
   assert.deepEqual(errors, []);
 });
 
+test('Inline Drawer 卡片快速收回时不会闪到全开或撑宽预览', {timeout: 20_000}, async t => {
+  const site = await startServer(t);
+  const browser = await chromium.launch();
+  t.after(() => browser.close());
+  const page = await browser.newPage({viewport: {width: 390, height: 844}, reducedMotion: 'no-preference'});
+  await page.goto(site + '?q=Inline%20Drawer');
+  const card = page.locator('[data-ui="fluent-inline-drawer"]');
+  const preview = card.frameLocator('iframe[data-loaded]');
+  await preview.locator('html[data-gallery-active="true"]').waitFor({state: 'attached'});
+  const show = preview.getByRole('button', {name: 'Show', exact: true});
+  const frames = await show.evaluate(async button => {
+    const nextFrame = () => new Promise(resolve => requestAnimationFrame(resolve));
+    const readFrame = () => {
+      const drawer = document.querySelector('.inline-drawer');
+      const root = document.documentElement;
+      return {
+        opacity: drawer ? Number(getComputedStyle(drawer).opacity) : 0,
+        overflow: root.scrollWidth - root.clientWidth,
+      };
+    };
+    button.click();
+    let frame;
+    const opening = [];
+    do {
+      await nextFrame();
+      frame = readFrame();
+      opening.push(frame);
+    } while (frame.opacity === 0 && opening.length < 30);
+    button.click();
+    const closing = [];
+    for (let index = 0; index < 20; index++) {
+      await nextFrame();
+      closing.push(readFrame());
+    }
+    return {opening, closing};
+  });
+  const turningPoint = frames.opening.at(-1).opacity;
+  assert.ok(turningPoint > 0 && turningPoint < 0.6, `反转时的透明度 ${turningPoint}`);
+  assert.ok(frames.closing.every(frame => frame.opacity <= turningPoint + 0.22),
+    `收回时透明度跳变 ${frames.closing.map(frame => frame.opacity)}`);
+  assert.ok([...frames.opening, ...frames.closing].every(frame => frame.overflow === 0),
+    '动画期间抽屉不撑宽 iframe');
+  await show.waitFor();
+  await show.click();
+  await preview.getByText('Drafts', {exact: true}).waitFor();
+  await preview.getByRole('button', {name: 'Hide', exact: true}).click();
+  await preview.getByText('Drafts', {exact: true}).waitFor({state: 'hidden'});
+});
+
 test('Astryx 发布包记录实际打包的正式版和 canary 依赖', async () => {
   for (const directory of ['astryx', 'astryx/experimental']) {
     const notices = await readFile(new URL(`../_site/gallery/${directory}/dist/THIRD_PARTY_LICENSES.txt`, import.meta.url), 'utf8');
@@ -562,6 +611,18 @@ test('全部按点按、拖动、输入、彩色和加载动效分组，初始�
   await page.locator('#categories [data-category="drag"]').click();
   assert.equal(await headings.count(), 0);
   assert.ok(await cards.first().isVisible());
+
+  await page.getByRole('searchbox').clear();
+  await page.locator('#categories [data-category="loading"]').click();
+  await revealGalleryCards(page);
+  const loadingOrder = await cards.evaluateAll(rows => rows.map(row => row.dataset.ui));
+  assert.equal(loadingOrder.length, 30);
+  assert.deepEqual(loadingOrder.slice(0, 5), ['paper-fold', 'tide-ring', 'pixel-snake', 'orbit-pair', 'signal-return']);
+  assert.ok(loadingOrder.indexOf('astryx-spinner') < loadingOrder.indexOf('fluent-skeleton'));
+  assert.ok(loadingOrder.indexOf('draft-card') > loadingOrder.indexOf('flip-tile'));
+  assert.equal(loadingOrder.at(-1), 'astryx-lab-reasoning');
+  await page.locator('#shapes [data-shape="States"]').click();
+  assert.deepEqual(await cards.evaluateAll(rows => rows.map(row => row.dataset.ui)), ['draft-card']);
 });
 
 test('滚动目标暂时留在视口之外时，卡片检查仍能推进到下一个批次', {timeout: 15_000}, async t => {
@@ -587,12 +648,12 @@ test('滚动目标暂时留在视口之外时，卡片检查仍能推进到下�
   assert.equal(await page.locator(`[data-ui="${next.id}"]:not([hidden])`).count(), 1);
 });
 
-test('最后一张动效可分享直达、搜索、收藏，结果数反映全量筛选', {timeout: 30_000}, async t => {
+test('尚未挂载的加载动效可分享直达、搜索和收藏', {timeout: 30_000}, async t => {
   const site = await startServer(t);
   const browser = await chromium.launch();
   t.after(() => browser.close());
   const page = await browser.newPage({locale: 'en-US'});
-  const last = (await fullCatalog()).at(-1);
+  const last = (await fullCatalog()).findLast(item => item.loader);
   await page.goto(site + '#' + last.id);
   await page.locator('#detail[open]').waitFor();
   assert.equal(await page.locator('#detail-title').textContent(), last.en);
